@@ -1,0 +1,20 @@
+# CLI build outputs
+/dist/
+/main
+/jlog
+
+# Local Roc caches and compiler distributions
+/.roc_cache/
+/.cache/roc/
+/roc_nightly-*/
+/roc_nightly-*.tar.gz
+
+# Python integration-test bytecode
+__pycache__/
+*.py[cod]
+
+# macOS metadata and editor temporary files
+.DS_Store
+*.swp
+*.swo
+*~

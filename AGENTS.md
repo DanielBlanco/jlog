@@ -1,5 +1,12 @@
 # Repository Guidelines
 
+## Development Status & Resumption
+
+M1-A and M1-B are implemented; development is paused. Read the
+[development handoff](plans/jlog-handoff.md) before resuming for current state,
+verification, and checkpoint limits. The tooling-only layout described below is
+historical; the handoff records the current sources and toolchain location.
+
 ## Project Structure & Module Organization
 
 This checkout currently contains development tooling only; there are no application sources, tests, assets, or package manifests yet.

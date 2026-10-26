@@ -3,42 +3,51 @@
 ## Development Status & Resumption
 
 M1-A and M1-B are implemented; development is paused. Read the
-[development handoff](plans/jlog-handoff.md) before resuming for current state,
-verification, and checkpoint limits. The tooling-only layout described below is
-historical; the handoff records the current sources and toolchain location.
+[development handoff](docs/plans/jlog-handoff.md) before resuming for current state,
+verification, and checkpoint limits.
 
 ## Project Structure & Module Organization
 
-This checkout currently contains development tooling only; there are no application sources, tests, assets, or package manifests yet.
+- `src/main.roc` is the application entry point and owns I/O and exit mapping.
+- `src/Cli.roc`, `src/Jsonl.roc`, and `src/Operations.roc` own pure parsing,
+  framing/validation, and inspection summaries/rendering, respectively. Pure
+  tests are inline `expect` checks in these modules.
+- `tests/test_cli.py` runs executable acceptance tests using Python's stdlib.
+- `dist/` contains ignored build outputs.
+- `docs/` contains documentation, including `docs/specs/` and `docs/plans/`.
+  Read [What is JSONL?](docs/jsonl.md) for format rules and examples.
+- `.tool-versions` pins Node.js to `24.13.0`; Node is not required for jlog.
 
-- `.tool-versions` pins Node.js to `24.13.0`.
-- `roc_nightly-macos_apple_silicon-2026-10-09-258ab27/` contains the bundled Roc compiler, licensing files, and macOS linker support.
-- The matching `.tar.gz` file is the compiler distribution archive.
-- `docs/` contains project documentation. Read [What is JSONL?](docs/jsonl.md) for format rules, examples, and reference links.
-
-Keep future application code separate from the compiler directory. Document the entry point and source/test layout when introducing them; `main.roc` below is an example, not an existing file.
+Keep application code in `src/`, separate from compiler and cache directories.
 
 ## Build, Test, and Development Commands
 
-The bundled compiler targets macOS Apple Silicon. From the repository root, add it to your shell's path:
+Use Roc `nightly-2026-10-09-258ab27` on your `PATH`; the compiler is outside the
+checkout. Discover it with `command -v roc` and confirm the pin with `roc version`.
+The application pins `basic-cli` 0.25.0. Native verification currently covers
+macOS Apple Silicon; Linux x86-64 verification remains pending.
+
+Run commands from the repository root:
 
 ```sh
-export PATH="$PWD/roc_nightly-macos_apple_silicon-2026-10-09-258ab27:$PATH"
+mkdir -p dist
+roc build --opt=dev --output=dist/jlog src/main.roc
+JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
 
 - `roc --help`: inspect available compiler commands.
 - `roc repl`: start an interactive session without an application file.
-- `roc run main.roc`: run an application after its entry point exists.
-- `roc build main.roc`: compile an application binary.
-- `roc check main.roc`: check source code without building or running it.
-- `roc test main.roc`: run top-level `expect` checks in the module and its imported local modules.
-- `roc fmt .` / `roc fmt --check .`: format Roc sources or verify their formatting.
+- `roc run src/main.roc -- --help`: run the CLI locally.
+- `roc build --opt=speed --output=dist/jlog src/main.roc`: build an optimized binary.
+- `roc check src/main.roc`: check source code without building or running it.
+- `roc test --opt=dev --no-cache src/main.roc`: run inline `expect` checks in the application and its imported local modules. Repeat with `--opt=speed` for optimized verification.
+- `roc fmt src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc`: format project sources. Add `--check` to verify formatting without edits.
 
 No npm scripts or project-specific build wrappers are configured.
 
 ## Coding Style & Naming Conventions
 
-Use `roc fmt` as the authority for Roc indentation and layout. Choose descriptive module and function names, and keep filenames consistent with module declarations. No additional lint configuration or established naming convention exists yet. Avoid editing bundled compiler or linker files as application code.
+Use `roc fmt` as the authority for Roc indentation and layout. Choose descriptive module and function names, and keep filenames consistent with module declarations. Document each named Roc function with a `##` comment explaining its behavior and relevant input/error contract; document Python helpers and test methods with docstrings. No additional lint configuration exists. Avoid editing compiler or linker files as application code.
 
 ## Testing Guidelines
 
@@ -46,4 +55,4 @@ Use Roc's built-in `expect` checks for new Roc behavior, including edge cases an
 
 ## Commit & Pull Request Guidelines
 
-This directory has no Git metadata, so existing commit conventions cannot be verified. Use concise, imperative commit subjects, such as `Add log parsing module`. Pull requests should explain the change, link relevant issues, and list validation commands and results. Include screenshots only for visible interface changes. Explicitly document toolchain upgrades and their platform requirements.
+Use concise, imperative commit subjects, such as `Add log parsing module`. Pull requests should explain the change, link relevant issues, and list validation commands and results. Include screenshots only for visible interface changes. Explicitly document toolchain upgrades and their platform requirements.

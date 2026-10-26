@@ -2,6 +2,12 @@
 
 Snapshot: 2026-10-18, native macOS ARM64. Development is paused.
 
+Layout update (2026-10-26): application modules and their inline checks now live
+in `src/`; the entry point is `src/main.roc`. Plans and the specification live
+in `docs/plans/` and `docs/specs/`. Historical verification commands below retain
+the paths used when executed. For current build/test commands, see the
+[README](../../README.md#for-developers). This move adds no milestone behavior.
+
 ## Current project status
 
 **M1-A and M1-B are already implemented and verified.** The handoff request's
@@ -27,7 +33,7 @@ learning project, not a jq replacement. `--field` is deferred to v0.2.
   `https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst`.
 
 Read the [specification](../specs/jlog-v0.1.md), [implementation plan](jlog-v0.1-plan.md),
-[progress record](jlog-v0.1-progress.md), and [feasibility report](../docs/roc-feasibility.md).
+[progress record](jlog-v0.1-progress.md), and [feasibility report](../roc-feasibility.md).
 Their initial-checkout statements are historical: application sources/tests and
 Git now exist, the compiler is outside the checkout, and `main.roc` is no longer
 the file-size example. `.tool-versions` pins Node, not Roc; Node is not needed.
@@ -60,9 +66,9 @@ These capabilities are implemented, not placeholders:
 | M1-16/17 | Buffered file and raw incremental stdin reads through the same framer/consumer; EOF-only report; propagated read errors yield exit 3 without a completed report. Empty/malformed/CRLF/final/long lines and file/stdin parity tested. |
 | M1-18 | Executable preflight with stdin held open and inaccessible paths. Already satisfied by M1-A; recorded as inherited coverage, not invented RED. |
 
-`Cli.roc` owns pure arguments/help; `Jsonl.roc` owns pure framing/classification/
-depth/JSON validation; `Operations.roc` owns pure bounded summaries/rendering.
-`main.roc` owns effects, native paths, shared reader loop, EOF/error normalization,
+`src/Cli.roc` owns pure arguments/help; `src/Jsonl.roc` owns pure framing/classification/
+depth/JSON validation; `src/Operations.roc` owns pure bounded summaries/rendering.
+`src/main.roc` owns effects, native paths, shared reader loop, EOF/error normalization,
 stdout/stderr, and exits. It uses `File.open_reader!`, `Reader.read_line!`, and
 `Stdin.bytes!`. The Python stdlib harness executes the supplied binary and asserts
 bytes/statuses; it never builds implicitly or reproduces application logic.
@@ -91,7 +97,7 @@ tests and had zero failures, errors, or skips.
 
 There are 67 CLI, 97 framing/classification/JSON, and 18 inspection/rendering
 `expect`s. The original 85 M1-A checks and seven executable tests remain included.
-Module-focused checks can use `roc test --main=main.roc Jsonl.roc` (or the owning
+Module-focused checks can use `roc test --main=src/main.roc src/Jsonl.roc` (or the owning
 module); this toolchain may include all modules reached through the main context.
 Do not add repeated run counts as distinct tests.
 
@@ -158,9 +164,9 @@ work or start the next milestone:
 ```text
 Resume jlog within M1-B (M1-09 through M1-18) ONLY.
 
-Read AGENTS.md, specs/jlog-v0.1.md, plans/jlog-v0.1-plan.md,
-plans/jlog-v0.1-progress.md, plans/jlog-handoff.md, docs/roc-feasibility.md,
-the Roc sources, and tests/test_cli.py. Inspect branch, HEAD and working tree.
+Read AGENTS.md, docs/specs/jlog-v0.1.md, docs/plans/jlog-v0.1-plan.md,
+docs/plans/jlog-v0.1-progress.md, docs/plans/jlog-handoff.md,
+docs/roc-feasibility.md, src/*.roc, and tests/test_cli.py. Inspect branch, HEAD and working tree.
 Preserve unrelated changes and every completed M1-A/M1-B behavior and test.
 
 The handoff HEAD already implements M1-B. First rerun and reconcile its acceptance
@@ -171,7 +177,7 @@ limits explicitly. Do not silently alter the specification or plan.
 Only if a genuine in-scope M1-B gap is demonstrated, work on ONE TDD task at a
 time: RED (execute a meaningful failing assertion; test syntax/compiler errors
 are not RED) -> minimum GREEN -> REFACTOR -> VERIFY. Keep evidence concise in
-plans/jlog-v0.1-progress.md: task ID, failing assertion/command, passing focused
+docs/plans/jlog-v0.1-progress.md: task ID, failing assertion/command, passing focused
 and regression tests, compiler/format status and outstanding limitations.
 Already-passing tests are inherited coverage; commits per cycle are not required.
 
@@ -183,8 +189,8 @@ Investigate and report genuine blockers rather than inventing success.
 Run focused tests and regressions after every GREEN and REFACTOR. Before stopping,
 run roc check; development and optimized Roc tests/builds; the existing Python
 executable suite against EACH binary; and roc fmt --check with explicit project
-source paths. Use the handoff's exact commands/cache guidance. Never claim an
-unexecuted check passed. Preserve malformed-line recovery, physical numbering,
+source paths. Use the README's current src/ paths with the handoff's cache
+guidance. Never claim an unexecuted check passed. Preserve malformed-line recovery, physical numbering,
 original bytes, first-100 diagnostics, EOF-only reporting and pipeline safety.
 
 Do not implement --count, --tail or --where beyond existing parsing, or --field

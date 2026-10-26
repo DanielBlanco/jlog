@@ -1,5 +1,9 @@
 # jlog v0.1 progress
 
+Layout note (2026-10-26): Roc sources now live in `src/`. Earlier entries and
+commands retain their original paths as historical verification evidence. Use
+the [README](../../README.md#for-developers) for current commands.
+
 M1-A is complete; current authorization is M1-B only. M2 is not authorized.
 Toolchain: Roc `nightly-2026-10-09-258ab27`,
 existing basic-cli 0.25.0 content-addressed URL; native Darwin ARM64.
@@ -203,3 +207,33 @@ Changed sources: Jsonl.roc, main.roc, tests/test_cli.py; added Operations.roc;
 updated this progress record. Generated dist/jlog is the optimized tested binary.
 M1-09 through M1-18 are complete with the disclosed platform limitation and
 inherited M1-18 coverage. Stop after M1-B; do not advance to M2.
+
+## Source layout and function documentation — 2026-10-26
+
+Moved all four application modules into `src/`, added `##` documentation to all
+26 named Roc functions and docstrings to all 30 Python helpers/test methods,
+and updated README, repository guidance, and documentation paths. Existing
+`docs/plans/` and `docs/specs/` moves were preserved. This is a behavior-preserving
+maintenance change; no milestone behavior or new tests were added. A source
+comparison excluding Roc comments/blank lines and a Python AST comparison
+excluding docstrings confirmed executable code is unchanged.
+
+Fresh native macOS ARM64 verification used the pinned compiler/platform and the
+same writable `ROC_CACHE_DIR` recorded above. All commands exited 0:
+
+| Command | Result |
+| --- | --- |
+| `roc check src/main.roc` | No errors. |
+| `roc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc` | All formatting valid after applying `roc fmt`. |
+| `roc test --opt=dev --no-cache src/main.roc` | 182 passed. |
+| `roc build --opt=dev --output=dist/jlog src/main.roc` | 0 errors/warnings. |
+| `JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v` | Development binary: 26 passed, no skips. |
+| `roc test --opt=speed --no-cache src/main.roc` | 182 passed. |
+| `roc build --opt=speed --output=dist/jlog src/main.roc` | 0 errors/warnings. |
+| `JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py'` | Optimized binary: 26 passed, no skips. |
+| `roc test --main=src/main.roc src/Jsonl.roc` | 182 passed through the application context. |
+| `roc run src/main.roc -- --help` | Help printed successfully. |
+
+All local Markdown file links resolve. The earlier stdin-descriptor limitation
+and pending Linux/resource/release verification remain unchanged. `dist/jlog`
+contains the tested optimized build.

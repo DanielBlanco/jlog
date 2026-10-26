@@ -32,14 +32,17 @@ HELP = (
 class CliTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        """Resolve the explicitly supplied executable once for the suite."""
         cls.binary = str(Path(os.environ['JLOG_BIN']).resolve(strict=True))
 
     def run_cli(self, *args, input_bytes=b''):
+        """Run the selected binary with captured streams and a bounded timeout."""
         return subprocess.run(
             [self.binary, *args], input=input_bytes, capture_output=True, timeout=5,
         )
 
     def test_m1_16_file_single_record(self):
+        """Verify the complete report for a file containing one valid record."""
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'one.jsonl'
             path.write_bytes(b'{}\n')
@@ -49,6 +52,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual((result.stderr, result.returncode), (b'', 0))
 
     def assert_file_report(self, data, report, status=0):
+        """Assert exact file report bytes, status, and unchanged input contents."""
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'events.jsonl'
             path.write_bytes(data)
@@ -58,6 +62,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), data)
 
     def test_m1_16_empty_and_eof(self):
+        """Check empty files, unterminated records, and a single blank line."""
         cases = [
             (b'', b'Records: 0\nValid: 0\nInvalid: 0\n', 0),
             (b'null', b'Records: 1\nValid: 1\nInvalid: 0\n', 0),
@@ -68,6 +73,7 @@ class CliTests(unittest.TestCase):
                 self.assert_file_report(data, report, status)
 
     def test_m1_16_representative_and_malformed(self):
+        """Check representative records and recovery past malformed physical lines."""
         representative = (
             b'{"status":"ok","skill":"Roc","detail":{"attempts":[1,2]}}\n'
             b'{"status":"failed","skill":"caf\xc3\xa9\\n\xce\xbb"}\n'
@@ -81,12 +87,14 @@ class CliTests(unittest.TestCase):
         )
 
     def test_m1_16_values_unicode_precision(self):
+        """Accept JSON value kinds, Unicode, duplicate keys, and unbounded numbers."""
         data = ('[]\n"café \u03bb🙂"\ntrue\nfalse\nnull\n'
                 '340282366920938463463374607431768211456\n1e9999\n'
                 '{"pair":"\\uD83D\\uDE42","x":1,"x":null}\n').encode()
         self.assert_file_report(data, b'Records: 8\nValid: 8\nInvalid: 0\n')
 
     def test_m1_16_crlf_and_numbering(self):
+        """Preserve physical numbering across CRLF, blank lines, and a final CR."""
         self.assert_file_report(
             b'{}\r\n\r\nnull\r',
             b'Records: 3\nValid: 2\nInvalid: 1\n\nMalformed records:\n'
@@ -94,6 +102,7 @@ class CliTests(unittest.TestCase):
         )
 
     def test_m1_16_defects_and_recovery(self):
+        """Report encoding, BOM, grammar, and depth defects while continuing."""
         data = (b'\xef\xbb\xbf{}\n\xff\n"\\uD800"\n' +
                 b'[' * 129 + b'0' + b']' * 129 + b'\n' +
                 b'{"unicode":"\xef\xbb\xbf"}\n\xef\xbb\xbf{}\nnull')
@@ -107,12 +116,14 @@ class CliTests(unittest.TestCase):
                                 b'Records: 1\nValid: 1\nInvalid: 0\n')
 
     def test_m1_16_first_100_errors(self):
+        """Cap file error details at 100 while counting every invalid record."""
         expected = (b'Records: 102\nValid: 1\nInvalid: 101\n\nMalformed records:\n' +
                     b''.join(f'  line {n}: blank line\n'.encode() for n in range(1, 101)) +
                     b'  ... 1 more invalid records\n')
         self.assert_file_report(b'\n' * 101 + b'{}', expected, 4)
 
     def test_m1_16_native_path_bytes(self):
+        """Open and label a filename supplied as native UTF-8 bytes."""
         with tempfile.TemporaryDirectory() as directory:
             path = os.fsencode(directory) + b'/native-\xc3\xa9.jsonl'
             with open(path, 'wb') as stream:
@@ -124,6 +135,7 @@ class CliTests(unittest.TestCase):
                              (expected, b'', 0))
 
     def test_m1_16_non_utf8_native_path(self):
+        """Check native invalid-UTF-8 paths, including Darwin fixture rejection."""
         # Darwin's filesystem rejects this name before jlog can open a fixture.
         # Keep real non-UTF-8 opening acceptance on filesystems supporting it.
         parent = '/private/tmp' if sys.platform == 'darwin' else None
@@ -147,6 +159,7 @@ class CliTests(unittest.TestCase):
                                  (expected, b'', 0))
 
     def test_m1_16_source_controls(self):
+        """Escape control characters in filename labels in the report."""
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'line\n\t\r\x01.jsonl'
             path.write_bytes(b'{}')
@@ -157,6 +170,7 @@ class CliTests(unittest.TestCase):
                              (expected, b'', 0))
 
     def test_m1_16_input_errors_suppress_report(self):
+        """Require exit 3 and no report for missing, unreadable, or directory input."""
         self.assertNotEqual(os.geteuid(), 0, 'Permission test requires an unprivileged user')
         with tempfile.TemporaryDirectory() as directory:
             denied = Path(directory) / 'denied'
@@ -175,11 +189,13 @@ class CliTests(unittest.TestCase):
                 denied.chmod(0o600)
 
     def test_m1_17_stdin_empty(self):
+        """Report zero totals when implicit stdin reaches EOF immediately."""
         result = self.run_cli()
         self.assertEqual((result.stdout, result.stderr, result.returncode),
                          (b'File: <stdin>\nRecords: 0\nValid: 0\nInvalid: 0\n', b'', 0))
 
     def assert_stdin_report(self, data, report, status=0):
+        """Assert identical reports for implicit stdin and an explicit dash."""
         for args in [(), ('-',)]:
             with self.subTest(args=args):
                 result = self.run_cli(*args, input_bytes=data)
@@ -187,6 +203,7 @@ class CliTests(unittest.TestCase):
                                  (b'File: <stdin>\n' + report, b'', status))
 
     def test_m1_17_stdin_records_and_eof(self):
+        """Check stdin/file parity for framing, malformed records, and EOF."""
         cases = [
             (b'', b'Records: 0\nValid: 0\nInvalid: 0\n', 0),
             (b'{}', b'Records: 1\nValid: 1\nInvalid: 0\n', 0),
@@ -203,6 +220,7 @@ class CliTests(unittest.TestCase):
                 self.assert_file_report(data, report, status)
 
     def test_m1_17_stdin_long_lines_and_unicode(self):
+        """Preserve long records, Unicode, and CRLF across transport boundaries."""
         cases = [
             b'"' + b'a' * 16382 + '🙂'.encode() + b'"\r\nnull',
             b'"' + b'a' * 16381 + b'"\r\nnull',
@@ -214,6 +232,7 @@ class CliTests(unittest.TestCase):
                 self.assert_file_report(data, b'Records: 2\nValid: 2\nInvalid: 0\n')
 
     def test_m1_17_stdin_validation(self):
+        """Require the same validation diagnostics for stdin and files."""
         data = b'\xef\xbb\xbf{}\n1e9999\n' + b'[' * 129 + b'0' + b']' * 129 + b'\n"\\uD800"\ntrue'
         report = (b'Records: 5\nValid: 2\nInvalid: 3\n\nMalformed records:\n'
                   b'  line 1: BOM is not allowed\n  line 3: nesting exceeds 128\n'
@@ -222,12 +241,14 @@ class CliTests(unittest.TestCase):
         self.assert_file_report(data, report, 4)
 
     def test_m1_17_stdin_error_cap(self):
+        """Cap stdin error details at 100 and report the omitted count."""
         expected = (b'Records: 101\nValid: 0\nInvalid: 101\n\nMalformed records:\n' +
                     b''.join(f'  line {n}: blank line\n'.encode() for n in range(1, 101)) +
                     b'  ... 1 more invalid records\n')
         self.assert_stdin_report(b'\n' * 101, expected, 4)
 
     def test_m1_18_preflight_with_stdin_held_open(self):
+        """Ensure help, version, and usage errors finish without reading stdin."""
         cases = [
             (('--help',), HELP, 0), (('-h',), HELP, 0),
             (('--version',), b'jlog 0.1.0\n', 0),
@@ -252,6 +273,7 @@ class CliTests(unittest.TestCase):
                     self.assertIn(b'\nUsage: jlog ', result.stderr)
 
     def test_m1_18_usage_before_file_io(self):
+        """Reject invalid arguments before attempting to open a missing file."""
         with tempfile.TemporaryDirectory() as directory:
             missing = str(Path(directory) / 'missing')
             for args in [(missing, '--unknown'), (missing, '--tail', '-1'),
@@ -264,6 +286,7 @@ class CliTests(unittest.TestCase):
                     self.assertNotIn(b'not found', result.stderr)
 
     def test_m1_17_stdin_read_error_suppresses_report(self):
+        """Require a directory-stdin read failure to suppress the report and exit 3."""
         with tempfile.TemporaryDirectory() as directory:
             # Verified to yield StdinErr(IsADirectory), unlike EBADF (host EOF).
             descriptor = os.open(directory, os.O_RDONLY)
@@ -277,6 +300,7 @@ class CliTests(unittest.TestCase):
 
 
     def test_m1_06_extra_information_arguments(self):
+        """Reject help combined with an extra argument using the usage diagnostic."""
         result = self.run_cli('--help', 'extra')
         self.assertEqual(result.stdout, b'')
         self.assertEqual(result.returncode, 2)
@@ -284,11 +308,13 @@ class CliTests(unittest.TestCase):
         self.assertIn(b'\nUsage: jlog ', result.stderr)
 
     def test_m1_06_help_alias(self):
+        """Match the exact help output and success status for the short alias."""
         result = self.run_cli('-h')
         self.assertEqual((result.stdout, result.stderr, result.returncode),
                          (HELP, b'', 0))
 
     def test_m1_06_usage_regressions(self):
+        """Reject unsupported, repeated, conflicting, or incomplete arguments."""
         cases = [
             ('-h', 'extra'), ('--version', 'extra'), ('-V', 'extra'),
             ('--help', '--count'), ('--help', '--version'),
@@ -304,6 +330,7 @@ class CliTests(unittest.TestCase):
                 self.assertIn(b'\nUsage: jlog ', result.stderr)
 
     def test_m1_05_invalid_utf8_text_regressions(self):
+        """Reject undecodable option names and operands without lossy conversion."""
         for args in [(b'--where', b'a=\xff'), (b'--where=a=\xff',),
                      (b'--tail', b'1\xff'), (b'--\xff',)]:
             with self.subTest(args=args):
@@ -313,16 +340,19 @@ class CliTests(unittest.TestCase):
                 self.assertIn(b'\nUsage: jlog ', result.stderr)
 
     def test_m1_06_help(self):
+        """Match the exact long-form help output with empty stderr and exit 0."""
         result = self.run_cli('--help')
         self.assertEqual((result.stdout, result.stderr, result.returncode),
                          (HELP, b'', 0))
 
     def test_m1_01_version_alias(self):
+        """Match the exact version output and status for the short alias."""
         result = self.run_cli('-V')
         self.assertEqual((result.stdout, result.stderr, result.returncode),
                          (b'jlog 0.1.0\n', b'', 0))
 
     def test_m1_01_version(self):
+        """Match the exact long-form version output, stderr, and success status."""
         result = self.run_cli('--version')
         self.assertEqual(result.stdout, b'jlog 0.1.0\n')
         self.assertEqual(result.stderr, b'')

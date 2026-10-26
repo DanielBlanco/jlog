@@ -1,6 +1,9 @@
 import Jsonl
 
 Operations :: {}.{
+
+	## Render an EOF inspection summary with an escaped source label, retained error
+	## details, and an omitted-detail count when needed. Always end with LF.
 	report : Str, Summary -> Str
 	report = |source, summary| {
 		label = escape_source(source)
@@ -19,12 +22,15 @@ Operations :: {}.{
 		}
 	}
 
+	## Escape C0, DEL, and C1 controls in a display label while preserving other
+	## Unicode and literal backslashes. This text must not be used to open a path.
 	escape_source : Str -> Str
 	escape_source = |source| match Str.from_utf8(escape_bytes(source.to_utf8(), [])) {
 		Ok(text) => text
 		Err(_) => crash "Source escaping produced invalid UTF-8"
 	}
 
+	## Map a classified record defect to its stable human-readable diagnostic.
 	reason_text : Jsonl.Reason -> Str
 	reason_text = |reason| match reason {
 		Blank => "blank line"
@@ -38,6 +44,8 @@ Operations :: {}.{
 	start : Summary
 	start = { records: 0, valid: 0, invalid: 0, errors: [] }
 
+	## Classify one physical line and increment inspection totals, retaining only
+	## the first 100 invalid line numbers and reasons in encounter order.
 	inspect_line : Summary, Jsonl.Line -> Summary
 	inspect_line = |summary, line| match Jsonl.classify(line) {
 		Valid => { ..summary, records: summary.records + 1, valid: summary.valid + 1 }
@@ -58,7 +66,8 @@ Operations :: {}.{
 expect Operations.inspect_line(Operations.start, { number: 1, body: "{}".to_utf8() }) == { records: 1, valid: 1, invalid: 0, errors: [] }
 expect Operations.inspect_line(Operations.start, { number: 42, body: [] }) == { records: 1, valid: 0, invalid: 1, errors: [{ number: 42, reason: Blank }] }
 
-# Test-only driver reuses production framing/classification/reduction.
+## Summarize test bytes through production framing and classification, including
+## a final unterminated record at EOF.
 summarize = |bytes| {
 	partial = Jsonl.feed(Jsonl.start, bytes, Operations.start, Operations.inspect_line)
 	Jsonl.finish(partial.state, partial.value, Operations.inspect_line).value
@@ -87,7 +96,8 @@ expect {
 }
 expect Operations.report("a\nb\tc\r", Operations.start) == "File: a\\nb\\tc\\r\nRecords: 0\nValid: 0\nInvalid: 0\n"
 
-# Control escaping only; ordinary Unicode and native display backslashes survive.
+## Append escaped UTF-8 label bytes to out, recognizing C1's two-byte encoding.
+## Ordinary Unicode bytes and native display backslashes pass through unchanged.
 escape_bytes = |remaining, out| match remaining {
 	[] => out
 	[194, byte, .. as rest] if byte >= 128 and byte <= 159 => escape_bytes(rest, out.concat(control_escape(byte)))
@@ -105,8 +115,10 @@ escape_bytes = |remaining, out| match remaining {
 	}
 }
 
+## Encode a control value as a six-byte Unicode escape with lowercase hex digits.
 control_escape = |byte| [92, 117, 48, 48, hex_digit(U8.shr_wrap(byte, 4)), hex_digit(U8.bitwise_and(byte, 15))]
 
+## Convert a nibble in 0..15 to its lowercase ASCII hexadecimal digit byte.
 hex_digit = |nibble| if nibble < 10 {
 	nibble + 48
 } else {

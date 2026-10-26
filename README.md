@@ -153,7 +153,7 @@ failures are visible too.
 **Known platform edge case:** the pinned platform exposes a write-only stdin
 descriptor as EOF, so that unusual setup currently reports empty input with exit
 0. Actual propagated read errors are handled separately. See the
-[handoff](plans/jlog-handoff.md#known-limitations-and-risks) for this gap and the
+[handoff](docs/plans/jlog-handoff.md#known-limitations-and-risks) for this gap and the
 remaining native Linux/resource verification work.
 
 ## Build and install
@@ -163,7 +163,7 @@ remaining native Linux/resource verification work.
 - **Roc `nightly-2026-10-09-258ab27`** from the
   [pinned nightly release](https://github.com/roc-lang/nightlies/releases/tag/nightly-2026-10-09-258ab27).
   Unpack the matching compiler archive and put its directory on your `PATH`.
-- **basic-cli 0.25.0** is already pinned by URL in `main.roc`; the compiler resolves
+- **basic-cli 0.25.0** is already pinned by URL in `src/main.roc`; the compiler resolves
   it during the build. Initial dependency downloads need network access.
 - **Python 3** is needed for executable tests only. No third-party Python packages
   or Node/npm setup are required.
@@ -182,7 +182,7 @@ roc version
 # Expected: Roc compiler version nightly-2026-10-09-258ab27
 
 mkdir -p dist
-roc build --opt=speed --output=dist/jlog main.roc
+roc build --opt=speed --output=dist/jlog src/main.roc
 ./dist/jlog --version
 ```
 
@@ -206,7 +206,7 @@ paths recorded in earlier development sessions.
 
 ## For developers
 
-Start with [AGENTS.md](AGENTS.md) and the [development handoff](plans/jlog-handoff.md).
+Start with [AGENTS.md](AGENTS.md) and the [development handoff](docs/plans/jlog-handoff.md).
 M1-A and M1-B are implemented. Work on one agreed TDD task at a time, preserving
 existing behavior and tests.
 
@@ -214,19 +214,24 @@ existing behavior and tests.
 
 | Path | Responsibility |
 | --- | --- |
-| `main.roc` | File/stdin effects, shared input loop, output, and exit mapping. |
-| `Cli.roc` | Pure argument parsing and help text. |
-| `Jsonl.roc` | Pure framing, UTF-8/BOM classification, depth precheck, and builtin JSON validation adapter. |
-| `Operations.roc` | Pure inspection summaries, capped details, and report rendering. |
+| `src/main.roc` | File/stdin effects, shared input loop, output, and exit mapping. |
+| `src/Cli.roc` | Pure argument parsing and help text. |
+| `src/Jsonl.roc` | Pure framing, UTF-8/BOM classification, depth precheck, and builtin JSON validation adapter. |
+| `src/Operations.roc` | Pure inspection summaries, capped details, and report rendering. |
 | `tests/test_cli.py` | Python stdlib tests against the actual executable. |
-| `specs/`, `plans/`, `docs/` | Behavior contracts, TDD tasks/evidence, and research. |
+| `docs/specs/`, `docs/plans/`, `docs/` | Behavior contracts, TDD tasks/evidence, and research. |
+
+Roc application sources and their inline `expect` checks live in `src/`. Run
+the commands below from the repository root. Document each named function with
+a `##` comment describing its behavior and any relevant input or error contract;
+use docstrings for Python test helpers and methods.
 
 ### Run locally and check sources
 
 ```sh
-roc run main.roc -- --help
-roc check main.roc
-roc fmt --check main.roc Cli.roc Jsonl.roc Operations.roc
+roc run src/main.roc -- --help
+roc check src/main.roc
+roc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc
 ```
 
 To apply formatting, run `roc fmt` with those same explicit source paths.
@@ -241,19 +246,19 @@ actual stdout/stderr bytes and exit codes. Build before invoking the harness;
 mkdir -p dist
 
 # Development mode
-roc test --opt=dev --no-cache main.roc
-roc build --opt=dev --output=dist/jlog main.roc
+roc test --opt=dev --no-cache src/main.roc
+roc build --opt=dev --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 
 # Optimized mode: repeat executable tests against this new build
-roc test --opt=speed --no-cache main.roc
-roc build --opt=speed --output=dist/jlog main.roc
+roc test --opt=speed --no-cache src/main.roc
+roc build --opt=speed --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
 
 Run permission tests as an ordinary user; the harness deliberately rejects a
 root-only run. A focused pure check can use
-`roc test --main=main.roc Jsonl.roc`; this compiler may also run checks reachable
+`roc test --main=src/main.roc src/Jsonl.roc`; this compiler may also run checks reachable
 through the application context. Focus executable tests with `-k m1_16` before
 `-v` in the discovery command above.
 
@@ -264,7 +269,7 @@ through the application context. Focus executable tests with `-k m1_16` before
 2. **GREEN:** implement the minimum change, then run focused and regression tests.
 3. **REFACTOR:** simplify without changing behavior; rerun tests and checks.
 4. **VERIFY:** record the task ID, failing assertion/command, passing results,
-   compiler/format status, and limitations in the [progress log](plans/jlog-v0.1-progress.md).
+   compiler/format status, and limitations in the [progress log](docs/plans/jlog-v0.1-progress.md).
 
 Already-passing coverage needs no artificial RED or production rewrite. Keep I/O
 at the boundary, reuse the verified JSON adapter, and investigate compiler/API
@@ -281,13 +286,13 @@ include the commands and results used to verify it.
 | M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Pending. |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |
 
-The [implementation plan](plans/jlog-v0.1-plan.md) contains the ordered tasks.
+The [implementation plan](docs/plans/jlog-v0.1-plan.md) contains the ordered tasks.
 There is no TUI, query language, nested-field query syntax, follow mode, or file
 modification in v0.1 scope.
 
 ## Further reading
 
 - [JSONL introduction](docs/jsonl.md) — format, examples, and reference links.
-- [v0.1 specification](specs/jlog-v0.1.md) — commands, edge cases, and output contracts.
+- [v0.1 specification](docs/specs/jlog-v0.1.md) — commands, edge cases, and output contracts.
 - [Roc feasibility](docs/roc-feasibility.md) — verified APIs, probes, and compatibility risks.
-- [Development handoff](plans/jlog-handoff.md) — checkpoint history and resume instructions.
+- [Development handoff](docs/plans/jlog-handoff.md) — checkpoint history and resume instructions.

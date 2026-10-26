@@ -1,5 +1,8 @@
 Jsonl :: {}.{
 	Reason : [Blank, InvalidUtf8, Bom, TooDeep, InvalidJson]
+
+	## Validate a framed line in diagnostic order: blank, UTF-8, initial first-line
+	## BOM, depth limit, then JSON grammar. Preserve the original record bytes.
 	classify : Line -> [Valid, Invalid(Reason)]
 	classify = |line| if line.body.all(|byte| byte == 32 or byte == 9 or byte == 10 or byte == 13) {
 		Invalid(Blank)
@@ -20,6 +23,8 @@ Jsonl :: {}.{
 		}
 	}
 
+	## Reject nesting above 128 before JSON parsing, ignoring brackets inside quoted
+	## strings and tracking escapes. This resource precheck does not validate grammar.
 	within_depth : Str -> Try({}, [TooDeep])
 	within_depth = |input| {
 		initial : { depth : U64, quoted : Bool, escaped : Bool }
@@ -55,6 +60,9 @@ Jsonl :: {}.{
 		).map_ok(|_| {})
 	}
 
+	## Check complete JSON grammar with the builtin parser and skip-only adapter,
+	## without building a value tree or converting numbers. Call within_depth first
+	## for untrusted input to bound parser recursion.
 	valid_json : Str -> Bool
 	valid_json = |text| {
 		parsed : Try(AnyJson, _)
@@ -68,7 +76,8 @@ Jsonl :: {}.{
 	start : State
 	start = { pending: [], next_line: 1 }
 
-	# Emit completed lines immediately; retain only the unfinished line.
+	## Consume a byte chunk, emitting each LF-terminated physical line to the reducer.
+	## Remove one CR immediately before LF; retain unfinished bytes across chunks.
 	feed : State, List(U8), a, (a, Line -> a) -> { state : State, value : a }
 	feed = |state, bytes, value, emit| bytes.fold(
 		{ state, value },
@@ -83,6 +92,9 @@ Jsonl :: {}.{
 			}
 		},
 	)
+
+	## At successful EOF, emit a nonempty pending line without stripping a lone CR.
+	## Clear emitted bytes; empty input and a trailing LF add no phantom record.
 	finish : State, a, (a, Line -> a) -> { state : State, value : a }
 	finish = |state, value, emit| if state.pending.is_empty() {
 		{ state, value }
@@ -94,7 +106,8 @@ Jsonl :: {}.{
 	}
 }
 
-# Called only for LF-terminated lines. A lone CR at EOF remains body data.
+## Remove one terminal CR from an LF-terminated line body. Call only after LF;
+## a lone CR at EOF remains record data.
 without_final_cr = |bytes| if bytes.is_empty() {
 	bytes
 } else if bytes.get(bytes.len() - 1) == Ok(13) {
@@ -114,7 +127,8 @@ expect {
 	actual == { state: { pending: [], next_line: 2 }, value: [{ number: 1, body: [123, 125] }] }
 }
 
-# Test-only collector: production feed/finish call the consumer per line.
+## Collect framed lines from byte chunks for tests, including final EOF emission.
+## Production uses a reducer per line instead of retaining the whole input.
 framed = |chunks| {
 	result = chunks.fold({ state: Jsonl.start, value: [] }, |current, chunk|
 		Jsonl.feed(current.state, chunk, current.value, |lines, line| lines.append(line)))
@@ -146,7 +160,8 @@ expect {
 	partial == { state: { pending: [195], next_line: 1 }, value: [] }
 }
 
-# Test-only exhaustive two-chunk splits, including empty chunks at either end.
+## Verify test framing against expected lines for every two-chunk split, empty
+## chunk boundaries, and one-byte chunks.
 all_cuts_match = |bytes, expected| {
 	initial = { offset: 0.U64, good: framed([[], bytes]).value == expected }
 	result = bytes.fold(
@@ -220,6 +235,9 @@ expect Jsonl.valid_json("{}")
 
 # Validation-only adapter: no value tree, number conversion, or serialization.
 AnyJson :: {}.{
+
+	## Build a parser that consumes one JSON value with the builtin skip routine,
+	## returning an empty marker and the remaining parser state without decoding it.
 	parser_for = |encoding| |state| {
 		rest = Json.skip_json_value(encoding, state)?
 		Ok({ value: AnyJson.{}, rest })

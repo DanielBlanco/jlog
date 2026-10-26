@@ -12,7 +12,8 @@ import pf.Path
 import pf.IOErr
 import pf.Stdin
 
-# Inspect input; count/tail/filter remain deferred to later milestones.
+## Parse arguments before I/O, dispatch help/version or inspection, and map failures
+## to process exits. Count, tail, and filtering currently return exit 1.
 main! : List(OsStr) => Try({}, [Exit(I32)])
 main! = |args| match Cli.parse(args) {
 	Ok({ operation: Help, .. }) => Stdout.write!(Cli.help_text).map_err(|_| Exit(3))
@@ -29,6 +30,8 @@ main! = |args| match Cli.parse(args) {
 	}
 }
 
+## Open the original native path and inspect its buffered reader. Display text is
+## used only for labels; open failures are reported on stderr with exit 3.
 inspect_file! : OsStr => Try({}, [Exit(I32)])
 inspect_file! = |native| {
 	label = native.display()
@@ -39,7 +42,8 @@ inspect_file! = |native| {
 	inspect_reader!(FromFile(reader), label)
 }
 
-# Both transports feed the same framer and finalize only on successful EOF.
+## Feed file or stdin chunks through the shared framer and inspection reducer.
+## Emit the completed report only at successful EOF; read failures return exit 3.
 inspect_reader! : [FromFile(File.Reader), FromStdin], Str => Try({}, [Exit(I32)])
 inspect_reader! = |source, label| {
 	var $current = { state: Jsonl.start, value: Operations.start }
@@ -59,7 +63,8 @@ inspect_reader! = |source, label| {
 	inspection_report!(label, summary)
 }
 
-# Normalize the platform's two EOF conventions without conflating read errors.
+## Read raw bytes from either transport, normalizing EOF to an empty list while
+## preserving read errors exposed by the platform as InputError.
 read_bytes! : [FromFile(File.Reader), FromStdin] => Try(List(U8), [InputError(IOErr)])
 read_bytes! = |source| match source {
 	FromFile(reader) => reader.read_line!().map_err(|FileErr(err)| InputError(err))
@@ -70,6 +75,8 @@ read_bytes! = |source| match source {
 	}
 }
 
+## Write the completed report to stdout, returning exit 4 for malformed records
+## or exit 3 if writing fails. Valid and empty inputs succeed.
 inspection_report! : Str, Operations.Summary => Try({}, [Exit(I32)])
 inspection_report! = |label, summary| {
 	Stdout.write!(Operations.report(label, summary)).map_err(|_| Exit(3))?
@@ -80,6 +87,8 @@ inspection_report! = |label, summary| {
 	}
 }
 
+## Write an input failure to stderr with an escaped source label and return exit 3,
+## including when the diagnostic itself cannot be written.
 input_error! : Str, Str => Try({}, [Exit(I32)])
 input_error! = |label, reason| {
 	Stderr.line!("jlog: ${Operations.escape_source(label)}: ${reason}").map_err(|_| Exit(3))?

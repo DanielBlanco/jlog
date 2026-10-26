@@ -14,11 +14,11 @@ blank-line handling, full-input validation, and original record bytes in tail an
 filter output, normalizing only line terminators to LF.
 
 Use Roc `nightly-2026-10-09-258ab27` with the existing `basic-cli` 0.25.0 URL.
-[Feasibility research](../docs/roc-feasibility.md) supplies executed compatibility
-probes; [the JSONL introduction](../docs/jsonl.md) supplies format background.
+[Feasibility research](../roc-feasibility.md) supplies executed compatibility
+probes; [the JSONL introduction](../jsonl.md) supplies format background.
 Those probes are not application acceptance tests.
 
-The existing `main.roc` is a file-size example, not a jlog implementation.
+The existing `src/main.roc` is a file-size example, not a jlog implementation.
 There are no application tests or build wrappers. `AGENTS.md` describes an older
 checkout layout: discover the actual compiler with `command -v roc`; do not use
 the nonexistent compiler directory blindly. Its Roc formatting/testing guidance
@@ -26,18 +26,20 @@ still applies. This planning task creates no code, fixtures, harness, or CI file
 
 ## Small architecture and test ownership
 
-Keep this initial layout; add a module only when an actual responsibility warrants it:
+Application sources now live in `src/`; commands below use the current paths.
+Initial-checkout observations describe the historical planning baseline. Add a
+module only when an actual responsibility warrants it:
 
 | Proposed file | Responsibility and tests |
 | --- | --- |
-| `main.roc` | Pinned platform declaration; native arguments/paths; buffered file/stdin effects; operation loop; stdout/stderr; final error/exit mapping. Tested through the compiled executable. |
-| `Cli.roc` | Pure argument interpretation, operation/source selection, usage errors. Native `OsStr` conversion may use pure platform helpers; no filesystem or stream effects. Owns CLI `expect`s. |
-| `Jsonl.roc` | Pure byte framing, UTF-8/BOM/blank classification, depth resource precheck, builtin JSON validation, string-or-other top-level lookup adapter. Owns framing/validation/lookup `expect`s. |
-| `Operations.roc` | Pure counters, capped error locations, report/diagnostic rendering, matching, and bounded tail state. Owns transformation `expect`s. |
+| `src/main.roc` | Pinned platform declaration; native arguments/paths; buffered file/stdin effects; operation loop; stdout/stderr; final error/exit mapping. Tested through the compiled executable. |
+| `src/Cli.roc` | Pure argument interpretation, operation/source selection, usage errors. Native `OsStr` conversion may use pure platform helpers; no filesystem or stream effects. Owns CLI `expect`s. |
+| `src/Jsonl.roc` | Pure byte framing, UTF-8/BOM/blank classification, depth resource precheck, builtin JSON validation, string-or-other top-level lookup adapter. Owns framing/validation/lookup `expect`s. |
+| `src/Operations.roc` | Pure counters, capped error locations, report/diagnostic rendering, matching, and bounded tail state. Owns transformation `expect`s. |
 | `tests/test_cli.py` | Python stdlib `unittest`, `subprocess`, `tempfile`, and OS descriptor helpers. Exercises the actual binary; owns byte/exit/transport acceptance tests. |
 
 Use headerless Roc type modules consistent with filenames. Import each tested
-pure module from the application so `roc test main.roc` reaches its checks.
+pure module from the application so `roc test src/main.roc` reaches its checks.
 Use records, tagged errors/operations, pattern matching, and explicit `Try` results.
 Choose integer types deliberately for counts and N.
 
@@ -75,7 +77,7 @@ add parameterized cases within a row one at a time, repeating the cycle.
    shared classification over duplicate readers or parsers. Execute the tests
    again, plus `roc check` and formatting checks.
 4. **VERIFY:** Keep one concise entry per task in a proposed
-   `plans/jlog-v0.1-progress.md`: task ID; failing assertion and command with a
+   `docs/plans/jlog-v0.1-progress.md`: task ID; failing assertion and command with a
    brief mismatch/status; passing focused/regression tests and commands; and
    refactor/compiler/format verification status with outstanding limitations.
    Record the toolchain once and update it only if it changes. Full logs and
@@ -94,7 +96,7 @@ Preserve existing tests. On unsupported APIs, compiler crashes, or mandatory-tes
 reproducibility failures, stop the dependent task, retain the reproducer, and
 report the blocker. The best-effort read-fault investigation follows S-IO instead.
 Do not change the pin or contract as an implementation shortcut. The existing
-`main.roc` fails `roc fmt --check main.roc`; record this inherited failure before
+`src/main.roc` fails `roc fmt --check src/main.roc`; record this inherited failure before
 editing, separately from new regressions and meaningful RED evidence. Format
 touched project sources during refactoring; resolve their inherited failures
 before closing the checkpoint. Record any untouched inherited failure explicitly
@@ -109,11 +111,11 @@ task. Their Roc flags were checked against the installed compiler's help.
 per-`expect` selector has been established. Identify the failing check by file/line.
 
 ```sh
-roc test --main=main.roc --verbose Cli.roc
-roc test --verbose main.roc
+roc test --main=src/main.roc --verbose src/Cli.roc
+roc test --verbose src/main.roc
 ```
 
-Substitute `Jsonl.roc` or `Operations.roc` for the focused module as appropriate.
+Substitute `src/Jsonl.roc` or `src/Operations.roc` for the focused module as appropriate.
 
 **I — build and execute focused/all integration checks:** test names contain the
 task ID using underscores, such as `test_m1_01_version`. `JLOG_BIN` is read by the
@@ -121,7 +123,7 @@ future harness; it must not silently build or substitute a different executable.
 
 ```sh
 mkdir -p dist
-roc build --opt=dev --output=dist/jlog main.roc
+roc build --opt=dev --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -k m1_01 -v
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
@@ -129,23 +131,23 @@ JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py'
 **V — refactoring and milestone verification:** run P and I regressions, then:
 
 ```sh
-roc check main.roc
-roc fmt --check main.roc Cli.roc Jsonl.roc Operations.roc
+roc check src/main.roc
+roc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc
 ```
 
 Include only project source paths that exist at that checkpoint: start with
-`main.roc`, then append the named modules as introduced. Do not check `.` or
+`src/main.roc`, then append the named modules as introduced. Do not check `.` or
 compiler/cache directories. The pinned compiler's `roc fmt --help` confirms
 `--check` and file-path arguments; formatting and checking two explicit temporary
 copies succeeded during this revision. Use `roc fmt` with the same explicit paths
-to fix touched sources, then rerun the check. The inherited `main.roc` check failed
+to fix touched sources, then rerun the check. The inherited `src/main.roc` check failed
 with status 1; no repository source was formatted during this planning revision.
 
 At each milestone boundary also run the completed tests against optimized code:
 
 ```sh
-roc test --opt=speed --no-cache --verbose main.roc
-roc build --opt=speed --output=dist/jlog main.roc
+roc test --opt=speed --no-cache --verbose src/main.roc
+roc build --opt=speed --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
 
@@ -313,7 +315,7 @@ executable acceptance checks; verification-only work must not fabricate RED.
 
 **Verification:** use V and the optimized suite on native macOS ARM64 and Linux
 x86-64, then rerun archive smoke checks on those actual artifacts. Build with
-`roc build --opt=speed --target=arm64mac --output=dist/jlog main.roc` on macOS and
+`roc build --opt=speed --target=arm64mac --output=dist/jlog src/main.roc` on macOS and
 `--target=x64musl` on Linux. Do not execute these two output commands concurrently
 in a shared directory. Cross-build success alone never satisfies native tests.
 Record resource measurements with host tools such as macOS `/usr/bin/time -l`

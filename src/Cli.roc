@@ -1,6 +1,9 @@
 import pf.OsStr
 
 Cli :: {}.{
+
+	## Parse one native input path and at most one operation without performing I/O.
+	## Help/version must stand alone; invalid or incompatible arguments yield Usage.
 	parse : List(OsStr) -> Try({ source : [Stdin, File(OsStr)], operation : [Inspect, Count, Tail(U32), Where({ key : Str, text : Str }), Help, Version] }, [Usage])
 	parse = |args| match args {
 		[arg] if arg.to_str_try() == Ok("--help") or arg.to_str_try() == Ok("-h") => Ok({ source: Stdin, operation: Help })
@@ -12,6 +15,9 @@ Cli :: {}.{
 	help_text = "Usage: jlog [INPUT] [--count | --tail N | --where KEY=TEXT]\n       jlog --help | --version\n\nINPUT is one file, or - for stdin (the default); use ./- for a file named -.\nOptions may precede or follow INPUT; -- ends option parsing.\nNo operation flag selects inspection and validation.\n  --count          Count valid records.\n  --tail N         Last N valid records; N is 0..4294967295.\n  --where KEY=TEXT Match a literal top-level key against an exact JSON string.\n                   Split at the first =; no type coercion or nested queries.\n  --help, -h       Show help (standalone).\n  --version, -V    Show version (standalone).\n\nEvery physical line is validated; malformed lines are reported and processing\ncontinues. Data stdout contains only results; diagnostics go to stderr.\nExit codes: 0 valid input; 1 internal/resource failure; 2 invalid arguments;\n            3 input/output failure; 4 malformed JSONL.\n"
 }
 
+## Consume remaining arguments while tracking the selected source/operation,
+## whether -- ended option parsing, and whether an input was already supplied.
+## Validate UTF-8 operands, ASCII U32 tail sizes, and first-= filter splitting.
 parse_args = |args, source, operation, positional, has_input| match args {
 	[] => Ok({ source, operation })
 	[_, ..] if positional and has_input => Err(Usage)
@@ -82,7 +88,8 @@ parse_args = |args, source, operation, positional, has_input| match args {
 	}
 }
 
-# An undecodable native filename is never converted to text or reconstructed.
+## Split UTF-8 option text on =; return no parts for undecodable native paths so
+## they can remain untouched when parsed as filenames.
 option_parts = |arg| match arg.to_str_try() {
 	Ok(text) => text.split_on("=")
 	Err(_) => []

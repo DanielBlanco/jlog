@@ -216,15 +216,25 @@ existing behavior and tests.
 | --- | --- |
 | `src/main.roc` | File/stdin effects, shared input loop, output, and exit mapping. |
 | `src/Cli.roc` | Pure argument parsing and help text. |
+| `src/help.txt` | Editable help text, embedded into the executable at compile time. |
 | `src/Jsonl.roc` | Pure framing, UTF-8/BOM classification, depth precheck, and builtin JSON validation adapter. |
 | `src/Operations.roc` | Pure inspection summaries, capped details, and report rendering. |
 | `tests/test_cli.py` | Python stdlib tests against the actual executable. |
 | `docs/specs/`, `docs/plans/`, `docs/` | Behavior contracts, TDD tasks/evidence, and research. |
 
+Learning Roc through this project? Read the detailed source walkthroughs in
+this order: [main.roc](docs/learning/main.roc.md),
+[Cli.roc](docs/learning/Cli.roc.md), [Jsonl.roc](docs/learning/Jsonl.roc.md), and
+[Operations.roc](docs/learning/Operations.roc.md). Each explains the syntax,
+data flow, design choices, and related tests.
+
 Roc application sources and their inline `expect` checks live in `src/`. Run
 the commands below from the repository root. Document each named function with
 a `##` comment describing its behavior and any relevant input or error contract;
 use docstrings for Python test helpers and methods.
+
+To edit `--help`, change `src/help.txt` and rebuild. Preserve its final newline;
+the compiled executable includes the text and needs no separate help file at runtime.
 
 ### Run locally and check sources
 

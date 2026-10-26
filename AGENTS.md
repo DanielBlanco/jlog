@@ -12,6 +12,8 @@ verification, and checkpoint limits.
 - `src/Cli.roc`, `src/Jsonl.roc`, and `src/Operations.roc` own pure parsing,
   framing/validation, and inspection summaries/rendering, respectively. Pure
   tests are inline `expect` checks in these modules.
+- `src/help.txt` contains the CLI help, imported as a string at compile time by
+  `src/Cli.roc`. Preserve the final newline when editing and rebuild to apply changes.
 - `tests/test_cli.py` runs executable acceptance tests using Python's stdlib.
 - `dist/` contains ignored build outputs.
 - `docs/` contains documentation, including `docs/specs/` and `docs/plans/`.

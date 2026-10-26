@@ -1,98 +1,116 @@
+import "help.txt" as usage_text : Str
 import pf.OsStr
 
 Cli :: {}.{
+	Source : [Stdin, File(OsStr)]
+	Operation : [Inspect, Count, Tail(U32), Where({ key : Str, text : Str }), Help, Version]
+	Command : { source : Source, operation : Operation }
 
-	## Parse one native input path and at most one operation without performing I/O.
-	## Help/version must stand alone; invalid or incompatible arguments yield Usage.
-	parse : List(OsStr) -> Try({ source : [Stdin, File(OsStr)], operation : [Inspect, Count, Tail(U32), Where({ key : Str, text : Str }), Help, Version] }, [Usage])
-	parse = |args| match args {
-		[arg] if arg.to_str_try() == Ok("--help") or arg.to_str_try() == Ok("-h") => Ok({ source: Stdin, operation: Help })
-		[arg] if arg.to_str_try() == Ok("--version") or arg.to_str_try() == Ok("-V") => Ok({ source: Stdin, operation: Version })
-		_ => parse_args(args, Stdin, Inspect, False, False)
+	## Decode native arguments once, then select standalone help/version or parse a
+	## command without I/O. Preserve original native values for opening filenames.
+	parse : List(OsStr) -> Try(Command, [Usage])
+	parse = |args| {
+		arguments = args.map(decode_argument)
+		match arguments {
+			[{ text: Ok(text), .. }] if text == "--help" or text == "-h" => Ok({ source: Stdin, operation: Help })
+			[{ text: Ok(text), .. }] if text == "--version" or text == "-V" => Ok({ source: Stdin, operation: Version })
+			_ => parse_args(arguments, { source: Stdin, operation: Inspect, options_ended: False, has_input: False })
+		}
 	}
 
+	## Help embedded from help.txt at compile time; retain its final newline.
 	help_text : Str
-	help_text = "Usage: jlog [INPUT] [--count | --tail N | --where KEY=TEXT]\n       jlog --help | --version\n\nINPUT is one file, or - for stdin (the default); use ./- for a file named -.\nOptions may precede or follow INPUT; -- ends option parsing.\nNo operation flag selects inspection and validation.\n  --count          Count valid records.\n  --tail N         Last N valid records; N is 0..4294967295.\n  --where KEY=TEXT Match a literal top-level key against an exact JSON string.\n                   Split at the first =; no type coercion or nested queries.\n  --help, -h       Show help (standalone).\n  --version, -V    Show version (standalone).\n\nEvery physical line is validated; malformed lines are reported and processing\ncontinues. Data stdout contains only results; diagnostics go to stderr.\nExit codes: 0 valid input; 1 internal/resource failure; 2 invalid arguments;\n            3 input/output failure; 4 malformed JSONL.\n"
+	help_text = usage_text
 }
 
-## Consume remaining arguments while tracking the selected source/operation,
-## whether -- ended option parsing, and whether an input was already supplied.
-## Validate UTF-8 operands, ASCII U32 tail sizes, and first-= filter splitting.
-parse_args = |args, source, operation, positional, has_input| match args {
-	[] => Ok({ source, operation })
-	[_, ..] if positional and has_input => Err(Usage)
-	[arg, .. as rest] if positional => parse_args(
-		rest,
-		if arg.to_str_try() == Ok("-") {
-			Stdin
-		} else {
-			File(arg)
-		},
-		operation,
-		True,
-		True,
-	)
-	[arg, ..] if arg.to_bytes().first() == Ok(45) and arg.to_str_try().is_err() => Err(Usage)
-	[arg, .. as rest] if arg.to_str_try() == Ok("--") => parse_args(rest, source, operation, True, has_input)
-	[arg, value, .. as rest] if arg.to_str_try() == Ok("--where") => {
-		if operation != Inspect {
-			return Err(Usage)
+Argument : { native : OsStr, text : Try(Str, [Usage]) }
+
+ParseState : { source : Cli.Source, operation : Cli.Operation, options_ended : Bool, has_input : Bool }
+
+## Keep the native argument alongside one strict UTF-8 conversion. A failed text
+## conversion remains usable as a filename; option operands propagate Usage.
+decode_argument : OsStr -> Argument
+decode_argument = |native| { native, text: native.to_str_try().map_err(|_| Usage) }
+
+## Consume decoded arguments, dispatching known options while retaining input and
+## operation decisions. Arguments after -- go directly to input selection.
+parse_args : List(Argument), ParseState -> Try(Cli.Command, [Usage])
+parse_args = |args, state| match args {
+	[] => Ok({ source: state.source, operation: state.operation })
+	[arg, .. as rest] if state.options_ended => parse_input(arg, rest, state)
+	[arg, .. as rest] => match arg.text.map_ok(|text| text.split_on("=")) {
+		Ok(["--"]) => parse_args(rest, { ..state, options_ended: True })
+		Ok(["--count"]) => select_operation(Count, rest, state)
+		Ok(["--tail", .. as inline]) => {
+			operand = option_operand(inline, rest)?
+			size = parse_tail_size(operand.text)?
+			select_operation(Tail(size), operand.rest, state)
 		}
-		text_operand = value.to_str_try().map_err(|_| Usage)?
-		parts = text_operand.split_on("=")
-		if parts.len() < 2 {
-			return Err(Usage)
+		Ok(["--where", .. as inline]) => {
+			operand = option_operand(inline, rest)?
+			filter = parse_filter(operand.text)?
+			select_operation(Where(filter), operand.rest, state)
 		}
-		key = match parts {
-			[first, ..] => first
-			[] => ""
-		}
-		text = Str.join_with(parts.drop_first(1), "=")
-		parse_args(rest, source, Where({ key, text }), False, has_input)
+		_ => parse_input(arg, rest, state)
 	}
-	[arg, value, .. as rest] if arg.to_str_try() == Ok("--tail") => {
-		if operation != Inspect {
-			return Err(Usage)
-		}
-		text_operand = value.to_str_try().map_err(|_| Usage)?
-		bytes = text_operand.to_utf8()
-		if bytes.is_empty() or !bytes.all(|byte| byte >= 48 and byte <= 57) {
-			return Err(Usage)
-		}
-		n = U32.from_str(text_operand).map_err(|_| Usage)?
-		parse_args(rest, source, Tail(n), False, has_input)
+}
+
+## Select exactly one native input, treating - as stdin. Before --, reject other
+## dash-leading arguments as unknown or undecodable options.
+parse_input : Argument, List(Argument), ParseState -> Try(Cli.Command, [Usage])
+parse_input = |arg, rest, state| {
+	if state.has_input {
+		return Err(Usage)
 	}
-	[arg, .. as rest] => if option_parts(arg).first() == Ok("--tail") {
-		operand = Str.join_with(option_parts(arg).drop_first(1), "=")
-		parse_args([OsStr.from_str("--tail"), OsStr.from_str(operand)].concat(rest), source, operation, False, has_input)
-	} else if option_parts(arg).first() == Ok("--where") {
-		operand = Str.join_with(option_parts(arg).drop_first(1), "=")
-		parse_args([OsStr.from_str("--where"), OsStr.from_str(operand)].concat(rest), source, operation, False, has_input)
-	} else if arg.to_str_try() == Ok("--count") {
-		if operation != Inspect {
-			return Err(Usage)
-		}
-		parse_args(rest, source, Count, False, has_input)
-	} else if arg.to_bytes().first() == Ok(45) and arg.to_str_try() != Ok("-") {
-		Err(Usage)
+	if !state.options_ended and arg.native.to_bytes().first() == Ok(45) and arg.text != Ok("-") {
+		return Err(Usage)
+	}
+	source = if arg.text == Ok("-") {
+		Stdin
 	} else {
-		if has_input {
-			return Err(Usage)
-		}
-		next_source = if arg.to_str_try() == Ok("-") {
-			Stdin
-		} else {
-			File(arg)
-		}
-		parse_args(rest, next_source, operation, False, True)
+		File(arg.native)
 	}
+	parse_args(rest, { ..state, source, has_input: True })
 }
 
-## Split UTF-8 option text on =; return no parts for undecodable native paths so
-## they can remain untouched when parsed as filenames.
-option_parts = |arg| match arg.to_str_try() {
-	Ok(text) => text.split_on("=")
-	Err(_) => []
+## Select one operation. Inspect is the default and indicates that no operation
+## flag has been supplied; repeated or conflicting flags yield Usage.
+select_operation : Cli.Operation, List(Argument), ParseState -> Try(Cli.Command, [Usage])
+select_operation = |operation, rest, state| {
+	if state.operation != Inspect {
+		return Err(Usage)
+	}
+	parse_args(rest, { ..state, operation })
+}
+
+## Read an equals-form operand or consume the next decoded argument, even when it
+## starts with a dash. Rejoin inline parts to preserve embedded equals signs.
+option_operand : List(Str), List(Argument) -> Try({ text : Str, rest : List(Argument) }, [Usage])
+option_operand = |inline, args| match inline {
+	[] => match args {
+		[arg, .. as rest] => Ok({ text: arg.text?, rest })
+		[] => Err(Usage)
+	}
+	_ => Ok({ text: Str.join_with(inline, "="), rest: args })
+}
+
+## Accept only nonempty ASCII decimal digits in the U32 range. Leading zeroes are
+## allowed; signs, whitespace, non-ASCII digits, and overflow yield Usage.
+parse_tail_size : Str -> Try(U32, [Usage])
+parse_tail_size = |text| {
+	bytes = text.to_utf8()
+	if bytes.is_empty() or !bytes.all(|byte| byte >= 48 and byte <= 57) {
+		return Err(Usage)
+	}
+	U32.from_str(text).map_err(|_| Usage)
+}
+
+## Split KEY=TEXT at the first equals sign, allowing an empty key or value and
+## preserving subsequent equals signs. A missing separator yields Usage.
+parse_filter : Str -> Try({ key : Str, text : Str }, [Usage])
+parse_filter = |operand| match operand.split_on("=") {
+	[key, .. as parts] if !parts.is_empty() => Ok({ key, text: Str.join_with(parts, "=") })
+	_ => Err(Usage)
 }
 
 expect Cli.parse([OsStr.from_str("events.jsonl")]) == Ok({ source: File(OsStr.from_str("events.jsonl")), operation: Inspect })

@@ -1,0 +1,17 @@
+Usage: jlog [INPUT] [--count | --tail N | --where KEY=TEXT]
+       jlog --help | --version
+
+INPUT is one file, or - for stdin (the default); use ./- for a file named -.
+Options may precede or follow INPUT; -- ends option parsing.
+No operation flag selects inspection and validation.
+  --count          Count valid records.
+  --tail N         Last N valid records; N is 0..4294967295.
+  --where KEY=TEXT Match a literal top-level key against an exact JSON string.
+                   Split at the first =; no type coercion or nested queries.
+  --help, -h       Show help (standalone).
+  --version, -V    Show version (standalone).
+
+Every physical line is validated; malformed lines are reported and processing
+continues. Data stdout contains only results; diagnostics go to stderr.
+Exit codes: 0 valid input; 1 internal/resource failure; 2 invalid arguments;
+            3 input/output failure; 4 malformed JSONL.

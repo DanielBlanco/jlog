@@ -16,18 +16,25 @@ import pf.Stdin
 ## to process exits. Count, tail, and filtering currently return exit 1.
 main! : List(OsStr) => Try({}, [Exit(I32)])
 main! = |args| match Cli.parse(args) {
-	Ok({ operation: Help, .. }) => Stdout.write!(Cli.help_text).map_err(|_| Exit(3))
-	Ok({ operation: Version, .. }) => Stdout.line!("jlog 0.1.0").map_err(|_| Exit(3))
-	Err(Usage) => {
-		Stderr.write!("jlog: invalid arguments\nUsage: jlog [INPUT] [--count | --tail N | --where KEY=TEXT]\nTry 'jlog --help' for help.\n").map_err(|_| Exit(3))?
-		Err(Exit(2))
-	}
+	Ok({ operation: Help, .. }) => write_stdout!(Cli.help_text)
+	Ok({ operation: Version, .. }) => write_stdout!("jlog 0.1.0\n")
+	Err(Usage) => report_failure!("jlog: invalid arguments\nUsage: jlog [INPUT] [--count | --tail N | --where KEY=TEXT]\nTry 'jlog --help' for help.", 2)
 	Ok({ operation: Inspect, source: File(native) }) => inspect_file!(native)
 	Ok({ operation: Inspect, source: Stdin }) => inspect_reader!(FromStdin, "<stdin>")
-	Ok(_) => {
-		Stderr.line!("jlog: data operations are not implemented yet").map_err(|_| Exit(3))?
-		Err(Exit(1))
-	}
+	Ok(_) => report_failure!("jlog: data operations are not implemented yet", 1)
+}
+
+## Write result text exactly as supplied; callers include any required newline.
+## Map stdout write errors reported by the platform to input/output exit status 3.
+write_stdout! : Str => Try({}, [Exit(I32)])
+write_stdout! = |text| Stdout.write!(text).map_err(|_| Exit(3))
+
+## Write a diagnostic with a final LF and return the requested failure status.
+## A stderr write error reported by the platform overrides that status with exit 3.
+report_failure! : Str, I32 => Try({}, [Exit(I32)])
+report_failure! = |message, code| {
+	Stderr.line!(message).map_err(|_| Exit(3))?
+	Err(Exit(code))
 }
 
 ## Open the original native path and inspect its buffered reader. Display text is
@@ -79,7 +86,7 @@ read_bytes! = |source| match source {
 ## or exit 3 if writing fails. Valid and empty inputs succeed.
 inspection_report! : Str, Operations.Summary => Try({}, [Exit(I32)])
 inspection_report! = |label, summary| {
-	Stdout.write!(Operations.report(label, summary)).map_err(|_| Exit(3))?
+	write_stdout!(Operations.report(label, summary))?
 	if summary.invalid > 0 {
 		Err(Exit(4))
 	} else {
@@ -90,7 +97,4 @@ inspection_report! = |label, summary| {
 ## Write an input failure to stderr with an escaped source label and return exit 3,
 ## including when the diagnostic itself cannot be written.
 input_error! : Str, Str => Try({}, [Exit(I32)])
-input_error! = |label, reason| {
-	Stderr.line!("jlog: ${Operations.escape_source(label)}: ${reason}").map_err(|_| Exit(3))?
-	Err(Exit(3))
-}
+input_error! = |label, reason| report_failure!("jlog: ${Operations.escape_source(label)}: ${reason}", 3)

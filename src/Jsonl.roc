@@ -4,21 +4,23 @@ Jsonl :: {}.{
 	## Validate a framed line in diagnostic order: blank, UTF-8, initial first-line
 	## BOM, depth limit, then JSON grammar. Preserve the original record bytes.
 	classify : Line -> [Valid, Invalid(Reason)]
-	classify = |line| if line.body.all(|byte| byte == 32 or byte == 9 or byte == 10 or byte == 13) {
-		Invalid(Blank)
-	} else {
-		match Str.from_utf8(line.body) {
-			Err(_) => Invalid(InvalidUtf8)
-			Ok(text) => match line.body {
-				[239, 187, 191, ..] if line.number == 1 => Invalid(Bom)
-				_ => match within_depth(text) {
-					Ok({}) => if valid_json(text) {
-						Valid
-					} else {
-						Invalid(InvalidJson)
-					}
-					Err(TooDeep) => Invalid(TooDeep)
-				}
+	classify = |line| {
+		if is_blank(line.body) {
+			return Invalid(Blank)
+		}
+		text = match Str.from_utf8(line.body) {
+			Ok(value) => value
+			Err(_) => return Invalid(InvalidUtf8)
+		}
+		if has_initial_bom(line) {
+			return Invalid(Bom)
+		}
+		match within_depth(text) {
+			Err(reason) => Invalid(reason)
+			Ok({}) => if valid_json(text) {
+				Valid
+			} else {
+				Invalid(InvalidJson)
 			}
 		}
 	}
@@ -29,35 +31,7 @@ Jsonl :: {}.{
 	within_depth = |input| {
 		initial : { depth : U64, quoted : Bool, escaped : Bool }
 		initial = { depth: 0, quoted: False, escaped: False }
-		input.to_utf8().fold_try(
-			initial,
-			|state, byte| {
-				if state.quoted {
-					if state.escaped {
-						Ok({ ..state, escaped: False })
-					} else if byte == 92 {
-						Ok({ ..state, escaped: True })
-					} else if byte == 34 {
-						Ok({ ..state, quoted: False })
-					} else {
-						Ok(state)
-					}
-				} else if byte == 34 {
-					Ok({ ..state, quoted: True })
-				} else if byte == 123 or byte == 91 {
-					if state.depth == 128 {
-						Err(TooDeep)
-					}
-						else {
-							Ok({ ..state, depth: state.depth + 1 })
-						}
-				} else if (byte == 125 or byte == 93) and state.depth > 0 {
-					Ok({ ..state, depth: state.depth - 1 })
-				} else {
-					Ok(state)
-				}
-			},
-		).map_ok(|_| {})
+		input.to_utf8().fold_try(initial, scan_depth).map_ok(|_| {})
 	}
 
 	## Check complete JSON grammar with the builtin parser and skip-only adapter,
@@ -83,10 +57,7 @@ Jsonl :: {}.{
 		{ state, value },
 		|current, byte| {
 			if byte == 10 {
-				{
-					state: { pending: [], next_line: current.state.next_line + 1 },
-					value: emit(current.value, { number: current.state.next_line, body: without_final_cr(current.state.pending) }),
-				}
+				emit_line(current.state, without_final_cr(current.state.pending), current.value, emit)
 			} else {
 				{ ..current, state: { ..current.state, pending: current.state.pending.append(byte) } }
 			}
@@ -99,11 +70,56 @@ Jsonl :: {}.{
 	finish = |state, value, emit| if state.pending.is_empty() {
 		{ state, value }
 	} else {
-		{
-			state: { pending: [], next_line: state.next_line + 1 },
-			value: emit(value, { number: state.next_line, body: state.pending }),
-		}
+		emit_line(state, state.pending, value, emit)
 	}
+}
+
+## Recognize empty bodies and bodies containing only the four JSON whitespace
+## bytes: space, tab, LF, and CR. Other Unicode whitespace is not blank JSONL.
+is_blank : List(U8) -> Bool
+is_blank = |bytes| bytes.all(|byte| byte == 32 or byte == 9 or byte == 10 or byte == 13)
+
+## Recognize a UTF-8 BOM only at the beginning of physical line 1.
+has_initial_bom : Jsonl.Line -> Bool
+has_initial_bom = |line| match line.body {
+	[239, 187, 191, ..] => line.number == 1
+	_ => False
+}
+
+## Advance the quote/escape-aware depth scanner by one byte, rejecting an opening
+## container at depth 128. Grammar validation remains the builtin parser's job.
+scan_depth = |state, byte| {
+	if state.quoted {
+		if state.escaped {
+			Ok({ ..state, escaped: False })
+		} else if byte == 92 {
+			Ok({ ..state, escaped: True })
+		} else if byte == 34 {
+			Ok({ ..state, quoted: False })
+		} else {
+			Ok(state)
+		}
+	} else if byte == 34 {
+		Ok({ ..state, quoted: True })
+	} else if byte == 123 or byte == 91 {
+		if state.depth == 128 {
+			Err(TooDeep)
+		} else {
+			Ok({ ..state, depth: state.depth + 1 })
+		}
+	} else if (byte == 125 or byte == 93) and state.depth > 0 {
+		Ok({ ..state, depth: state.depth - 1 })
+	} else {
+		Ok(state)
+	}
+}
+
+## Emit one numbered line and advance framing state. Callers decide whether CRLF
+## normalization applies; LF and EOF emission share clearing and numbering rules.
+emit_line : Jsonl.State, List(U8), a, (a, Jsonl.Line -> a) -> { state : Jsonl.State, value : a }
+emit_line = |state, body, value, emit| {
+	state: { pending: [], next_line: state.next_line + 1 },
+	value: emit(value, { number: state.next_line, body }),
 }
 
 ## Remove one terminal CR from an LF-terminated line body. Call only after LF;

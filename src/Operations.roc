@@ -6,19 +6,17 @@ Operations :: {}.{
 	## details, and an omitted-detail count when needed. Always end with LF.
 	report : Str, Summary -> Str
 	report = |source, summary| {
-		label = escape_source(source)
-		header = "File: ${label}\nRecords: ${summary.records.to_str()}\nValid: ${summary.valid.to_str()}\nInvalid: ${summary.invalid.to_str()}\n"
+		header = report_header(escape_source(source), summary)
 		if summary.invalid == 0 {
-			header
+			return header
+		}
+		details = summary.errors.fold(header.concat("\nMalformed records:\n"), |text, error|
+			text.concat(render_error(error)))
+		omitted = summary.invalid - summary.errors.len()
+		if omitted > 0 {
+			details.concat("  ... ${omitted.to_str()} more invalid records\n")
 		} else {
-			details = summary.errors.fold(header.concat("\nMalformed records:\n"), |text, error|
-				text.concat("  line ${error.number.to_str()}: ${reason_text(error.reason)}\n"))
-			omitted = summary.invalid - summary.errors.len()
-			if omitted > 0 {
-				details.concat("  ... ${omitted.to_str()} more invalid records\n")
-			} else {
-				details
-			}
+			details
 		}
 	}
 
@@ -40,26 +38,52 @@ Operations :: {}.{
 		InvalidJson => "invalid JSON"
 	}
 
-	Summary : { records : U64, valid : U64, invalid : U64, errors : List({ number : U64, reason : Jsonl.Reason }) }
+	ErrorDetail : { number : U64, reason : Jsonl.Reason }
+	Summary : { records : U64, valid : U64, invalid : U64, errors : List(ErrorDetail) }
 	start : Summary
 	start = { records: 0, valid: 0, invalid: 0, errors: [] }
 
 	## Classify one physical line and increment inspection totals, retaining only
 	## the first 100 invalid line numbers and reasons in encounter order.
 	inspect_line : Summary, Jsonl.Line -> Summary
-	inspect_line = |summary, line| match Jsonl.classify(line) {
-		Valid => { ..summary, records: summary.records + 1, valid: summary.valid + 1 }
-		Invalid(reason) => {
-			..summary,
-			records: summary.records + 1,
-			invalid: summary.invalid + 1,
-			errors: if summary.errors.len() < 100 {
-				summary.errors.append({ number: line.number, reason })
-			} else {
-				summary.errors
-			},
+	inspect_line = |summary, line| {
+		counted = { ..summary, records: summary.records + 1 }
+		match Jsonl.classify(line) {
+			Valid => { ..counted, valid: counted.valid + 1 }
+			Invalid(reason) => {
+				..counted,
+				invalid: counted.invalid + 1,
+				errors: retain_error(counted.errors, { number: line.number, reason }),
+			}
 		}
 	}
+}
+
+## Render the four header lines from an already escaped source label. Joining a
+## final empty string supplies exactly one trailing LF.
+report_header : Str, Operations.Summary -> Str
+report_header = |label, summary| Str.join_with(
+	[
+		"File: ${label}",
+		"Records: ${summary.records.to_str()}",
+		"Valid: ${summary.valid.to_str()}",
+		"Invalid: ${summary.invalid.to_str()}",
+		"",
+	],
+	"\n",
+)
+
+## Render one retained physical-line error without including the record body.
+render_error : Operations.ErrorDetail -> Str
+render_error = |error| "  line ${error.number.to_str()}: ${Operations.reason_text(error.reason)}\n"
+
+## Retain the first 100 error details in encounter order. Totals continue to grow
+## independently after this bounded list is full.
+retain_error : List(Operations.ErrorDetail), Operations.ErrorDetail -> List(Operations.ErrorDetail)
+retain_error = |errors, error| if errors.len() < 100 {
+	errors.append(error)
+} else {
+	errors
 }
 
 # M1-14: inspection totals reflect every framed line.

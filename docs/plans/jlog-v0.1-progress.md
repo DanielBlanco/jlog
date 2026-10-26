@@ -237,3 +237,60 @@ same writable `ROC_CACHE_DIR` recorded above. All commands exited 0:
 All local Markdown file links resolve. The earlier stdin-descriptor limitation
 and pending Linux/resource/release verification remain unchanged. `dist/jlog`
 contains the tested optimized build.
+
+## Editable embedded help — 2026-10-26
+
+Moved the existing help bytes into `src/help.txt` and imported them at compile
+time with `import "help.txt" as usage_text : Str`. `Cli.help_text` remains a pure
+constant, and help output is byte-for-byte unchanged. Updated repository guidance,
+README, and the CLI learning guide. This is a refactor; no behavior RED or new
+application tests were needed.
+
+On the pinned toolchain with the same writable cache, `roc check src/main.roc`
+and explicit-source `roc fmt --check` passed. Dev and speed pure test runs each
+passed 182 checks; both builds completed without errors/warnings, and the Python
+executable suite passed all 26 tests against each binary. An isolated build probe
+confirmed that normal cached rebuilds pick up text edits and that a relocated
+binary prints help after its temporary source tree, including `help.txt`, is
+removed. `dist/jlog` remains the tested optimized build. Milestone scope and
+previously recorded platform limitations are unchanged.
+
+## Readability refactor — 2026-10-26
+
+Refactored all four modules without adding operation behavior. `Cli` decodes each
+argument once while retaining native values, names command/state types, and shares
+input selection, operand consumption, operation selection, and operand validation.
+`Jsonl` names classification/depth helpers and shares line emission between LF
+and EOF paths. `Operations` shares the physical-record increment, names error
+details, and extracts bounded detail retention and readable report rendering.
+`main` centralizes stdout writes and stderr failure reporting. Updated all four
+learning guides to explain the new structure and documented every helper.
+
+The existing 182 pure checks and 26 executable tests passed before refactoring;
+all existing `expect` bodies and the Python suite were preserved. This is a
+refactor with inherited behavior coverage; no artificial RED or feature tests
+were introduced. An isolated differential check compared the new and original
+CLI parsers on 25,260 argument lists of length 0 through 3, including dash-leading
+operands, empty/equals forms, invalid UTF-8, and native Unix/Windows arguments.
+All results matched; that temporary comparison is separate from the 182 project
+checks and is not counted as a new permanent suite.
+
+Final verification on the pinned native toolchain and recorded writable cache:
+
+- `roc check src/main.roc` and explicit-source `roc fmt --check` passed.
+- Dev and speed `roc test --no-cache src/main.roc` each passed all 182 checks.
+- Dev and speed builds of `src/main.roc` completed with zero errors/warnings;
+  the Python suite passed 26 tests against each build, without skips.
+- A manual optimized-binary check confirmed unchanged usage-diagnostic bytes.
+- An extra output-fault probe expected exit 3 but observed help exit 0 with a
+  read-only `/dev/null` stdout descriptor, and usage exit 2 with an equivalent
+  stderr descriptor. Python `os.write` confirmed EBADF. Rebuilding the original
+  source snapshot reproduced both outcomes exactly. This is an existing
+  output-error detection gap, not a refactor regression or evidence that the
+  exit-3 contract is satisfied for these descriptors. No platform or contract
+  change was made; retain it for the pending output-failure work.
+- All 40 named functions have documentation and learning-guide coverage; local
+  Markdown links and linked heading anchors resolve.
+
+`dist/jlog` is the tested optimized binary. Existing milestone boundaries remain
+unchanged; the additional observed output limitation is recorded above.

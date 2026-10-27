@@ -1,0 +1,81 @@
+name: Native verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x86-64
+            runner: ubuntu-24.04
+            os: Linux
+            arch: x86_64
+            target: x64musl
+            artifact: linux-x86_64
+          - name: macOS ARM64
+            runner: macos-15
+            os: Darwin
+            arch: arm64
+            target: arm64mac
+            artifact: macos-arm64
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      LC_ALL: C
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the exact native compiler
+        shell: bash
+        run: |
+          bash tests/ci/install-roc.sh '${{ matrix.os }}' '${{ matrix.arch }}' "$RUNNER_TEMP/roc"
+          echo "$RUNNER_TEMP/roc" >> "$GITHUB_PATH"
+          echo "ROC_CACHE_DIR=$RUNNER_TEMP/roc-cache" >> "$GITHUB_ENV"
+
+      - name: Check and test both builds, including strict I/O conformance
+        id: verify
+        shell: bash
+        run: |
+          python3 tests/ci/verify.py --target '${{ matrix.target }}' --output "$RUNNER_TEMP/evidence"
+
+      # A real conformance failure must fail the job, but need not discard
+      # independent measurements of a successfully tested optimized build.
+      - name: Measure the optimized executable
+        if: ${{ !cancelled() && steps.verify.outputs.measure-ready == 'true' }}
+        shell: bash
+        run: |
+          python3 tests/measure_resources.py \
+            --binary "$RUNNER_TEMP/evidence/jlog-speed" \
+            --work-dir "$RUNNER_TEMP/measurements" \
+            --environment "$RUNNER_TEMP/evidence/environment.json" \
+            2>&1 | tee "$RUNNER_TEMP/evidence/measurements.log"
+
+      - name: Preserve verification and measurement evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-${{ matrix.artifact }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/evidence/
+            ${{ runner.temp }}/measurements/results.json
+            ${{ runner.temp }}/measurements/*.time
+            ${{ runner.temp }}/measurements/*.stderr

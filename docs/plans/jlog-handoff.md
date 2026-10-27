@@ -1,7 +1,7 @@
 # jlog development handoff
 
 Historical snapshot: 2026-10-18, native macOS ARM64. Later updates below record
-the user-authorized development through the M4-01 audit on 2026-10-27.
+the user-authorized development through M4-02 measurements on 2026-10-27.
 
 Layout update (2026-10-26): application modules and their inline checks now live
 in `src/`; the entry point is `src/main.roc`. Plans and the specification live
@@ -47,6 +47,45 @@ its complete valid prefix, with status 3. Earlier pseudo-terminal observations
 remain historical evidence and are not mistaken for injected read failures.
 Do not mark M4-01 or release readiness complete from the ordinary passing suite.
 No platform/pin/FFI/dependency change or release publication was made.
+
+M4-02 update (2026-10-27): after audit commit `816f65c`, the user requested the
+next task. Optimized native macOS resource measurements now cover 100,000 and
+1,000,000 roughly-1-KiB records, all-invalid equivalents, 1 MiB/8 MiB lines,
+varying tail N, and a 4,000,000-record fixed-N follow-up. All 74 measured cases
+have exact output/status/hash verification. See the
+[report and JSON artifact](../measurements/m4-02-macos-arm64.md). No measured
+scaling/retention/stack failure required an application change. The strict
+descriptor and native Linux gates remain open; these observations do not
+establish full release readiness. The initial driver supported native macOS.
+
+Linux Docker update (2026-10-27): the user requested Linux resources using Docker.
+The local engine is ARM64, so the explicitly stated default collects native
+ARM64 guest execution while preserving the required x86-64 gate. A SHA-pinned
+Debian/compiler image runs as UID 1000 with read-only sources and Linux-local
+temporary data. Both dev and speed pass 273 pure checks and 63 ordinary CLI
+methods; the strict descriptor gate still fails 15 subcases per build. All 70
+Linux resource cases pass, with identical fixture hashes to macOS and unchanged
+input/binary hashes. See the
+[Linux ARM64 report](../measurements/m4-02-linux-arm64-docker.md) and
+[Docker workflow](../../tests/docker/README.md). The driver now supports GNU time
+and records container provenance; no application or pin change was made.
+
+Native CI update (2026-10-27): the user authorized M4-03 alongside the required
+Linux x86-64 measurements. The [workflow](../../.github/workflows/native-ci.yml)
+and [CI drivers](../../tests/ci/README.md) assert native architecture and exact
+compiler checksums, run both optimization suites and the strict descriptor gate,
+and retain measurement evidence even when that gate fails. Preparation alone
+does not establish remote execution or complete either native release gate.
+
+Execution follow-up: [run 40549245469](m4-03-native-ci.md) now executes on both
+required native architectures at `48c9aa9` on `ci/native-m4`. Each build passes
+273 pure checks and 63 ordinary CLI methods, and each architecture passes all 70
+resource cases. The strict suite still fails 15 subcases per build, leaving both
+CI jobs correctly red. The [native x86-64 report](../measurements/m4-02-linux-x86_64-ci.md)
+closes the missing M4-02 architecture evidence; full descriptor/M4-03 conformance
+and M4-04/05/06 remain open. Tested artifacts/provenance are downloaded; source,
+input and binary hashes are verified. Local/remote `master` were not changed;
+the prior pending measurement/docs work remains present on the CI branch.
 
 **M1-A and M1-B are already implemented and verified.** The handoff request's
 expected next checkpoint, M1-B, is stale for this checkout. Preserve the existing

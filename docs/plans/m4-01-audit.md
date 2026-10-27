@@ -93,3 +93,20 @@ Exact final commands/results are recorded in the
 Native Linux has not run; a cross-build would not satisfy that requirement.
 Measurements, native CI, installation/release packaging, license/notices and
 supported OS versions remain M4-02 through M4-06. No release was published.
+
+Subsequent update: the user authorized M4-02 next. Native macOS resource
+measurements are now [recorded](../measurements/m4-02-macos-arm64.md); they do not
+close the strict descriptor or native Linux gates described above.
+
+The later [Linux ARM64 Docker run](../measurements/m4-02-linux-arm64-docker.md)
+passes all 63 ordinary executable methods on both builds, including actual raw
+invalid-UTF-8 filename opening and prefix read failures. Strict descriptor checks
+still fail 15 subcases per build. This supplemental guest architecture does not
+close the required native x86-64 gate.
+
+The subsequent [native CI run](m4-03-native-ci.md) executes the entire sequence
+on Linux x86-64 and macOS ARM64. Each build passes 273 pure checks and 63 ordinary
+executable methods without skips; each architecture passes 70 resource cases.
+Successful raw-name opening and actual mid-stream WouldBlock are now verified
+on the required Linux target. Strict descriptor checks still fail the same 15
+subcases per build on both hosts, so M4-01/full native conformance remains open.

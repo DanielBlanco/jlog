@@ -538,3 +538,242 @@ CI, installation/packaging, license/notices, and supported OS versions remain
 M4-02 through M4-06. No application source, specification, platform/pin/FFI,
 dependency, release, or push change was made. The work was left uncommitted at
 the audit checkpoint; the user subsequently requested committing all changes.
+
+## M4-02 resource measurements — authorized 2026-10-27
+
+After audit commit `816f65c`, the user requested the next task. M4-02 proceeds
+with optimized resource measurements, preserving the M4-01 strict descriptor and
+native Linux gates. No platform/pin/contract change is implied. The working tree
+was clean; the native host is a MacBookPro18,1 with Apple M1 Pro, 32 GiB RAM,
+macOS 27.0.1 (26A434), Darwin ARM64, and an 8,176-KiB stack soft limit.
+
+The sandbox blocks `/usr/bin/time -l`'s `kern.clockrate` query. The approved
+unsandboxed control `/usr/bin/time -l /usr/bin/true` exits 0 and reports elapsed,
+user/system time, and maximum resident set size in bytes. Hardware metadata was
+also read with approved `sysctl -n`. This is tooling setup, not application RED.
+Large fixtures and raw measurement artifacts will be generated in temporary
+storage, with exact output/status/hash checks independent of the measurements.
+
+Added the stdlib-only `tests/measure_resources.py` driver. A 62-case small-input
+run verified fixture templates, all output/status oracles, cap/omission text,
+native timing parsing, and unchanged input/binary hashes before full measurement.
+The same 62-case shape passed again after refactoring targeted `--cases`
+selection, which generates only the required fixtures. Setup/syntax work on the
+driver is not application RED; no production behavior needed a RED/GREEN cycle.
+
+The optimized native baseline ran **70 cases** sequentially: 100,000/1,000,000
+valid and all-invalid 1,024-byte records through file and redirected stdin;
+inspect/count/filter and varying tail N=0/1/64/4096/16384; single 1 MiB/8 MiB
+bodies in all four modes; and a two-record input with maximum U32 tail N.
+Every case passed golden output byte-count/SHA-256, exact stderr/status, and
+final input/binary hash verification. Verified large stdout files are removed;
+fixtures and raw timing/diagnostic artifacts remain outside the checkout.
+
+Two initial inspection cases were repeated to investigate elapsed/CPU timing
+differences, retaining both observations. A separate fixed-N=16384 follow-up
+used 4,000,000 records (4,096,000,000 bytes) through file and stdin to investigate
+tail RSS variation. The total **74 measured cases** all pass. The original
+baseline driver snapshot/hash is retained; the later driver adds targeted case
+selection without changing the application's binary or default matrix.
+
+Observed file count RSS is 2.83 MiB for both 102.4 MB and 1.024 GB inputs;
+filter RSS is 3.25 MiB for both, while emitting 51.2 MB and 512 MB respectively.
+All-invalid RSS stays within 2.66–3.02 MiB across measured sizes, modes, and
+sources, with exactly 100 details and correct omitted counts. Tail memory grows
+with retained data; fixed N=16384 peaks at 68.92/101.95/92.66 MiB for file inputs
+of 100,000/1,000,000/4,000,000 records, and 76.94/78.75/99.41 MiB for stdin.
+The larger-input check does not show RSS tracking total bytes. Maximum-N tiny
+inputs peak near 2 MiB without preallocation. Native 8 MiB-body cases complete
+without stack failure, at 31.05–31.30 MiB file RSS and 14.83–15.08 MiB stdin RSS.
+
+No measured retention/scaling or stack violation required a production change,
+and no speculative optimization or post-hoc absolute RSS threshold was added.
+The measurements are single-host sequential observations with no cache eviction,
+CPU isolation, or universal throughput/complexity claim. The timer prints
+hundredths; elapsed/CPU discrepancies and tiny rounded times are preserved.
+See the [report](../measurements/m4-02-macos-arm64.md) and
+[74-case JSON artifact](../measurements/m4-02-macos-arm64.json) for exact commands,
+input/max-line bytes, N, host, native real/user/system time, peak RSS, statuses,
+output hashes, interpretation and reproducibility limits.
+
+Final verification: optimized `roc build` completed without errors/warnings;
+`roc check src/main.roc` and explicit-source `roc fmt --check` passed. Optimized
+`roc test --no-cache src/main.roc` passed **273** checks, and the actual measured
+optimized artifact passed **63** ordinary executable methods with no skips.
+Its SHA-256 remains
+`0bf01d6835fa99f8dec215c922be8bd8f68601653dae1a0a326a01cb24c6ed77`.
+Driver syntax/docstrings, both smoke matrices, archived data integrity, current
+and baseline driver identities, local Markdown links/anchors/fences, and diff
+whitespace were verified. No application source was edited.
+
+Native macOS M4-02 measurements are recorded; native Linux resource verification
+remains pending, and the driver currently requires macOS `time -l`. The earlier
+M4-01 strict descriptor failures remain unresolved and were not weakened or
+claimed fixed. Native CI, install/packaging, license/notices, and OS support
+remain later tasks. No platform/pin/FFI/dependency change, release publication,
+push, or commit was made. The work is uncommitted.
+
+M4-02 follow-up requested by the user's questions about copies and peak phase:
+the whole-run timer cannot locate a peak, so a read-only native Mach probe gates
+EOF and final stdout on the unchanged binary. Four trials use 100,000/1,000,000
+records at N=16384 through stdin and a FIFO on the File.Reader path. The probe
+confirms an empty input queue and no output before EOF, reads current/high-water
+RSS, then blocks stdout after EOF before draining/verifying the exact tail.
+Per-child `wait4.ru_maxrss` records the final maximum. Source/binary hashes stay
+unchanged. The raw probe/traces remain in temporary storage; the compact
+[summary](../measurements/m4-02-tail-phases.json) and report preserve the results.
+
+For 1,000,000 records, stdin is 88.66 MiB before EOF and peaks at 89.14 MiB after
+EOF (about 0.48 MiB extra). The FIFO/file-reader probe peaks at 76.61 MiB during
+processing, with output-blocked current RSS 75.59 MiB and no higher final peak.
+The smaller trials show the same distinction. These are controlled pipe/FIFO
+probes, not retrospective phase timestamps for the earlier regular-file runs.
+
+The exact pinned Roc runtime source at
+`258ab27f79bef726d501e3b79ce2e47e54e83f9d` was inspected. `listSet` updates a
+unique outer list or shallow-copies outer elements with nested increfs when
+shared, and decrefs the displaced element. This does not recursively duplicate
+record payloads. Which compiled calls take the uniqueness path and the exact
+cause of the remaining RSS overhead were not allocation-profiled. No application
+or platform source was modified and no memory-cause claim is inferred from RSS.
+
+## M4-02 Linux container measurements — authorized 2026-10-27
+
+The user requested Linux resource measurements and suggested Docker. Existing
+macOS artifacts and pending changes are preserved. Docker Desktop reports a
+native ARM64 Linux VM (10 virtual CPUs, 8,214,851,584 bytes RAM) on the Apple
+Silicon host. Native ARM64 container measurements proceed as supplemental Linux
+evidence; they do not close the planned native x86-64 release gate. No emulated
+x86-64 performance is presented as native. The architecture choice was surfaced
+to the user; native ARM64 is the stated default while awaiting optional steering.
+
+The exact nightly release contains both Linux ARM64 and x86-64 compiler assets.
+The ARM64 archive's release digest is
+`9750ce89a820d3cdeadd751996d26c70b68584ca9428e52f43a1bb20702c54e5`.
+The driver initially rejected GNU time verbose data with ValueError; the new
+format test reproduces that missing driver behavior. Linux parsing/normalization
+is then added while retaining the passing macOS byte-unit assertion. Three
+driver checks now pass, including invalid-data rejection. This is driver work,
+not a production application RED/GREEN change.
+
+The Docker image uses Debian base manifest
+`7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8`, verifies the
+compiler archive SHA-256 before extraction, and runs the unchanged compiler pin
+successfully. The built ARM64 image ID is
+`77bae4abc313f331d62956145c843235a20d82f7729b7d5d76ff2c70fa5fa6f5`.
+The source mount is read-only; builds, cache, fixtures and outputs are inside
+the Linux filesystem. UID 1000 executes all permission fixtures. Docker's bridge
+is disconnected before the timer controls, smoke matrix and full measurements;
+`NetworkSettings.Networks` is verified as `{}`. Source module hashes, image/host
+provenance, page/stack sizes, cgroup limits and package versions are archived.
+
+Native ARM64 Linux verification: `roc check`, explicit-source formatting, 273
+dev and 273 speed pure checks pass. Both fresh Linux builds pass all **63**
+ordinary executable methods without skips, including raw invalid-UTF-8 filename
+opening and actual prefix WouldBlock. Three driver unit checks pass on both
+Linux and macOS. The strict descriptor suite is separately captured for both
+Linux builds: three methods, **15 failing subcases** each, status 1. No skipped
+or expected-failure annotations, contract change, or claim of full I/O
+conformance was introduced.
+
+GNU time (`time` Debian package 1.9-0.2) controls report 828 KiB RSS for `true`
+and 39,788 KiB for a Python process touching a 32 MiB allocation. The 62-case
+small matrix passes native-format parsing, output/status/hash checks and final
+input/binary integrity. The full **70-case** matrix then passes all cases on
+the unchanged optimized ARM64 ELF. Its seven fixture hashes exactly match the
+macOS baseline. GNU RSS is normalized from KiB to bytes. A final two-case macOS
+smoke also passes after the cross-platform driver changes.
+
+Observed Linux file count/filter peak RSS stays about 0.4 MiB from 102.4 MB to
+1.024 GB input. Tail N=4096 stays at 5.13 MiB; N=16384 stays at 19.38 MiB for
+file input and 19.51 MiB for redirected stdin across both sizes. All-invalid
+cases remain near 0.39–0.42 MiB with exactly 100 details and correct omissions.
+The 8 MiB body passes all modes without stack failure: 17.18–17.56 MiB file
+RSS, 8.48–10.04 MiB stdin RSS. The maximum-N tiny input emits exactly its two
+records without preallocation. No measured violation requires a production
+change or another large-input follow-up. Raw timing variance is preserved;
+these are single-observation shared-VM results, not a throughput promise or
+an explanation of cross-OS allocator differences.
+
+The [Linux ARM64 report](../measurements/m4-02-linux-arm64-docker.md),
+[70-case JSON](../measurements/m4-02-linux-arm64-docker.json), and
+[Docker instructions](../../tests/docker/README.md) record the exact context,
+replay procedure and limits. The Linux ELF is retained as ignored
+`dist/jlog-linux-arm64`, SHA-256
+`e279601f4160b9b4830e34f37340a472680ba492eaf3225f8c9ff9ec24504f25`;
+the measured macOS `dist/jlog` is unchanged. The task container is stopped after
+export, retaining raw artifacts for review. Native Linux x86-64, full native CI,
+strict descriptor conformance and later release work remain open. No application
+source, platform/FFI/pin, release publication, push or commit was changed.
+
+## M4-03 native CI — authorized 2026-10-27
+
+The user proposed using CI to obtain the required native Linux x86-64 evidence
+and explicitly tackling M4-03 alongside M4-02. The new workflow uses independent
+`ubuntu-24.04` x86-64 and `macos-15` ARM64 jobs. Installation asserts the actual
+OS/architecture, verifies the exact pinned archive SHA-256 and compiler version,
+and preserves basic-cli 0.25.0. Checkout/upload actions use full commit pins;
+there is no moving setup action or shared dependency cache.
+
+The shared CI driver records command logs/statuses, source/binary hashes and
+runner/image provenance. Both dev and speed run pure checks, native builds,
+ordinary executable tests and the unchanged strict descriptor suite. Strict
+failures are real failed CI steps; a separately conditioned step still measures
+an optimized build whose pure/ordinary/driver checks passed. Upload retains small
+evidence files and tested binaries, excluding generated fixtures/stdout/cache.
+
+Local preparation: `actionlint` 1.7.12 and shell/Python syntax checks pass. The
+actual macOS installer downloads and verifies archive SHA-256
+`aa6339579730fcea4753940bec21f5d8cf8be8e25659ec001abccbc3463a60b2`, then confirms
+the exact nightly. The CI driver passes check/format, three measurement-unit
+tests, 273 pure checks and 63 ordinary CLI methods for each optimization. Its
+status is correctly **1**, with only `io-contract-dev` and `io-contract-speed`
+failing (15 strict subcases each). Source hashes stay unchanged; a one-case
+measurement smoke verifies the new environment artifact. These local logs live
+under `/private/tmp/jlog-m403-local-evidence` and
+`/private/tmp/jlog-m403-local-measure-smoke`.
+
+Workflow/tooling commit `48c9aa9` is pushed to the separate `ci/native-m4` branch;
+local and remote `master` are unchanged. The HTTPS OAuth credential lacks workflow
+scope, so the push uses the already authenticated SSH transport without changing
+the remote URL or credential scopes. No release or PR is published. Native
+execution and measured results are pending the actual GitHub run; preparation
+does not close either release gate.
+
+Execution follow-up: [run 40549245469, attempt 1](https://github.com/DanielBlanco/jlog/actions/runs/40549245469)
+finishes on both native targets at `48c9aa9`. Linux is `x86_64`, Ubuntu 24.04.5,
+kernel 6.17.0-1022-azure, image `20261023.334.3`, four logical CPUs and UID 1001.
+macOS is ARM64 15.7.9, image `20260907.0337.1`, three logical CPUs and UID 501.
+Exact native compiler installation passes on both. Each build passes 273 pure
+checks and 63 ordinary CLI methods without skips; formatting/check and all three
+driver unit checks pass. The only nonzero command statuses are the two strict
+descriptor suites per job, each with the same 15 failing subcases. Both jobs
+correctly conclude **failure**; no waiver or application fix was introduced.
+
+Both optimized resource steps and both artifact uploads succeed. Each native
+matrix verifies **70/70** outputs/statuses/diagnostics and final input/binary
+hashes. All seven fixture hashes match the earlier macOS/Linux ARM64 baselines.
+Downloaded ZIP digests match GitHub metadata; source/driver/tested executable
+hashes are checked locally. macOS's optimized binary matches the earlier local
+baseline exactly. The native x86-64 static ELF is retained as ignored
+`dist/jlog-linux-x86_64`, SHA-256
+`c7a3e08ad74a6d5b1508e1160fd1f3379566eb4795fbf261abb8457325915d78`.
+
+Native x86-64 file count/filter peaks at 0.39 MiB across 100,000/1,000,000
+1-KiB records. Tail N=4096 stays at 5.14 MiB; N=16384 stays at 19.39–19.52 MiB
+for files and 19.27–19.52 MiB for stdin. Invalid data stays at 0.39–0.52 MiB
+with exact capped diagnostics. An 8 MiB body passes all modes without stack
+failure, using 16.46–17.39 MiB file RSS or 8.57–9.85 MiB stdin RSS under the
+16-MiB stack limit. No measured violation justifies production optimization.
+Single shared-VM timings remain observations, not throughput guarantees.
+
+The [native CI report](m4-03-native-ci.md),
+[Linux x86-64 report/JSON](../measurements/m4-02-linux-x86_64-ci.md), and
+[macOS CI JSON](../measurements/m4-02-macos-arm64-ci.json) retain durable compact
+evidence. Downloaded raw logs/artifacts remain under
+`/private/tmp/jlog-m403-artifacts`; GitHub uploads expire 2026-11-10. M4-02 now
+has resource evidence on both required native architectures. M4-03 automation
+is implemented and executed, but full native conformance and M4-01 remain open
+because the strict descriptor gate fails. M4-04/05/06, release publication and
+minimum OS support decisions remain later work. The CI workflow/tooling is
+committed/pushed; measurement reports and documentation updates remain pending.

@@ -304,6 +304,22 @@ Execution update (2026-10-27): the user authorized starting M4-01. The
 [native macOS coverage audit](m4-01-audit.md) links executed coverage to the
 requirements below. Strict descriptor conformance and native Linux execution
 remain open; historical planning statements do not imply those gates passed.
+The subsequent next-task instruction authorized M4-02; its
+[native macOS measurements](../measurements/m4-02-macos-arm64.md) are recorded
+without closing those earlier gates. Native Linux x86-64 measurements remain pending.
+Subsequent Docker measurements are recorded for
+[Linux ARM64](../measurements/m4-02-linux-arm64-docker.md). The available engine
+and physical host are ARM64; the required native Linux x86-64 gate remains open.
+The user subsequently authorized M4-03 native CI alongside those measurements.
+The [workflow](../../.github/workflows/native-ci.yml) and
+[driver documentation](../../tests/ci/README.md) cover both required native
+targets. Workflow preparation is not evidence of execution; strict descriptor
+failures remain fatal and prevent full conformance completion.
+The [first native execution](m4-03-native-ci.md) now passes both 70-case matrices,
+including the [required x86-64 measurements](../measurements/m4-02-linux-x86_64-ci.md).
+M4-02 has native evidence on both required architectures. Both native CI jobs
+pass ordinary checks but remain red for the known descriptor tests; M4-01 and
+full M4-03 conformance remain open.
 
 **Objective:** evidence-backed public release on native macOS ARM64 and Linux
 x86-64. **Complexity: medium to high**, depending on native CI availability.

@@ -250,7 +250,7 @@ failures are visible too.
 descriptor as EOF, so that unusual setup currently reports empty input with exit
 0. Actual propagated read errors are handled separately. See the
 [handoff](docs/plans/jlog-handoff.md#known-limitations-and-risks) for this gap and the
-remaining native Linux/resource verification work.
+remaining release verification work.
 
 The pinned platform can also suppress EBADF errors when stdout/stderr uses an
 unusable descriptor. Real closed-pipe write failures return 3 in the executable
@@ -270,8 +270,10 @@ for the compatibility gate; the specified I/O contract has not been relaxed.
 - **Python 3** is needed for executable tests only. No third-party Python packages
   or Node/npm setup are required.
 
-Native builds/tests have been verified on **macOS ARM64**. **Linux x86-64** is an
-initial release target whose native application verification is still pending.
+Native builds, pure/ordinary tests and resource measurements run on **macOS
+ARM64** and **Linux x86-64** in CI, with supplemental **Linux ARM64 Docker**
+results. Strict descriptor tests still fail on all three environments; full
+release conformance remains open. See the [native CI evidence](docs/plans/m4-03-native-ci.md).
 Use the exact compiler pin: Roc syntax and APIs are evolving.
 
 ### Build an optimized executable
@@ -324,6 +326,9 @@ existing behavior and tests.
 | `src/Operations.roc` | Shared summaries, bounded tail/filter buffers, diagnostics, progress, and exit policy. |
 | `tests/test_cli.py` | Python stdlib tests against the actual executable. |
 | `tests/test_io_contract.py` | Strict descriptor conformance gate; currently fails on the pinned native host. |
+| `tests/measure_resources.py` | macOS/Linux resource measurements, with normalized RSS units and environment provenance. |
+| `tests/test_measure_resources.py`, `tests/docker/` | Timing-unit checks and a pinned unprivileged Linux Docker workflow. |
+| `.github/workflows/native-ci.yml`, `tests/ci/` | Native Linux x86-64/macOS ARM64 CI, exact compiler installation and retained verification evidence. |
 | `docs/specs/`, `docs/plans/`, `docs/` | Behavior contracts, TDD tasks/evidence, and research. |
 
 Learning Roc through this project? Read the detailed source walkthroughs in
@@ -389,6 +394,57 @@ for release; broad discovery includes these failures. See the
 [M4-01 audit](docs/plans/m4-01-audit.md) and
 [reproducer](docs/repros/stdio-descriptor-errors.md).
 
+### Native CI
+
+The [native workflow](.github/workflows/native-ci.yml) checks both development and
+optimized builds on Linux x86-64 and macOS ARM64, then collects resource
+measurements. Compiler downloads are checksum-verified; actions are pinned by
+commit. Strict descriptor failures fail the job while allowing independent
+resource evidence to be collected. See [CI details](tests/ci/README.md) for the
+command sequence and artifact contents. The
+[first native run](https://github.com/DanielBlanco/jlog/actions/runs/40549245469)
+passes 273 pure checks and 63 ordinary CLI methods per build, plus all 70 resource
+cases per architecture. Both jobs correctly remain red because of the known
+descriptor failures; see the [execution report](docs/plans/m4-03-native-ci.md).
+
+### Measure resources
+
+Build the optimized binary first, then run the standard-library measurement driver:
+
+```sh
+python3 tests/measure_resources.py --binary dist/jlog
+```
+
+It generates temporary 100,000- and 1,000,000-record fixtures with 1,024 bytes per
+record, all-invalid equivalents, 1 MiB/8 MiB lines, and a tiny input with maximum
+tail N. It measures file and redirected-stdin runs sequentially with native
+`/usr/bin/time`, checking exact output bytes/hashes, status, diagnostics, and
+unchanged inputs. Peak RSS and CPU exclude the Python driver. Large stdout files
+are removed after verification; raw timing/diagnostic files and `results.json`
+remain in the printed temporary directory. Allow roughly 3 GiB of free disk space.
+
+The runner uses macOS `time -l` or Linux GNU `time -v` and normalizes RSS to
+bytes. For a container build and run, follow the
+[Docker instructions](tests/docker/README.md). A small validation run can use:
+
+```sh
+python3 tests/measure_resources.py --binary dist/jlog --sizes 100 1000 --tail-sizes 0 1 8 --long-lines 1024 4096
+```
+
+`--cases 'valid-*-file-inspect'` selects named cases for focused repeats and
+generates only the fixtures they need. `--work-dir` selects a new directory
+outside the checkout. A failed output check
+or timeout stops the matrix and preserves its artifacts; a timeout is an
+inconclusive measurement, not a successful run. These are sequential warm-cache
+observations on one host, not a throughput promise or a substitute for the strict
+I/O gate.
+
+The [macOS measurements](docs/measurements/m4-02-macos-arm64.md),
+[native Linux x86-64 measurements](docs/measurements/m4-02-linux-x86_64-ci.md) and
+supplemental [Linux ARM64 Docker measurements](docs/measurements/m4-02-linux-arm64-docker.md)
+include the full fixture matrix and machine-readable results. A second native
+macOS matrix is retained with the [CI evidence](docs/plans/m4-03-native-ci.md).
+
 ### Keep the TDD loop honest
 
 1. **RED:** write and execute a small behavior test; confirm its assertion fails
@@ -410,7 +466,7 @@ include the commands and results used to verify it.
 | M1: CLI, framing, file/stdin inspection and validation | ✅ Implemented. |
 | M2: `--count`, `--tail N`, and expanded error handling | Count/tail and tested failure paths implemented; handling some invalid standard descriptors remains unresolved. |
 | M3: `--where KEY=TEXT`, string-only top-level equality | Implemented and tested on native macOS ARM64, including streaming and pipelines. |
-| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Started: native macOS M4-01 coverage audit; descriptor conformance and native Linux verification remain open. |
+| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Native macOS ARM64/Linux x86-64 measurements and CI executed; strict descriptor conformance and later documentation/packaging/release gates remain open. |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |
 
 The [implementation plan](docs/plans/jlog-v0.1-plan.md) contains the ordered tasks.

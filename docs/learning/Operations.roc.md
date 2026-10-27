@@ -208,7 +208,11 @@ output, so numeric spellings, duplicate keys, whitespace, and Unicode survive.
 Roc values remain semantically immutable. A test retaining an older tail snapshot
 still observes its old contents after a push. Production keeps only the current
 state so storage can be reused; the ring API and an insertion smoke probe were
-checked on the pinned compiler. These checks are not full resource benchmarks.
+checked on the pinned compiler. M4-02 later adds
+[actual optimized measurements](../measurements/m4-02-macos-arm64.md), including
+tail N=0/1/64/4096/16384, a maximum-N tiny input, and a larger fixed-N follow-up.
+They show no per-record O(N) work growth in the measured range; they are
+native macOS observations rather than a universal complexity or memory proof.
 
 ## Shared streaming state and checked consumption
 

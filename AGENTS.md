@@ -13,7 +13,10 @@ counts to inspection. See its [specification](docs/specs/inspection-progress.md)
 The later authorizations cover M2 count/tail and error handling, and M3 streaming
 string-only filtering. On 2026-10-27 the user authorized starting M4 with M4-01,
 the contract/coverage audit. See the progress record for its results and open
-release gates. Publishing remains a separate action.
+release gates. The user subsequently authorized the next task, M4-02 resource
+measurements, while retaining the unresolved M4-01 release gates. The later
+request authorizes M4-03 native CI alongside Linux x86-64 measurements. Release
+publishing remains a separate action.
 
 ## Project Structure & Module Organization
 
@@ -27,6 +30,14 @@ release gates. Publishing remains a separate action.
 - `tests/test_io_contract.py` is the strict standard-descriptor conformance gate.
   It currently fails on the pin; run it explicitly and preserve its exit-3
   expectations. Passing `test_cli.py` alone is not full release verification.
+- `tests/measure_resources.py` runs macOS/Linux resource measurements against an
+  explicitly supplied optimized binary. It records architecture/environment,
+  generates large fixtures outside the checkout, and verifies outputs/hashes.
+  `tests/test_measure_resources.py` checks timing formats/units; `tests/docker/`
+  provides the pinned unprivileged Linux container and verification instructions.
+- `.github/workflows/native-ci.yml` and `tests/ci/` automate pinned native
+  Linux x86-64/macOS ARM64 verification and resource measurements. Strict
+  descriptor failures must remain fatal, even when independent measurements run.
 - `dist/` contains ignored build outputs.
 - `docs/` contains documentation, including `docs/specs/` and `docs/plans/`.
   Read [What is JSONL?](docs/jsonl.md) for format rules and examples.
@@ -38,8 +49,10 @@ Keep application code in `src/`, separate from compiler and cache directories.
 
 Use Roc `nightly-2026-10-09-258ab27` on your `PATH`; the compiler is outside the
 checkout. Discover it with `command -v roc` and confirm the pin with `roc version`.
-The application pins `basic-cli` 0.25.0. Native verification currently covers
-macOS Apple Silicon; Linux x86-64 verification remains pending.
+The application pins `basic-cli` 0.25.0. Native CI now executes macOS ARM64 and
+Linux x86-64 check/build/test/resource sequences; ordinary suites and all resource
+cases pass, while strict descriptor conformance still fails on both. See the
+[CI evidence](docs/plans/m4-03-native-ci.md). Linux ARM64 Docker remains supplemental.
 
 Run commands from the repository root:
 
@@ -57,7 +70,8 @@ JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py'
 - `roc test --opt=dev --no-cache src/main.roc`: run inline `expect` checks in the application and its imported local modules. Repeat with `--opt=speed` for optimized verification.
 - `roc fmt src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc`: format project sources. Add `--check` to verify formatting without edits.
 
-No npm scripts or project-specific build wrappers are configured.
+No npm scripts are configured. The native CI command driver is documented in
+[`tests/ci/README.md`](tests/ci/README.md).
 
 ## Coding Style & Naming Conventions
 

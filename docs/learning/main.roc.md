@@ -283,8 +283,16 @@ Filtering additionally retains current-read matching bodies and temporary
 top-level decoded fields. Stdin reads at most 16 KiB at a time, but a line spanning
 reads can be arbitrarily large. File reads supply one buffered physical line.
 Draining prevents match storage from growing with total output. There is no
-fixed total-input or individual-line cap. Large-file resource measurements and
-native Linux execution remain release work.
+fixed total-input or individual-line cap. M4-02's
+[native macOS measurements](../measurements/m4-02-macos-arm64.md) now cover
+roughly-1-KiB records up to 1,000,000 lines, a 4,000,000-record tail follow-up,
+and a single 8 MiB body. Observed RSS follows line/retention size rather than
+total input bytes in those samples. Supplemental
+[Linux ARM64 Docker measurements](../measurements/m4-02-linux-arm64-docker.md)
+also pass the resource matrix. The later
+[native Linux x86-64 measurements](../measurements/m4-02-linux-x86_64-ci.md)
+pass all 70 cases, and [native CI](../plans/m4-03-native-ci.md) executes both
+required architectures while keeping the known descriptor failures visible.
 
 The platform exposes write-only stdin as EOF and can suppress EBADF errors on
 unusable stdout/stderr descriptors. These remain strict-contract gaps; mapping

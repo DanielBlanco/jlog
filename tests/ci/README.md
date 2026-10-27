@@ -13,6 +13,10 @@ or moving nightly is used. Checkout and artifact-upload actions are pinned by fu
 commit SHA. The application retains its basic-cli 0.25.0 content-addressed URL.
 There is no shared compiler/package cache in this initial workflow.
 
+The [first native execution](../../docs/plans/m4-03-native-ci.md) passes ordinary
+tests and all 70 measurements per architecture. Both jobs retain their failure
+status for the known strict descriptor cases.
+
 `verify.py` runs as an ordinary user and records each command and status:
 
 1. Compiler check, explicit-source formatting and measurement-driver unit checks.

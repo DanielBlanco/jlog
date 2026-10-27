@@ -213,9 +213,11 @@ This is why malformed records before an I/O failure cannot cause a completed
 count/tail/report or exit 4: the terminal read-error branch wins. Pure tests seed
 prefixes with errors and retained bodies. Directory-stdin tests exercise actual
 reported read errors. Filtering may already have emitted a prefix; failure drops
-deferred state, leaves that prefix intact, and exits 3. The advanced pseudo-
-terminal closure attempts appeared as EOF in inspection and filtering, so an
-executable read failure specifically after a consumed prefix remains unverified.
+deferred state, leaves that prefix intact, and exits 3. Earlier pseudo-terminal
+closures appeared as EOF. M4-01 establishes an actual prefix read failure with a
+prefilled nonblocking pipe whose writer remains open: the next read reports
+WouldBlock. Every input mode exits 3, the incomplete final body is discarded,
+and only filtering retains its already-emitted complete record.
 
 ## Optional progress in the read loop
 
@@ -309,6 +311,20 @@ permission failures, ring boundaries, broken pipes, and real filter/count
 pipelines. M3's representative test selects the original bodies at lines 2 and 3,
 including nested data, escapes, duplicate keys, and huge numeric spellings.
 See [README](../../README.md#for-developers) for complete build/test commands.
+
+M4-01 adds exact specification-fixture checks across every mode/source, long
+data records across stdin reads, safe diagnostic labels, redirects from malformed
+sources, and normal SIGTERM behavior. The shared Python helper supplies source
+variants and hand-written expected bytes; it does not reproduce Roc logic.
+Large numeric parser oracles use exact integers and `Decimal`.
+The nonblocking-pipe test also exercises a real read failure after a valid and
+malformed prefix, without treating ordinary EOF as a fault.
+
+The separate [strict descriptor suite](../../tests/test_io_contract.py) still
+fails on the pinned platform: independent platform calls report EOF or success
+for unusable descriptors. These failures are preserved as a release gate, with
+no skipped assertions or changes to the exit-3 contract. See the
+[audit](../plans/m4-01-audit.md) for current evidence and remaining work.
 
 As an exercise, trace `missing.jsonl --unknown`: parsing fails before opening.
 Then trace a count with a malformed prefix and a reported read failure: terminal

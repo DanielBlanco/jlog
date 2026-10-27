@@ -323,6 +323,7 @@ existing behavior and tests.
 | `src/Jsonl.roc` | Pure framing, UTF-8/BOM classification, depth precheck, builtin JSON validation, and string-field lookup. |
 | `src/Operations.roc` | Shared summaries, bounded tail/filter buffers, diagnostics, progress, and exit policy. |
 | `tests/test_cli.py` | Python stdlib tests against the actual executable. |
+| `tests/test_io_contract.py` | Strict descriptor conformance gate; currently fails on the pinned native host. |
 | `docs/specs/`, `docs/plans/`, `docs/` | Behavior contracts, TDD tasks/evidence, and research. |
 
 Learning Roc through this project? Read the detailed source walkthroughs in
@@ -375,6 +376,19 @@ root-only run. A focused pure check can use
 through the application context. Focus executable tests with `-k m1_16` before
 `-v` in the discovery command above.
 
+Release verification also requires the strict descriptor conformance suite:
+
+```sh
+JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_io_contract.py' -v
+```
+
+This currently fails three methods (15 subcases): the pinned platform hides
+errors from write-only stdin and read-only stdout/stderr. Ordinary closed-pipe
+and directory-read tests pass, but do not close this gate. Both suites must pass
+for release; broad discovery includes these failures. See the
+[M4-01 audit](docs/plans/m4-01-audit.md) and
+[reproducer](docs/repros/stdio-descriptor-errors.md).
+
 ### Keep the TDD loop honest
 
 1. **RED:** write and execute a small behavior test; confirm its assertion fails
@@ -396,7 +410,7 @@ include the commands and results used to verify it.
 | M1: CLI, framing, file/stdin inspection and validation | ✅ Implemented. |
 | M2: `--count`, `--tail N`, and expanded error handling | Count/tail and tested failure paths implemented; handling some invalid standard descriptors remains unresolved. |
 | M3: `--where KEY=TEXT`, string-only top-level equality | Implemented and tested on native macOS ARM64, including streaming and pipelines. |
-| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Pending. |
+| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Started: native macOS M4-01 coverage audit; descriptor conformance and native Linux verification remain open. |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |
 
 The [implementation plan](docs/plans/jlog-v0.1-plan.md) contains the ordered tasks.

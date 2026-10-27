@@ -300,6 +300,11 @@ paths share the approved contracts. `--field` remains rejected with exit 2.
 
 ## M4 — Release readiness
 
+Execution update (2026-10-27): the user authorized starting M4-01. The
+[native macOS coverage audit](m4-01-audit.md) links executed coverage to the
+requirements below. Strict descriptor conformance and native Linux execution
+remain open; historical planning statements do not imply those gates passed.
+
 **Objective:** evidence-backed public release on native macOS ARM64 and Linux
 x86-64. **Complexity: medium to high**, depending on native CI availability.
 

@@ -466,3 +466,75 @@ scenario, native Linux checks, and large-file resource/release work remain open.
 No M4 work, platform/pin/FFI/dependency change, push, or PR was performed. M3
 changes were left uncommitted at the implementation checkpoint; the preceding-
 work commit is `f174c25`. The user authorized committing M3 on 2026-10-27.
+
+## M4-01 coverage audit — authorized 2026-10-27
+
+After M3 was committed as `d1a0d20`, the user requested the next step and
+authorized starting M4-01: audit the specification's behavioral coverage,
+published examples, and remaining I/O gaps. Work starts from a clean tree on
+native Darwin ARM64 with the unchanged compiler/platform pins. Fresh baseline:
+273 pure checks and 52 executable methods passed. Already-passing additions are
+coverage-only; no production change or artificial RED is required for them.
+
+Added eleven `test_m4_01_*` executable methods covering the exact published
+representative/malformed fixtures across all modes and sources, validation and
+defect precedence, long data records across stdin reads, safe data-mode labels,
+literal filenames/operands, held-open-stdin usage rejection, redirected data from
+malformed sources, SIGTERM, README samples, and actual prefix read failure.
+The new source-variant helper substitutes labels into hand-specified bytes and
+checks hashes; it does not reproduce application logic. Independent JSON oracles
+now use exact integers/Decimal. All eleven additions pass without production
+changes. An initial usage-hint expectation accidentally omitted the existing
+help-hint line; its fixture was corrected, not recorded as production RED.
+
+The S-IO nonblocking-pipe mechanism is now verified on native macOS. A pipe is
+prefilled with a malformed line, a complete matching record, and an incomplete
+body; its read descriptor is nonblocking and the parent keeps the writer open.
+After consuming the prefix, the actual executable reports WouldBlock and exits
+3. Inspect/progress/count/tail 0/tail 2 emit no deferred result or completion;
+filtering emits only the complete matching prefix. A parent OS read confirms
+the descriptor was drained and returns EAGAIN/EWOULDBLOCK rather than EOF.
+The retained regression passes in both dev and optimized builds. Earlier
+pseudo-terminal attempts remain historical, not evidence of a fault. Native
+Linux execution of this fixture is still pending.
+
+The strict descriptor gate is retained in `tests/test_io_contract.py`: three
+methods, **15 failing subcases** on both builds. Python OS reads/writes establish
+EBADF on the same descriptors; jlog instead returns 0 for write-only stdin and
+read-only stdout, and 2/0/4 for read-only stderr. Expectations remain status 3,
+without skips or expected-failure markers. An independent freshly built pinned
+Roc probe returns `Err(EndOfFile)` / `Ok({})` for those cases. Public API inspection
+found no standard-descriptor validation or explicit flush operation. The probe,
+observations, and replay commands are preserved in
+`docs/repros/stdio-descriptor-errors.md`. This is an unresolved platform gate,
+not a completed RED/GREEN fix or a reason to weaken the application contract.
+
+Final checks, using `ROC_CACHE_DIR=/private/tmp/jlog-research/cache` for Roc and
+`PYTHONDONTWRITEBYTECODE=1` plus the selected `JLOG_BIN` for Python:
+
+| Command / target | Result |
+| --- | --- |
+| `roc check src/main.roc` | No errors. |
+| `roc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc` | All formatting valid. |
+| `roc test --opt=dev --no-cache src/main.roc` | 273 passed. |
+| `roc test --opt=speed --no-cache src/main.roc` | 273 passed. |
+| `roc build --opt=dev --output=/private/tmp/jlog-m4-audit-n7rhvmo8/jlog-dev src/main.roc` | Zero errors/warnings. |
+| `roc build --opt=speed --output=dist/jlog src/main.roc` | Zero errors/warnings. |
+| `python3 -m unittest discover -s tests -p 'test_cli.py'` against each binary | **63 methods passed** per build; no skips. |
+| `python3 -m unittest discover -s tests -p 'test_io_contract.py'` against each binary | Status 1; three methods fail, 15 failing subcases per build. |
+
+The README big-sample filter→count pipeline prints 706, with both processes
+exiting 0, both stderr streams empty, and the source SHA-256 unchanged. README
+small-sample outputs are now permanent executable assertions. Help matches the
+embedded `src/help.txt` bytes. Changed Markdown links/anchors/fences, Python
+syntax/docstrings, the documented independent probe source, and diff whitespace
+were checked. The tested optimized artifact remains at `dist/jlog`; full
+descriptor logs and the probe are machine-local under the temporary audit path.
+
+The [audit](m4-01-audit.md) maps specification/traceability groups to actual tests.
+The native macOS coverage audit is complete, but **M4-01 remains open** for strict
+descriptor conformance and native Linux execution. Resource measurements, native
+CI, installation/packaging, license/notices, and supported OS versions remain
+M4-02 through M4-06. No application source, specification, platform/pin/FFI,
+dependency, release, or push change was made. The work was left uncommitted at
+the audit checkpoint; the user subsequently requested committing all changes.

@@ -275,9 +275,11 @@ Tests seed a prefix containing valid/invalid records and retained bodies, then
 assert that failure cannot yield completed output or malformed-input status 4.
 Real directory-stdin failures and closed-pipe writes are checked separately. A
 pseudo-terminal closure was observed as EOF on this platform in both inspection
-and filtering, so those attempts do not establish executable mid-stream
-read-fault coverage. Pure filter tests verify the drained prefix remains
-separate from discarded state and I/O status 3 overrides malformed status 4.
+and filtering. M4-01 later establishes an actual executable prefix read failure
+using a nonblocking pipe kept open by its writer. Deferred results are empty;
+filtering preserves its already-emitted valid prefix and returns status 3.
+Pure tests separately verify that draining keeps this prefix outside discarded
+state and that I/O status 3 overrides malformed status 4.
 
 ## `Progress`, `progress_start`, `progress_due`, and `progress_text`
 

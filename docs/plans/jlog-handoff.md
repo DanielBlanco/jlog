@@ -1,7 +1,7 @@
 # jlog development handoff
 
 Historical snapshot: 2026-10-18, native macOS ARM64. Later updates below record
-the user-authorized development through M3 on 2026-10-26.
+the user-authorized development through the M4-01 audit on 2026-10-27.
 
 Layout update (2026-10-26): application modules and their inline checks now live
 in `src/`; the entry point is `src/main.roc`. Plans and the specification live
@@ -35,6 +35,18 @@ original-byte streaming, capped diagnostics, and filter-to-count pipeline tests.
 The latest progress record contains current verification totals and the new
 [compiler declaration-order reproducer](../repros/m3-dict-parser-order.md).
 The snapshot and M1-only prompt below are historical; M4 has not been started.
+
+M4-01 update (2026-10-27): after M3 commit `d1a0d20`, the user authorized starting
+the contract/coverage audit. See the [audit](m4-01-audit.md) and latest progress
+record for actual test totals. The native macOS audit adds exact cross-mode
+fixtures, transport/redirect checks, and explicit strict descriptor tests. The
+latter still fail the specified exit-3 contract; native Linux remains pending.
+A prefilled nonblocking pipe now establishes a real mid-stream read failure
+after a consumed prefix: deferred modes emit no result and filtering keeps only
+its complete valid prefix, with status 3. Earlier pseudo-terminal observations
+remain historical evidence and are not mistaken for injected read failures.
+Do not mark M4-01 or release readiness complete from the ordinary passing suite.
+No platform/pin/FFI/dependency change or release publication was made.
 
 **M1-A and M1-B are already implemented and verified.** The handoff request's
 expected next checkpoint, M1-B, is stale for this checkout. Preserve the existing

@@ -11,7 +11,9 @@ verification, and checkpoint limits.
 The separately authorized `--progress` extension adds opt-in, rate-limited stderr
 counts to inspection. See its [specification](docs/specs/inspection-progress.md).
 The later authorizations cover M2 count/tail and error handling, and M3 streaming
-string-only filtering. M4 release work has not been authorized or started.
+string-only filtering. On 2026-10-27 the user authorized starting M4 with M4-01,
+the contract/coverage audit. See the progress record for its results and open
+release gates. Publishing remains a separate action.
 
 ## Project Structure & Module Organization
 
@@ -22,6 +24,9 @@ string-only filtering. M4 release work has not been authorized or started.
 - `src/help.txt` contains the CLI help, imported as a string at compile time by
   `src/Cli.roc`. Preserve the final newline when editing and rebuild to apply changes.
 - `tests/test_cli.py` runs executable acceptance tests using Python's stdlib.
+- `tests/test_io_contract.py` is the strict standard-descriptor conformance gate.
+  It currently fails on the pin; run it explicitly and preserve its exit-3
+  expectations. Passing `test_cli.py` alone is not full release verification.
 - `dist/` contains ignored build outputs.
 - `docs/` contains documentation, including `docs/specs/` and `docs/plans/`.
   Read [What is JSONL?](docs/jsonl.md) for format rules and examples.

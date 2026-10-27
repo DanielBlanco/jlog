@@ -1,11 +1,14 @@
 """Executable checks; set JLOG_BIN to the binary under test (never built here)."""
 import os
 import errno
+import fcntl
 import hashlib
+from decimal import Decimal
 import json
 from pathlib import Path
 import subprocess
 import select
+import signal
 import tempfile
 import sys
 import time
@@ -45,6 +48,244 @@ class CliTests(unittest.TestCase):
         return subprocess.run(
             [self.binary, *args], input=input_bytes, capture_output=True, timeout=5,
         )
+
+    def assert_file_and_stdin(self, data, operation, stdout, stderr=b'', status=0):
+        """Check hand-specified bytes with source-label substitution and unchanged input."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'records.data'
+            path.write_bytes(data)
+            before = hashlib.sha256(data).digest()
+            for args, source in [((*operation, str(path)), str(path)),
+                                 ((str(path), *operation), str(path)),
+                                 (operation, '<stdin>'), ((*operation, '-'), '<stdin>')]:
+                with self.subTest(args=args):
+                    result = self.run_cli(*args, input_bytes=data)
+                    label = source.encode()
+                    self.assertEqual((result.stdout, result.stderr, result.returncode),
+                                     (stdout.replace(b'{source}', label),
+                                      stderr.replace(b'{source}', label), status))
+            self.assertEqual(hashlib.sha256(path.read_bytes()).digest(), before)
+
+    def test_m4_01_published_representative_all_modes(self):
+        """Execute the exact specification fixture for every mode and source form."""
+        first = b'{"status":"ok","skill":"Roc","detail":{"attempts":[1,2]}}\n'
+        selected = (b'{"status":"failed","skill":"caf\xc3\xa9\\n\xce\xbb"}\n'
+                    b'{"status":"failed","skill":null}\n')
+        suffix = b'{"status":false}\n42\n'
+        data = first + selected + suffix
+        for operation, stdout in [
+                ((), b'File: {source}\nRecords: 5\nValid: 5\nInvalid: 0\n'),
+                (('--count',), b'5\n'), (('--tail', '2'), suffix),
+                (('--where', 'status=failed'), selected)]:
+            with self.subTest(operation=operation):
+                self.assert_file_and_stdin(data, operation, stdout)
+
+    def test_m4_01_published_malformed_all_modes(self):
+        """Execute the published malformed example with exact data-mode diagnostics."""
+        diagnostics = (b'jlog: {source}: line 2: blank line\n'
+                       b'jlog: {source}: line 3: invalid JSON\n')
+        report = (b'File: {source}\nRecords: 4\nValid: 2\nInvalid: 2\n\n'
+                  b'Malformed records:\n  line 2: blank line\n  line 3: invalid JSON\n')
+        for operation, stdout, stderr in [
+                ((), report, b''), (('--count',), b'2\n', diagnostics),
+                (('--tail', '10'), b'{}\nnull\n', diagnostics),
+                (('--where', 'status=failed'), b'', diagnostics)]:
+            with self.subTest(operation=operation):
+                self.assert_file_and_stdin(b'{}\n\nnot-json\nnull', operation,
+                                           stdout, stderr, 4)
+
+    def test_m4_01_validation_precedence_all_modes(self):
+        """Share full validation and physical numbering across all operation callbacks."""
+        selected = b'{"status":"failed","pair":"\\uD83D\\uDE42","n":1e9999}'
+        deep = b'[' * 128 + b'0' + b']' * 128
+        last = b'{"status":"failed","bom":"\xef\xbb\xbf"}'
+        lines = [b'\xef\xbb\xbf\xff', b'\xef\xbb\xbf{}', b'[' * 129,
+                 b' \t\r', b'"raw\tcontrol"', b'"\\uD800"', b'{}null',
+                 selected, deep, last]
+        data = b'\r\n'.join(lines)
+        details = [(1, b'invalid UTF-8'), (2, b'invalid JSON'),
+                   (3, b'nesting exceeds 128'), (4, b'blank line'),
+                   (5, b'invalid JSON'), (6, b'invalid JSON'), (7, b'invalid JSON')]
+        diagnostics = b''.join(b'jlog: {source}: line ' + str(n).encode() + b': ' + reason
+                               + b'\n' for n, reason in details)
+        report = (b'File: {source}\nRecords: 10\nValid: 3\nInvalid: 7\n\nMalformed records:\n'
+                  + b''.join(f'  line {n}: '.encode() + reason + b'\n'
+                             for n, reason in details))
+        for operation, stdout, stderr in [
+                ((), report, b''), (('--count',), b'3\n', diagnostics),
+                (('--tail', '1'), last + b'\n', diagnostics),
+                (('--tail', '0'), b'', diagnostics),
+                (('--where', 'status=failed'), selected + b'\n' + last + b'\n', diagnostics)]:
+            with self.subTest(operation=operation):
+                self.assert_file_and_stdin(data, operation, stdout, stderr, 4)
+
+    def test_m4_01_long_records_data_modes(self):
+        """Preserve long UTF-8 records across stdin reads and flush final pending bytes."""
+        first = (b' {"padding":"' + b'a' * 16368 + '🙂'.encode() + b'b' * 20000
+                 + b'","status":"failed","message":"line\\nend"} ')
+        nonmatch = b'{"status":"failed","status":null}'
+        last = b'{"status":"failed","id":2}\r'
+        data = first + b'\r\n' + nonmatch + b'\nbad\n' + last
+        diagnostic = b'jlog: {source}: line 3: invalid JSON\n'
+        for operation, stdout in [(('--count',), b'3\n'),
+                                  (('--tail', '2'), nonmatch + b'\n' + last + b'\n'),
+                                  (('--where', 'status=failed'), first + b'\n' + last + b'\n')]:
+            with self.subTest(operation=operation):
+                self.assert_file_and_stdin(data, operation, stdout, diagnostic, 4)
+
+    def test_m4_01_data_diagnostics_escape_source(self):
+        """Escape data-mode source labels and keep private malformed bodies out of stderr."""
+        body = b'{"status":"failed"}\n'
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / 'line\n\t\x7fλ.data'
+            data = b'PRIVATE invalid input\n' + body
+            source.write_bytes(data)
+            diagnostic = (f'jlog: {directory}/line\\n\\t\\u007fλ.data: line 1: invalid JSON\n').encode()
+            for operation, stdout in [(('--count',), b'1\n'),
+                                      (('--tail', '1'), body),
+                                      (('--where', 'status=failed'), body)]:
+                with self.subTest(operation=operation):
+                    result = self.run_cli(*operation, str(source))
+                    self.assertEqual((result.stdout, result.stderr, result.returncode),
+                                     (stdout, diagnostic, 4))
+            self.assertEqual(source.read_bytes(), data)
+
+    def test_m4_01_literal_paths_and_dash_operand(self):
+        """Open literal option/dash filenames and consume a dash-leading filter operand."""
+        body = b'{"-key":"-value"}\n'
+        with tempfile.TemporaryDirectory() as directory:
+            for name in ('-', '-events', '--count', 'events.anything'):
+                (Path(directory) / name).write_bytes(body)
+            for args, stdout in [
+                    (('./-', '--count'), b'1\n'),
+                    (('--tail=01', '--', '-events'), body),
+                    (('--where', '-key=-value', '--', '--count'), body),
+                    (('events.anything', '--count'), b'1\n')]:
+                with self.subTest(args=args):
+                    result = subprocess.run([self.binary, *args], cwd=directory,
+                                            input=b'bad\n', capture_output=True, timeout=5)
+                    self.assertEqual((result.stdout, result.stderr, result.returncode),
+                                     (stdout, b'', 0))
+
+    def test_m4_01_usage_does_not_read_stdin(self):
+        """Reject the full tail boundary/operation conflict matrix before blocking input."""
+        cases = [('--tail', value) for value in
+                 ('-1', '+1', '1.0', '', ' 1', '1 ', '١', '4294967296')]
+        cases.extend([('--tail=1', '--tail=1'), ('--tail=1', '--where=a=b'),
+                      ('--where=a=b', '--count'), ('--where=a=b', '--where=a=b'),
+                      ('--field=skill',), ('--count=value',)])
+        for args in cases:
+            with self.subTest(args=args):
+                read_fd, write_fd = os.pipe()
+                try:
+                    result = subprocess.run([self.binary, *args], stdin=read_fd,
+                                            capture_output=True, timeout=3)
+                finally:
+                    os.close(read_fd)
+                    os.close(write_fd)
+                self.assertEqual((result.stdout, result.returncode), (b'', 2))
+                self.assertEqual(result.stderr,
+                                 b"jlog: invalid arguments\nUsage: jlog [INPUT] [--progress] "
+                                 b"[--count | --tail N | --where KEY=TEXT]\n"
+                                 b"Try 'jlog --help' for help.\n")
+
+    def test_m4_01_redirected_data_with_malformed_source(self):
+        """Keep redirected tail/filter JSONL valid, exact, and numerically lossless."""
+        first = b' {"status":"failed","n":9007199254740993} '
+        last = b'{"status":"failed","n":1e9999}'
+        data = first + b'\r\nbad\nnull\r\n' + last
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / 'events.data'
+            source.write_bytes(data)
+            before = hashlib.sha256(data).digest()
+            for operation, expected in [(('--tail', '2'), b'null\n' + last + b'\n'),
+                                        (('--where', 'status=failed'), first + b'\n' + last + b'\n')]:
+                with self.subTest(operation=operation):
+                    output = Path(directory) / 'selected.jsonl'
+                    with output.open('wb') as handle:
+                        result = subprocess.run([self.binary, *operation, str(source)],
+                                                stdout=handle, stderr=subprocess.PIPE, timeout=5)
+                    self.assertEqual((result.stderr, result.returncode),
+                                     (f'jlog: {source}: line 2: invalid JSON\n'.encode(), 4))
+                    self.assertEqual(output.read_bytes(), expected)
+                    parsed = [json.loads(body, parse_float=Decimal)
+                              for body in output.read_bytes().splitlines()]
+                    self.assertEqual(len(parsed), 2)
+                    self.assertEqual(parsed[-1]['n'], Decimal('1e9999'))
+                    if operation[0] == '--where':
+                        self.assertEqual(parsed[0]['n'], 9007199254740993)
+                    self.assertEqual(hashlib.sha256(source.read_bytes()).digest(), before)
+
+    def test_m4_01_sigterm_preserves_normal_termination(self):
+        """Leave SIGTERM to the OS after proving a streaming filter is running."""
+        process = subprocess.Popen([self.binary, '--where', 'status=failed'],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, bufsize=0)
+        body = b'{"status":"failed"}\n'
+        try:
+            process.stdin.write(body)
+            self.assertTrue(select.select([process.stdout], [], [], 3)[0])
+            self.assertEqual(process.stdout.readline(), body)
+            process.terminate()
+            stdout, stderr = process.communicate(timeout=5)
+            self.assertEqual((stdout, stderr, process.returncode),
+                             (b'', b'', -signal.SIGTERM))
+        finally:
+            if process.poll() is None:
+                process.kill()
+            process.communicate(timeout=5)
+
+    def test_m4_01_readme_sample(self):
+        """Keep the README sample count, progress, and last two original bodies exact."""
+        source = Path(__file__).resolve().parent / 'sample.jsonl'
+        before = hashlib.sha256(source.read_bytes()).digest()
+        report = f'File: {source}\nRecords: 6\nValid: 6\nInvalid: 0\n'.encode()
+        tail = (
+            b'{"timestamp":"2026-10-26T10:00:05Z","level":"error","status":"failed",'
+            b'"skill":"Networking","message":"Connection failed\\nCheck the upstream service",'
+            b'"details":{"attempt":2,"response":null}}\n'
+            b'{"timestamp":"2026-10-26T10:00:06Z","level":"info","status":"ok",'
+            b'"skill":"Roc","message":"Application stopped","details":{"processed":4,"failed":1}}\n'
+        )
+        for operation, stdout, stderr in [
+                ((), report, b''), (('--count',), b'6\n', b''),
+                (('--tail', '2'), tail, b''),
+                (('--progress',), report, b'jlog: 6 lines inspected, 0 invalid (complete)\n')]:
+            with self.subTest(operation=operation):
+                result = self.run_cli(*operation, str(source))
+                self.assertEqual((result.stdout, result.stderr, result.returncode),
+                                 (stdout, stderr, 0))
+        self.assertEqual(hashlib.sha256(source.read_bytes()).digest(), before)
+
+    def test_m4_01_mid_read_failure_all_modes(self):
+        """Inject real WouldBlock after a consumed prefix without closing the pipe."""
+        selected = b'{"status":"failed","id":1}\n'
+        prefix = b'bad\n' + selected + b'{"status":"failed"'
+        for operation in [(), ('--progress',), ('--count',), ('--tail', '0'),
+                          ('--tail', '2'), ('--where', 'status=failed')]:
+            with self.subTest(operation=operation):
+                read_fd, write_fd = os.pipe()
+                try:
+                    self.assertEqual(os.write(write_fd, prefix), len(prefix))
+                    flags = fcntl.fcntl(read_fd, fcntl.F_GETFL)
+                    fcntl.fcntl(read_fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+                    # Keep the writer open: exhausting buffered bytes must fail,
+                    # rather than become EOF. The child shares this read cursor.
+                    result = subprocess.run([self.binary, *operation], stdin=read_fd,
+                                            capture_output=True, timeout=5)
+                    with self.assertRaises(OSError) as error:
+                        os.read(read_fd, 1)
+                    self.assertIn(error.exception.errno, (errno.EAGAIN, errno.EWOULDBLOCK))
+                finally:
+                    os.close(read_fd)
+                    os.close(write_fd)
+                expected = selected if operation == ('--where', 'status=failed') else b''
+                self.assertEqual((result.stdout, result.returncode), (expected, 3))
+                self.assertTrue(result.stderr.startswith(b'jlog: <stdin>: '))
+                self.assertRegex(result.stderr.lower(), b'would block|temporarily unavailable')
+                self.assertNotIn(b'(complete)', result.stderr)
+                self.assertNotIn(b'invalid JSON', result.stderr)
+                self.assertNotIn(b'status', result.stderr)
 
     def test_progress_short_file_and_stdin(self):
         """Opt-in progress preserves reports and counts every physical line at EOF."""
@@ -274,7 +515,8 @@ class CliTests(unittest.TestCase):
                     stdout=handle, stderr=subprocess.PIPE, timeout=5)
             self.assertEqual((result.stderr, result.returncode), (b"", 0))
             self.assertEqual(output.read_bytes(), bodies[0] + b"\n" + bodies[2] + b"\n")
-            parsed = [json.loads(body) for body in output.read_bytes().splitlines()]
+            parsed = [json.loads(body, parse_float=Decimal)
+                      for body in output.read_bytes().splitlines()]
             self.assertEqual(len(parsed), 2)
             self.assertTrue(all(record["status"] == "failed" for record in parsed))
             self.assertEqual(parsed[0]["n"], 9007199254740993)

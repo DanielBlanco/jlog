@@ -4,14 +4,16 @@
 
 M1 through M3 behavior is implemented. The approved basic-cli host correction
 closes the known M2 descriptor gap; M4-01/02/03 now have passing native evidence.
-M4-04/05/06 release preparation remains. Read the latest
+M4-04 documentation/source-build/install verification also passes on both native
+targets. M4-05/06 release preparation remains. Read the latest
 [progress record](docs/plans/jlog-v0.1-progress.md) and the
 [development handoff](docs/plans/jlog-handoff.md) before resuming for current state,
 verification, and checkpoint limits.
 
-The user has authorized M4-04: verify documented source build, installation and
-usage in clean temporary locations, update the README and add contribution
-guidance. Packaging, license decisions and release publication remain later tasks.
+The user authorized M4-04, which is now complete: documented source build,
+installation and usage in clean temporary locations, README updates and
+contribution guidance. See the [verification report](docs/plans/m4-04-docs-verification.md).
+Packaging, license decisions and release publication remain later tasks.
 
 The separately authorized `--progress` extension adds opt-in, rate-limited stderr
 counts to inspection. See its [specification](docs/specs/inspection-progress.md).

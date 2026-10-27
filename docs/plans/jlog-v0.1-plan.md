@@ -331,6 +331,11 @@ all 70 resource cases per architecture. The known M2 compatibility gap and
 M4-01/M4-03 native blockers are closed. M4-02 has refreshed corrected-host data;
 M4-04/05/06 remain the next release tasks.
 
+M4-04 follow-up: [documentation/build/install verification](m4-04-docs-verification.md)
+now passes on a clean local source checkout and both native CI targets. README
+usage/install cases and five actual source-command blocks are automated, and
+contribution guidance is added. The remaining implementation tasks are M4-05/06.
+
 **Objective:** evidence-backed public release on native macOS ARM64 and Linux
 x86-64. **Complexity: medium to high**, depending on native CI availability.
 

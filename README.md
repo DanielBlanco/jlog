@@ -460,6 +460,11 @@ The [corrected native run](https://github.com/DanielBlanco/jlog/actions/runs/405
 is green on both architectures, with all descriptor assertions and resource
 cases passing; see the [correction report](docs/plans/m4-03-stdio-correction.md).
 
+CI also executes README usage/install examples and the documented source-command
+blocks. M4-04's [verification report](docs/plans/m4-04-docs-verification.md)
+records clean source builds, Bash/zsh status handling and user-prefix installs
+on the native targets.
+
 ### Measure resources
 
 Build the optimized binary first, then run the standard-library measurement driver:
@@ -512,7 +517,7 @@ in the [progress log](docs/plans/jlog-v0.1-progress.md).
 | M1: CLI, framing, file/stdin inspection and validation | ✅ Implemented. |
 | M2: `--count`, `--tail N`, and expanded error handling | Implemented; the approved host patch closes the known descriptor gap on both native targets. |
 | M3: `--where KEY=TEXT`, string-only top-level equality | Implemented and tested on native macOS ARM64, including streaming and pipelines. |
-| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | M4-01/02/03 verified on native macOS ARM64/Linux x86-64; M4-04/05/06 documentation, packaging and final release audit remain. |
+| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | M4-01 through M4-04 verified on native macOS ARM64/Linux x86-64; M4-05 packaging/offline checks and M4-06 final release audit remain. |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |
 
 The [implementation plan](docs/plans/jlog-v0.1-plan.md) contains the ordered tasks.

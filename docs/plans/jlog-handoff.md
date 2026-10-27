@@ -7,7 +7,8 @@ Latest verified checkpoint: the approved corrected platform passes native
 macOS ARM64 and Linux x86-64 CI, including all 15 descriptor subcases per build
 and all 70 resource cases per target. See the
 [correction report](m4-03-stdio-correction.md). M4-01/02/03 are verified;
-M4-04 has now been authorized and is in progress. Historical failures and scoped resume prompts below
+M4-04 documentation/source-build/install verification is now complete; next is
+M4-05 packaging and offline archive verification. Historical failures and scoped resume prompts below
 remain snapshots, not current instructions to preserve the unpatched defect.
 
 M4-04 preparation: documented clone instructions must select `ci/native-m4`
@@ -16,6 +17,13 @@ could not find the bootstrap, and zsh rejected the README's `status` variable.
 Both documentation gaps are corrected; clean macOS source build and documented
 usage/install/source checks pass. Native CI also runs the new README verifier.
 See the latest progress entry for final verification and remaining release tasks.
+
+M4-04 completion: [native run 40571638408](m4-04-docs-verification.md) passes on
+both release targets. Linux verifies 16 usage/install cases; macOS verifies 19
+with zsh coverage. Both execute five documented source blocks, full regressions
+and all existing resource cases. Source, platform and runtime hashes are checked.
+`CONTRIBUTING.md` and the README verifier are in place. Do not start license,
+archive publication or minimum-OS decisions as part of this finished docs task.
 
 Layout update (2026-10-26): application modules and their inline checks now live
 in `src/`; the entry point is `src/main.roc`. Plans and the specification live

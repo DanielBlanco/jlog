@@ -910,3 +910,25 @@ the focused strict suite also passes. Source dev progress reports exactly 12,000
 records at completion. The installed mode is 0755 and binary/input hashes match.
 Raw cases, source stdout/stderr and JSON are under
 `/private/tmp/jlog-m404-clean-verification`. Native CI results follow.
+
+M4-04 changes are committed/pushed as `9c76b4c`. Both
+[PR run 40571638408](https://github.com/DanielBlanco/jlog/actions/runs/40571638408)
+and [push run 40571627911](https://github.com/DanielBlanco/jlog/actions/runs/40571627911)
+finish **success** on native Linux x86-64 and macOS ARM64. The retained PR
+artifacts use merge checkout `cb0e0f304e441a2b5e9f015ade095be4d915980c` and
+identify head `9c76b4c`. Linux passes 16 usage/install cases; macOS passes 19,
+including the three zsh cases. Each target passes all five documented source
+blocks, in addition to the existing compiler/tests/strict/resource sequence.
+The installed binary matches the tested binary byte-for-byte; application,
+platform and fixture integrity checks pass. All 70 existing resource cases pass
+per architecture; no resource code or baseline requirement changed.
+
+The [M4-04 report](m4-04-docs-verification.md) links the clean-local and native
+JSON evidence in `docs/verification/`. Artifact ZIP digests match GitHub metadata,
+and binary/source hashes are verified locally. The optimized artifacts match
+the earlier corrected-host binaries. Raw CI downloads are under
+`/private/tmp/jlog-m404-ci-artifacts`; upload retention ends 2026-11-10.
+
+M4-04 is complete. M4-05 release archives/checksums/offline smoke tests and M4-06
+license/notices/OS support/final manifest remain. No application/platform/compiler
+change, release archive, upstream publication or PR merge is part of this task.

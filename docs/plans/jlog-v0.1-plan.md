@@ -324,6 +324,13 @@ M4-02 has native evidence on both required architectures. Both native CI jobs
 pass ordinary checks but remain red for the known descriptor tests; M4-01 and
 full M4-03 conformance remain open.
 
+Latest execution: the user approved the basic-cli 0.25.0 descriptor correction.
+Both [corrected native jobs](m4-03-stdio-correction.md) now pass check/format,
+486 inline checks, 64 ordinary methods, every strict descriptor assertion and
+all 70 resource cases per architecture. The known M2 compatibility gap and
+M4-01/M4-03 native blockers are closed. M4-02 has refreshed corrected-host data;
+M4-04/05/06 remain the next release tasks.
+
 **Objective:** evidence-backed public release on native macOS ARM64 and Linux
 x86-64. **Complexity: medium to high**, depending on native CI availability.
 

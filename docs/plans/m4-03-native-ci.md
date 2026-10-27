@@ -1,5 +1,11 @@
 # M4-03 native CI execution
 
+**Current status:** the user-approved basic-cli 0.25 host correction now passes
+both required native CI jobs, including every strict descriptor assertion and
+all 70 resource cases per architecture. See the
+[correction execution report](m4-03-stdio-correction.md). The original failed run
+below is retained as historical evidence of the defect.
+
 On 2026-10-27 the user authorized native CI alongside M4-02 Linux x86-64
 measurements. [Run 40549245469](https://github.com/DanielBlanco/jlog/actions/runs/40549245469)
 executed both required architectures at commit

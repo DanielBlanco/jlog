@@ -2,9 +2,10 @@
 
 ## Development Status & Resumption
 
-M1 through M3 behavior is implemented. Strict descriptor-edge conformance from
-M2 remains open; the user explicitly authorized proceeding to M3 with that gap
-recorded. Read the latest [progress record](docs/plans/jlog-v0.1-progress.md) and the
+M1 through M3 behavior is implemented. The approved basic-cli host correction
+closes the known M2 descriptor gap; M4-01/02/03 now have passing native evidence.
+M4-04/05/06 release preparation remains. Read the latest
+[progress record](docs/plans/jlog-v0.1-progress.md) and the
 [development handoff](docs/plans/jlog-handoff.md) before resuming for current state,
 verification, and checkpoint limits.
 
@@ -60,7 +61,10 @@ checkout. Discover it with `command -v roc` and confirm the pin with `roc versio
 The application uses the approved checksum-pinned basic-cli 0.25.0 host patch,
 built with Rust 1.99.0. Prepare it before Roc checks/builds. Native CI executes
 macOS ARM64 and Linux x86-64 sequences; the earlier unpatched results are in the
-[CI evidence](docs/plans/m4-03-native-ci.md). Linux ARM64 Docker is supplemental.
+[CI evidence](docs/plans/m4-03-native-ci.md). The
+[corrected native run](docs/plans/m4-03-stdio-correction.md) passes every command,
+including both strict descriptor suites and all resource cases. Linux ARM64
+Docker also passes its verification and remains supplemental.
 
 Run commands from the repository root:
 

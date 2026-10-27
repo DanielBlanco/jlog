@@ -1,5 +1,9 @@
 # Standard descriptor errors hidden by the pinned platform
 
+**Current status:** the approved host correction passes both required native
+CI jobs. See the [execution report](../plans/m4-03-stdio-correction.md).
+The reproducer below deliberately retains the original published platform.
+
 Rechecked on 2026-10-27, native macOS ARM64, Roc
 `nightly-2026-10-09-258ab27` and basic-cli 0.25.0. These are known release
 blockers under the existing exit-3 contract, not newly accepted behavior.
@@ -175,10 +179,10 @@ application/platform copies and tested binaries are in
 `/private/tmp/jlog-stdio-backport`. The unsuccessful upgrade experiment is in
 `/private/tmp/jlog-stdio-upgrade`. These paths are local diagnostic artifacts.
 
-**Adoption is pending.** jlog still references the original official archive;
-the compiler pin, CI workflow, Dockerfile and existing acceptance tests are
-unchanged. The correction has not executed on native Linux x86-64, and no new
-resource baseline is claimed. Adoption requires a reproducible patched-platform
+**Candidate snapshot before adoption:** jlog still referenced the original official archive;
+the compiler pin, CI workflow, Dockerfile and existing acceptance tests were
+unchanged. The correction had not executed on native Linux x86-64, and no new
+resource baseline was claimed. Adoption required a reproducible patched-platform
 build with pinned provenance and native CI verification. No upstream issue/PR,
 dependency publication or project commit/push was made during this investigation.
 
@@ -186,3 +190,6 @@ The user subsequently approved adoption. The patch now lives under `platform/`,
 and [the pinned bootstrap](../../platform/README.md) prepares the local and CI
 platform. The candidate results above remain a historical snapshot; current
 integration and native verification are tracked in the progress record.
+Both [corrected native CI jobs](../plans/m4-03-stdio-correction.md) now pass,
+including every strict descriptor assertion. The original reproducer and
+candidate evidence above preserve the failure and the isolated RED/GREEN path.

@@ -297,9 +297,12 @@ also pass the resource matrix. The later
 pass all 70 cases, and [native CI](../plans/m4-03-native-ci.md) executes both
 required architectures while keeping the known descriptor failures visible.
 
-The platform exposes write-only stdin as EOF and can suppress EBADF errors on
-unusable stdout/stderr descriptors. These remain strict-contract gaps; mapping
-returned errors cannot recover an error the interface does not expose. Actual
+The original published platform exposed write-only stdin as EOF and suppressed
+EBADF errors on unusable stdout/stderr. Mapping returned errors cannot recover
+an error the interface hides. The approved host patch now checks descriptor
+access before Rust's standard streams, so the existing Roc error mapping receives
+the real failure. [Native CI](../plans/m4-03-stdio-correction.md) verifies all 15
+descriptor subcases in both builds. Actual
 closed-pipe failures are tested to return 3, including help/version, data output,
 and diagnostic/progress writes. See the [progress record](../plans/jlog-v0.1-progress.md)
 for the observations and pending compatibility gate.

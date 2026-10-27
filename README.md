@@ -410,6 +410,9 @@ command sequence and artifact contents. CI rebuilds the same pinned platform as
 local development and verifies its hashes around both optimization suites.
 The [execution report](docs/plans/m4-03-native-ci.md) retains native results,
 including the original unpatched failure evidence.
+The [corrected native run](https://github.com/DanielBlanco/jlog/actions/runs/40560329965)
+is green on both architectures, with all descriptor assertions and resource
+cases passing; see the [correction report](docs/plans/m4-03-stdio-correction.md).
 
 ### Measure resources
 
@@ -468,9 +471,9 @@ include the commands and results used to verify it.
 | Milestone | Status |
 | --- | --- |
 | M1: CLI, framing, file/stdin inspection and validation | ✅ Implemented. |
-| M2: `--count`, `--tail N`, and expanded error handling | Count/tail and tested failure paths implemented; handling some invalid standard descriptors remains unresolved. |
+| M2: `--count`, `--tail N`, and expanded error handling | Implemented; the approved host patch closes the known descriptor gap on both native targets. |
 | M3: `--where KEY=TEXT`, string-only top-level equality | Implemented and tested on native macOS ARM64, including streaming and pipelines. |
-| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Native macOS ARM64/Linux x86-64 measurements and CI executed; strict descriptor conformance and later documentation/packaging/release gates remain open. |
+| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | M4-01/02/03 verified on native macOS ARM64/Linux x86-64; M4-04/05/06 documentation, packaging and final release audit remain. |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |
 
 The [implementation plan](docs/plans/jlog-v0.1-plan.md) contains the ordered tasks.

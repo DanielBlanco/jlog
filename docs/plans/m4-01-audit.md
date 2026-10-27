@@ -1,5 +1,11 @@
 # M4-01 contract and coverage audit
 
+**Current status:** the approved host correction now passes the full native
+verification sequence on macOS ARM64 and Linux x86-64, including every formerly
+failing descriptor assertion. M4-01's known blockers are closed; see the
+[execution report](m4-03-stdio-correction.md). The original audit below records
+the baseline and its later follow-ups.
+
 Audit date: 2026-10-27. Application baseline: `d1a0d20` (M3). Host: native
 macOS ARM64; Roc `nightly-2026-10-09-258ab27`, basic-cli 0.25.0. The user
 authorized starting M4 with this audit. No application source or pin changed.

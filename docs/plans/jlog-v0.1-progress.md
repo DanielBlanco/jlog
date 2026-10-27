@@ -834,3 +834,37 @@ The two platform checks reject corrupted artifacts and mismatched input/target
 identities. The bootstrap is exercised from verified cached archives, then its
 reuse path verifies every generated file. Raw local results are retained under
 `/private/tmp/jlog-patched-local-evidence`. Native CI/Docker results follow.
+
+Integration is committed and pushed as `cf08c48`. Both the
+[push run 40560321503](https://github.com/DanielBlanco/jlog/actions/runs/40560321503)
+and [PR run 40560329965](https://github.com/DanielBlanco/jlog/actions/runs/40560329965)
+finish **success** on Linux x86-64 and macOS ARM64. Durable artifacts use the PR
+run's actual merge checkout `0fb8a1d86b78a3e315b1de9bdc4758a2f7d15157`; source
+hashes match the pushed head/local checkout. Each build passes 486 inline and
+64 ordinary methods plus all 15 unchanged strict descriptor subcases, with no
+skips. All five tooling unit checks and every verification command pass.
+
+Both corrected optimized hosts pass **70/70** resource cases, with all seven
+fixture hashes matching the original baselines. Input/binary hashes remain
+unchanged, and platform integrity is checked around verification. Downloaded
+ZIP digests match GitHub metadata; source/driver/tested executable hashes are
+checked locally. Native x86-64 count/filter peak at 0.41 MiB for both input sizes,
+tail 4096 at 5.16 MiB and tail 16384 at 19.53 MiB. Native macOS count/filter stay
+near 1.7–1.8 MiB, tail 4096 near 20 MiB and tail 16384 at 44.91–50.47 MiB.
+Every 8-MiB line passes without observed stack failure and invalid diagnostics
+remain capped/exact. No measured violation requires a production optimization;
+shared-VM timings are not attributed to the patch or advertised as guarantees.
+
+The updated pinned Docker image also builds and verifies as UID 1000 on native
+Linux ARM64. Both dev/speed pass 486 inline, 64 ordinary and all 15 strict
+subcases; five tooling unit checks and a 62-case small measurement smoke pass.
+The original source mount stays read-only; the generated platform uses the
+writable `/work/source` copy. The container is stopped after artifact export.
+This is supplemental ARM64 evidence, not a new full resource baseline.
+
+The [correction report](m4-03-stdio-correction.md) links the new native and Docker
+JSON evidence. The known M2 descriptor gap and M4-01/M4-03 native blockers are
+closed; M4-02 is refreshed for the corrected host. Next are M4-04 docs/install
+verification, M4-05 archives/offline checks and M4-06 license/notices/OS/final
+audit. The existing PR was neither created nor merged by this work, and no
+release or upstream platform publication was performed.

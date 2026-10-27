@@ -19,6 +19,8 @@ The [first native execution](../../docs/plans/m4-03-native-ci.md) passes ordinar
 tests and all 70 measurements per architecture. Those initial jobs retain their
 failure status for the original strict descriptor cases; later correction
 results are recorded separately in that report.
+The [corrected native execution](../../docs/plans/m4-03-stdio-correction.md) is
+green on both targets, including all strict descriptor assertions and resource cases.
 
 `verify.py` runs as an ordinary user and records each command and status:
 

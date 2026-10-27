@@ -2,9 +2,16 @@
 
 ## Development Status & Resumption
 
-M1-A and M1-B are implemented; development is paused. Read the
+M1-A and M1-B are implemented. M2 has been authorized and count/tail plus the
+tested error paths are implemented; strict descriptor-edge conformance remains
+open. Read the latest [progress record](docs/plans/jlog-v0.1-progress.md) and the
 [development handoff](docs/plans/jlog-handoff.md) before resuming for current state,
 verification, and checkpoint limits.
+
+The separately authorized `--progress` extension adds opt-in, rate-limited stderr
+counts to inspection. See its [specification](docs/specs/inspection-progress.md).
+The later M2 authorization covers count/tail and error handling. Filtering remains
+an M3 task and is not part of the current scope.
 
 ## Project Structure & Module Organization
 

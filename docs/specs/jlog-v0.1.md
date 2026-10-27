@@ -20,7 +20,7 @@ limit remains 128; no custom JSON parser or serializer is part of v0.1.
 ## 2. Commands and argument rules
 
 ```text
-jlog [INPUT] [--count | --tail N | --where KEY=TEXT]
+jlog [INPUT] [--progress] [--count | --tail N | --where KEY=TEXT]
 jlog --help
 jlog --version
 ```
@@ -30,6 +30,10 @@ jlog --version
 - Options may precede or follow the input. `--` ends option parsing, allowing
   filenames beginning with `-`. File extensions are unrestricted.
 - Exactly one operation at most; operations cannot be combined or repeated.
+- Approved extension (2026-10-26): optional `--progress` shows inspection counts
+  on stderr, at most about once per second as input advances and once at EOF.
+  It may appear before/after input, cannot repeat or take a value, and does not
+  select an operation. It emits no progress for unfinished data operations.
 - Accept both `--tail 10` and `--tail=10`, and equivalent forms for `--where`.
   An operand is consumed as one argument, even if it starts with `-`.
 - `--field` is unsupported in v0.1 and follows the usage-error contract.
@@ -148,7 +152,10 @@ value is the JSON string `"failed"`.
 | Help / version | Requested information only | Empty on success |
 | Usage error | Empty | Error followed by a short usage hint |
 
-No colors, progress indicators, implicit summaries, or decorations. Successful
+No colors, implicit summaries, or decorations. Progress is opt-in via `--progress`
+and consists of plain newline-delimited stderr counts plus a completion snapshot;
+it never changes stdout. The ordinary no-progress contract remains unchanged.
+Successful
 data output always ends each emitted record with LF. Tail and filter do not
 reserialize whole records.
 

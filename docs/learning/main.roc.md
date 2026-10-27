@@ -1,276 +1,288 @@
-# Learning `main.roc`: connecting pure code to the operating system
+# Learning `main.roc`: effects, shared streaming, and completion
 
 Read alongside [the source](../../src/main.roc). This guide describes the current
-M1 implementation using Roc `nightly-2026-10-09-258ab27` and `basic-cli` 0.25.0.
-Commands run from the repository root. Newer Roc examples may use different APIs.
+M1/M2 implementation using Roc `nightly-2026-10-09-258ab27` and `basic-cli` 0.25.0.
+Commands run from the repository root. Newer examples may use different APIs.
 
-Start here for the program's overall flow, then read [Cli](Cli.roc.md),
-[Jsonl](Jsonl.roc.md), and [Operations](Operations.roc.md) for the pure logic.
+Start here for overall flow, then read [Cli](Cli.roc.md), [Jsonl](Jsonl.roc.md),
+and [Operations](Operations.roc.md) for the pure decisions and data transformations.
 
 ## The job of this file
 
-`main.roc` owns the effects: accepting native arguments, opening a file, reading
-bytes, writing output, and returning a process exit status. Other modules turn
-values into new values without performing I/O.
+`main.roc` owns native arguments/paths, file and stdin reads, clocks, stdout/stderr,
+and process exits. It connects pure functions rather than duplicating JSON
+validation or counter logic for each operation.
 
 ```mermaid
 flowchart TD
-    A[Native arguments] --> B[Cli.parse]
-    B --> C[Help, version, or usage diagnostic]
-    B --> D[Choose file or stdin]
-    D --> E[Read a byte chunk]
-    E --> F[Jsonl.feed]
-    F --> G[Operations.inspect_line]
-    G --> E
-    E -->|Successful EOF| H[Jsonl.finish]
-    H --> I[Operations.report]
-    I --> J[Write report and return status]
-    E -->|Read failure| K[Write input diagnostic and return 3]
+    A[Cli.parse native arguments] --> B[Help/version, usage failure, or input mode]
+    B --> C[read_source! selects native file or stdin]
+    C --> D[Read raw bytes]
+    D -->|Chunk| E[Jsonl.feed with Operations.consume_checked]
+    E --> F[checked_state! and optional progress]
+    F --> D
+    D -->|EOF| G[Jsonl.finish and checked_state!]
+    G --> H[finish_input!: Eof]
+    D -->|Read failure| I[finish_input!: ReadError]
+    I --> J[stderr diagnostic and exit 3]
+    H --> K[Optional progress completion]
+    K --> L[complete_output!: inspect/count/tail]
+    L --> M[Validation exit 0 or 4]
 ```
 
-This split makes framing and validation testable without constructing files or
-operating-system descriptors. The executable tests still exercise real I/O.
+A resource check can stop earlier with exit 1. No completed count, tail, or
+inspection report is emitted before successful EOF.
 
 ## The application declaration and imports
 
-The first line declares an application, exposes `main!` to its platform, and
-binds the platform dependency to the local name `pf`:
+The `app [main!]` declaration exposes the entry point to the pinned platform and
+binds that platform to `pf`. The long URL identifies the exact basic-cli bundle
+used to build this executable. A platform supplies operating-system integration.
 
-```roc
-app [main!] { pf: platform "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst" }
-```
+`import Cli`, `import Jsonl`, and `import Operations` resolve neighboring source
+modules. Imports beginning with `pf.` resolve platform modules:
 
-A platform supplies the operating-system integration that this application uses.
-Here, `basic-cli` supplies argument/path types, standard streams, file readers,
-and exit handling. The pinned URL keeps that interface reproducible.
-
-`import Cli`, `import Jsonl`, and `import Operations` resolve the neighboring
-project modules. `import pf.File` and similar imports resolve platform modules.
-The `File` module name in `File.open_reader!` and the `File(native)` tag in a
-source value have different roles; context distinguishes them.
-
-| Import | Use in this application |
+| Import | Purpose |
 | --- | --- |
-| `OsStr` | Preserve operating-system arguments, including native path data. |
-| `Stdout`, `Stderr` | Write results and operational diagnostics. |
-| `File`, `Path` | Open a native path as a buffered reader. |
-| `IOErr` | Turn platform error categories into diagnostic text. |
-| `Stdin` | Read raw chunks from standard input. |
+| `OsStr` | Native arguments and preserved path representation. |
+| `File`, `Path` | Open a native file as a buffered reader. |
+| `Stdin` | Read raw input chunks. |
+| `Stdout`, `Stderr` | Separate result data from diagnostics/progress. |
+| `IOErr` | Render an error category returned by the platform. |
+| `Monotonic` | Measure elapsed nanoseconds for optional progress. |
 
-## Reading a function signature
+The `File` module in `File.open_reader!` and the `File(native)` source tag have
+different roles; context distinguishes them.
+
+## Read the entry-point type
 
 ```roc
 main! : List(OsStr) => Try({}, [Exit(I32)])
 ```
 
-Read this as: “Given a list of native arguments, this effectful function returns
-either an empty success value or an exit request carrying a signed 32-bit code.”
+Read this as: given a list of native arguments, perform effects and return either
+an empty success value or an explicit signed 32-bit exit request.
 
-| Syntax | Meaning here |
+| Syntax | Meaning |
 | --- | --- |
-| `name : Type` | An explicit type annotation. |
-| `List(OsStr)` | A list whose elements are native argument values. |
-| `=>` | An effectful function type; pure function types use `->`. |
-| `!` in a function name | Marks an effectful function. |
-| `Try(success, error)` | A result represented by `Ok(value)` or `Err(error)`. |
-| `{}` | The empty record, used when success has no data to return. |
-| `[Exit(I32)]` | A tag union with an `Exit` case carrying an `I32`. |
-| `|args| expression` | A function implementation with one parameter. |
+| `name : Type` | A type annotation. |
+| `List(OsStr)` | A list of native argument values. |
+| `=>` | An effectful function type; pure functions use `->`. |
+| `!` in a name | Identifies an effectful function. |
+| `Try(success, error)` | `Ok(value)` or `Err(error)`. |
+| `{}` | Empty record: success has no additional payload. |
+| `[Exit(I32)]` | A tag union containing an exit code. |
+| `|args| expression` | A function implementation and its parameter. |
 
-The brackets in `[Exit(I32)]` describe a type's alternatives. In a value such as
-`[1, 2]`, brackets instead construct a list.
+A bracketed type such as `[Exit(I32)]` describes alternatives; a bracketed value
+such as `[1, 2]` is a list. In this platform, entry arguments exclude the
+executable's own name.
 
-## `main!`: decide what to do before touching input
+## `main!`: select behavior before input effects
 
-The implementation immediately matches on `Cli.parse(args)`. In this platform,
-the argument list excludes the executable's own name.
+The dispatcher matches `Cli.parse(args)`. A record pattern such as
+`Ok({ operation: Help, .. })` requires help while ignoring other fields.
 
-`match` checks its branches in order. This pattern:
+| Request | Dispatch |
+| --- | --- |
+| Help | Write the embedded help string, including its existing newline. |
+| Version | Write `jlog 0.1.0` and LF. |
+| Usage failure | Report the usage diagnostic and request exit 2. |
+| Inspect | Read the selected source with optional progress. |
+| Count | Use the same reader with no inspection progress. |
+| Tail(N) | Use the same reader with N-body retention and no inspection progress. |
+| Filtering | Return the existing unfinished-operation status 1. |
+
+`InputMode` contains only implemented input operations: `Inspect`, `Count`, and
+`Tail(U32)`. It prevents the shared reader from accidentally receiving help or
+an unfinished filter. Count and tail deliberately ignore the inspection-only
+progress modifier; stderr remains available for their data diagnostics.
+
+Parsing first means help finishes even if stdin stays open, and malformed flags
+beat an inaccessible filename. Tests exercise both cases against the executable.
+
+## Output writers and `report_failure!`
+
+`write_stdout!` writes exact string bytes and maps a reported write failure to
+`Exit(3)`. It adds no newline. `write_stderr!` does the same for diagnostic text,
+including an entire capped diagnostic block. `write_stderr_line!` delegates to
+that writer after concatenating one LF; progress and single-line errors share it.
+
+The expression `.map_err(|_| Exit(3))` transforms only the error case. The `_`
+parameter ignores the underlying write error because the CLI needs an I/O exit.
+A caller such as `write_stderr_line!(message)?` unwraps success or returns the
+error from its enclosing function immediately.
+
+`report_failure!(message, failure)` writes a stderr line and returns the code
+selected by `Operations.exit_code(Failed(failure))`. Its success type is generic:
 
 ```roc
-Ok({ operation: Help, .. })
+report_failure! : Str, Operations.Failure => Try(a, [Exit(I32)])
 ```
 
-requires a successful result whose record has `operation: Help`; `..` ignores
-the other record fields. The branches implement these decisions:
+This function always returns an error; it never constructs an `Ok(a)`. Its callers
+can therefore use it in a function expecting either an empty success value or a
+stream state. That avoids unreachable dummy success values in failure branches.
+If writing the diagnostic itself fails, `?` returns exit 3 before the requested
+usage/resource/internal code can be returned. It does not recursively report a
+write failure through the same broken stream.
 
-| Parse result | Action |
-| --- | --- |
-| `Help` | Write the help string, which already includes its final newline. |
-| `Version` | Write `jlog 0.1.0` with a newline. |
-| `Err(Usage)` | Write a usage diagnostic to stderr and request exit 2. |
-| `Inspect` with `File(native)` | Open the file and inspect it. |
-| `Inspect` with `Stdin` | Inspect stdin with the label `<stdin>`. |
-| Any other successful operation | Explain that it is unfinished and request exit 1. |
+## `read_source!`: native paths and labels remain separate
 
-Count, tail, and filtering are recognized by the parser but have no processing
-implementation yet. Help describes their intended behavior. Parsing an option
-successfully does not imply that the application implements it.
+A `Cli.Source` is either `File(native)` or `Stdin`. Stdin goes directly to the
+reader with the display label `<stdin>`. A file branch obtains `native.display()`
+for the label but opens `Path.from_os_str(native)` using the original native data.
 
-Parsing first has observable benefits: `--help` finishes even if stdin stays
-open, and invalid arguments produce a usage error before a missing file is opened.
+A display string may be lossy, so rebuilding the opening path from it could
+select a different file. The path used for opening is never reconstructed from
+the report label.
 
-### Error conversion and `?`
+`File.open_reader!` returns a reader or `PathErr(err, path)`. The error pattern
+ignores the path payload and passes the label plus `IOErr.to_str(err)` to
+`input_error!`. Opening happens before progress starts. A successful reader is
+wrapped in `FromFile(reader)`; stdin uses `FromStdin`.
 
-`report_failure!` converts a diagnostic write failure with this expression:
+## `read_bytes!`: normalize EOF without swallowing read errors
 
-```roc
-Stderr.line!(message).map_err(|_| Exit(3))?
-```
+The input union `[FromFile(File.Reader), FromStdin]` makes the file reader payload
+explicit. Both cases produce `List(U8)`, raw unsigned-byte values.
 
-`map_err` changes only the error case. `|_|` accepts an error value and ignores
-its details, replacing it with `Exit(3)`. The trailing `?` unwraps `Ok` and
-continues, or returns `Err` from the enclosing function immediately.
+| Transport | Platform result | Shared-loop result |
+| --- | --- | --- |
+| File | Buffered `read_line!` includes LF; empty bytes mean EOF. | Preserve bytes and map `FileErr` to `InputError`. |
+| Stdin | `bytes!` reads at most 16,384 bytes; EOF is `EndOfFile`. | Convert EOF to `Ok([])` and preserve actual `StdinErr` failures. |
 
-For a usage error, a successful diagnostic write is followed by `Err(Exit(2))`.
-If writing fails, `?` returns `Err(Exit(3))` first. Output failure therefore
-overrides the intended usage status. `!` identifies an effect; `?` propagates a
-result error. They serve separate purposes.
+Both transports still pass through the same framer. A stdin chunk can split a
+record, CRLF, or UTF-8 character; validation waits until the physical line exists.
 
-## `write_stdout!` and `report_failure!`: shared output rules
+## `process_reader!`: framing and checked operation state
 
-`write_stdout!(text)` writes exactly the supplied text with `Stdout.write!` and
-maps a write error to exit 3. Help and the completed report already contain their
-newlines; the version branch explicitly supplies `"jlog 0.1.0\n"`. All result
-writes use the same error policy without repeating the mapping at each call.
-
-`report_failure!(message, code)` writes a diagnostic with `Stderr.line!`, then
-returns `Err(Exit(code))`. That writer supplies the final LF. A write failure
-returns exit 3 before the requested code can be returned. Usage errors, unfinished
-operations, and input failures share this ordering through the helper.
-
-The helpers express stream and status policy; they do not combine input reading
-with rendering or hide whether a function performs I/O. Their `!` names and `=>`
-signatures make that visible.
-
-That policy depends on the platform returning an error. A manual macOS probe
-with a read-only `/dev/null` descriptor as stdout still returned 0 for help; the
-same kind of stderr descriptor still returned 2 for usage. Python confirmed the
-descriptors reject writes, and the original and refactored binaries behaved
-identically. This is an observed output-error detection gap, recorded in the
-[progress log](../plans/jlog-v0.1-progress.md#readability-refactor--2026-10-26),
-alongside the pending broader output-failure work. Mapping returned errors does
-not establish detection of every unusable descriptor.
-
-## `inspect_file!`: keep the path separate from its display label
-
-The function takes an `OsStr`, obtains `native.display()` for the report label,
-and opens `Path.from_os_str(native)` using the original native value.
-
-This matters because a displayed path may be a lossy representation of native
-data. Reconstructing an opening path from that text could refer to a different
-file. Display conversion is for messages; native conversion is for opening.
-
-On success, `File.open_reader!` returns a buffered reader. On failure, the pattern
-`PathErr(err, _)` extracts the I/O error and ignores the accompanying path payload.
-The explicit `return input_error!(...)` stops execution before entering the loop.
-
-The successful reader is wrapped in `FromFile(reader)` so it can share the same
-inspection loop as the payload-free `FromStdin` case.
-
-## `inspect_reader!`: two pieces of state, one loop
-
-The loop begins with:
+The mode chooses a retention limit: tail uses its N; inspection/count use zero.
+The loop begins with this shape:
 
 ```roc
-var $current = { state: Jsonl.start, value: Operations.start }
+var $current = { state: Jsonl.start, value: Ok(Operations.stream_start(limit)) }
+var $progress = start_progress!(progress)
 var $reading = True
 ```
 
-`var` introduces a local mutable variable, and `$` identifies its uses. Ordinary
-bindings such as `bytes = ...` remain immutable within their scope. The mutation
-here makes the effectful read loop direct to follow.
+`var` introduces a local mutable variable and `$` marks its references. Ordinary
+bindings such as `bytes = ...` remain immutable within their scopes.
 
-`$current` contains two independent states:
-
-| Field | Contents |
+| Part | Contents |
 | --- | --- |
-| `state` | Framing state: unfinished bytes and the next physical line number. |
-| `value` | Inspection state: totals and at most 100 invalid-line details. |
+| `$current.state` | Framing: pending bytes, physical line number, and exhaustion flag. |
+| `$current.value` | `Try` containing shared counters/details and bounded tail, or a resource failure. |
+| `$progress` | Quiet mode or the most recent displayed count and timestamp. |
 
-Each iteration calls `read_bytes!`. A read failure returns immediately through
-`input_error!`; it does not finalize the framer or write a completed report.
-An empty byte list means EOF after transport normalization. Otherwise:
+A nonempty read is passed to `Jsonl.feed` with `Operations.consume_checked` as its
+pure callback. Each line is classified once. The callback updates the shared
+summary and retains a valid body only when tail storage is enabled. A fatal
+counter error remains sticky in the accumulator.
 
-```roc
-$current = Jsonl.feed($current.state, bytes, $current.value, Operations.inspect_line)
-```
+After framing, `checked_state!` rejects either a framing-exhaustion flag or a
+failed consumer. It reports a resource error and exit 1 before progress or
+results can be written. Otherwise the summary is available for a progress check.
+The loop does not retain earlier stream-state snapshots between iterations.
 
-passes the current summary and a function value to the framer. The function
-`Operations.inspect_line` is called for each complete physical line. The framer
-does not need to know what a summary contains.
+An empty read ends the loop. `Jsonl.finish` emits a final pending unterminated
+record, if present, using the same checked callback. Its result is checked again,
+then passed to `finish_input!` with `Eof`.
 
-At EOF, `Jsonl.finish` emits a pending unterminated line, if present. Its returned
-`.value` is the final summary; `inspection_report!` writes it.
+## `finish_input!`: one terminal decision before output
 
-Incremental reading avoids storing the entire input. Memory still depends on the
-largest physical line, transport buffers, temporary validation data, and capped
-error details. There is no implemented maximum line length or measured whole-file
-resource guarantee yet.
+A reported read error also goes through `finish_input!`, but carries
+`ReadError(reason)` and the last successful state. It does not call `Jsonl.finish`
+on the incomplete prefix.
 
-## `read_bytes!`: adapt the transports
+The helper calls the pure `Operations.complete_stream(state, event)`. For an
+error it immediately returns through `input_error!`, dropping deferred output.
+Only EOF success can call `finish_progress!` and `complete_output!`.
 
-```roc
-read_bytes! : [FromFile(File.Reader), FromStdin] => Try(List(U8), [InputError(IOErr)])
-```
+This is why malformed records before an I/O failure cannot cause a completed
+count/tail/report or exit 4: the terminal read-error branch wins. Pure tests seed
+prefixes with errors and retained bodies. Directory-stdin tests exercise actual
+reported read errors; the advanced pseudo-terminal closure attempt was EOF, so
+executable failure specifically after a consumed prefix remains unverified.
 
-The input union makes it explicit that a file source carries a reader and stdin
-does not. Both branches return bytes, represented by unsigned 8-bit integers.
+## Optional progress in the read loop
 
-| Transport | Platform behavior | Shared-loop behavior |
+`ProgressOutput` is `Quiet` or `Reporting(Operations.Progress)`. `start_progress!`
+reads `Monotonic.now!` only when explicitly enabled. Quiet runs perform no clock
+reads or progress writes.
+
+`update_progress!` reads the clock and asks `Operations.progress_due` whether at
+least a second and new completed lines exist. If so, it writes a plain stderr
+snapshot and stores the new count/timestamp only after the write succeeds.
+
+`finish_progress!` prints a final `(complete)` snapshot after successful EOF,
+including empty input and the final unterminated line. It is exempt from the
+periodic interval. Failed reads/resources do not call that completion path.
+
+There is no timer thread: updates are checked after reads, so blocked input and
+very long records can delay them. The pinned API has no terminal detection;
+newline-delimited text works for terminals and redirected stderr without cursor
+controls, colors, or extra dependencies. A reported progress write failure is 3.
+
+## `complete_output!`, `write_tail!`, and `validation_status`
+
+`complete_output!` receives a completed stream state and selects rendering:
+
+| Mode | stdout | stderr |
 | --- | --- | --- |
-| File | `read_line!` includes the LF when present; empty bytes mean EOF. | Preserve bytes; map `FileErr(err)` to `InputError(err)`. |
-| Stdin | `bytes!` reads chunks; EOF is an `EndOfFile` error case. | Map `EndOfFile` to `Ok([])`; preserve actual `StdinErr` failures. |
+| Inspect | `Operations.report`: header and malformed detail section. | Only requested progress or operational errors. |
+| Count | `Operations.count_report`: valid count and LF. | Capped `Operations.data_diagnostics`. |
+| Tail | Original retained bodies, each followed by LF. | Capped `Operations.data_diagnostics`. |
 
-The loop can now treat either transport identically. It still sends file reads
-through the framer because stdin chunks may split a line, CRLF, or UTF-8 sequence.
+Data diagnostics are written before count/tail data. A reported stderr failure
+stops completion rather than producing apparently successful data without its
+diagnostics.
 
-The pinned platform exposes a write-only stdin descriptor as EOF rather than a
-read error. This adapter cannot distinguish that from genuine empty input.
-Directory stdin does produce a propagated read failure. The
-[handoff](../plans/jlog-handoff.md#known-limitations-and-risks) records the gap.
+`write_tail!` iterates `Operations.tail_lines` with a `for` loop. It writes each
+byte body through `Stdout.write_bytes!`, then adds LF. `?` inside the loop returns
+from the whole function on a write failure. It does not serialize JSON or build
+one large string containing all retained bytes. A failed write may leave partial
+output; already-written bytes cannot be retracted.
 
-## `inspection_report!` and `input_error!`: output and status
+After successful writes, `validation_status` calls the pure exit-code policy:
+valid/empty input becomes `Ok({})`, mapped to process status 0 by the platform;
+malformed input becomes `Err(Exit(4))`. N=0 tail still validates and can return 4
+with empty stdout. Write failures return 3 before this validation status.
 
-`inspection_report!` first asks `Operations.report` to construct a string, then
-passes it to `write_stdout!`. Writing successfully yields exit 4 if the summary has any
-invalid records, or `Ok({})` otherwise. The platform maps that success to exit 0.
-If the write fails, `?` returns exit 3 before the malformed-record check.
+`input_error!` escapes a source label and delegates `jlog: LABEL: REASON` to
+`report_failure!` with `IoFailure`. Neither diagnostics nor progress include
+original record contents.
 
-`input_error!` escapes the display label and delegates `jlog: LABEL: REASON` to
-`report_failure!` with status 3. The shared helper writes to stderr and also
-returns 3 if writing that diagnostic fails.
+## Memory and known platform limits
 
-Malformed records are recoverable input data: they appear in the completed
-inspection report on stdout. An open/read failure prevents completion and uses
-stderr. A failed stdout write can leave partial output; the code cannot retract
-bytes that were already written.
+Inspection/count retain the largest current line, buffers, validation temporaries,
+and at most 100 malformed details. Tail additionally retains at most N valid
+bodies, growing with received records rather than preallocating N slots. There
+is no fixed total-input or individual-line cap. Large-file resource measurements
+and native Linux execution remain release work.
 
-## Follow one input through the program
-
-For the bytes represented by `{}\n\nnot-json\nnull`, the shared pipeline emits
-four physical lines. Their classifications are valid, blank, invalid JSON, and
-valid. EOF causes the final `null` to be emitted even without a trailing LF.
-
-The report has `Records: 4`, `Valid: 2`, and `Invalid: 2`, with errors at physical
-lines 2 and 3. Writing it succeeds, then the application returns exit 4.
+The platform exposes write-only stdin as EOF and can suppress EBADF errors on
+unusable stdout/stderr descriptors. These remain strict-contract gaps; mapping
+returned errors cannot recover an error the interface does not expose. Actual
+closed-pipe failures are tested to return 3, including help/version, data output,
+and diagnostic/progress writes. See the [progress record](../plans/jlog-v0.1-progress.md)
+for the observations and pending compatibility gate.
 
 ## Try it and read the tests
 
 ```sh
 roc run src/main.roc -- tests/sample.jsonl
-printf '{}\n\nnot-json\nnull' | roc run src/main.roc
+roc run src/main.roc -- --count tests/sample.jsonl
+roc run src/main.roc -- --tail 2 tests/sample.jsonl
+printf '{}\n\nnot-json\nnull' | roc run src/main.roc -- --count
 ```
 
-The sample reports six valid records and exit 0. The second command reports the
-four-line example above and exit 4. The backslash escapes in `printf` produce
-actual physical newlines.
+The sample count is 6. The final command prints `2` and LF to stdout, details for
+physical lines 2/3 to stderr, and exits 4. Tail's two sample records keep their
+original bodies. The [Python suite](../../tests/test_cli.py) checks real streams,
+EOF gating, native paths, permission failures, ring boundaries, and broken pipes.
+See [README](../../README.md#for-developers) for complete build/test commands.
 
-The [Python executable suite](../../tests/test_cli.py) checks exact stdout,
-stderr, and statuses, including held-open stdin, inaccessible files, long lines,
-and file/stdin parity. See the [README](../../README.md#for-developers) for build
-and test commands. Pure module checks alone cannot prove this I/O behavior.
-
-As a reading exercise, trace `jlog missing.jsonl --unknown`: `Cli.parse` returns
-`Usage`, so `inspect_file!` is never called. Then trace a valid input whose report
-write fails: `inspection_report!` returns exit 3 before it can return success.
+As an exercise, trace `missing.jsonl --unknown`: parsing fails before opening.
+Then trace a count with a malformed prefix and a reported read failure: terminal
+failure returns 3, while its deferred count and malformed details are discarded.

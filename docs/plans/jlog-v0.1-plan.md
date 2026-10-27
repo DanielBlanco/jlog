@@ -222,6 +222,11 @@ claims count/tail/filter acceptance before their milestones pass.
 
 ## M2 — Count, tail, and errors
 
+Implementation update (2026-10-26): count/tail and the ordinary/closed-pipe error
+paths are implemented. The [progress record](jlog-v0.1-progress.md) contains
+task-by-task evidence. Strict handling of unusable standard descriptors remains
+a platform compatibility gate; the contract below is unchanged.
+
 **Objective:** scriptable count/tail and complete error contracts with bounded
 storage. **Complexity: medium to high**, primarily tail ownership and I/O tests.
 

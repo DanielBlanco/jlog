@@ -23,7 +23,7 @@ explains that declaration pattern.
 ## `State`, `Line`, and `start`
 
 ```roc
-State : { pending : List(U8), next_line : U64 }
+State : { pending : List(U8), next_line : U64, exhausted : Bool }
 Line : { number : U64, body : List(U8) }
 ```
 
@@ -38,8 +38,12 @@ and purposes rather than relying on a default numeric type.
 `start` is a value, not a function call:
 
 ```roc
-start = { pending: [], next_line: 1 }
+start = { pending: [], next_line: 1, exhausted: False }
 ```
+
+`exhausted` starts false. It marks the exceptional point where advancing the
+physical line number would exceed U64, so the caller can stop with a resource
+failure rather than wrap. Ordinary framing leaves it false.
 
 The state contains no input filename, JSON syntax state, or inspection totals.
 Framing is independent of all three.
@@ -104,6 +108,13 @@ paths the same numbering and clearing rules.
 The caller passes the body explicitly: `feed` removes a final CR, while `finish`
 supplies the pending bytes unchanged. Sharing emission preserves their different
 terminator rules. The generic callback and consumer value remain pure.
+
+At `U64.highest`, advancing the physical number would overflow. `emit_line`
+leaves that number unchanged and sets `exhausted: True` rather than wrapping.
+`feed` ignores remaining bytes once exhausted, and `finish` emits nothing further.
+The actual application's `checked_state!` recognizes the flag and returns a
+resource failure before any completed output. This exceptional flag is separate
+from malformed-record reasons; ordinary framing always leaves it false.
 
 ## `without_final_cr`: remove exactly the CR that belongs to CRLF
 
@@ -285,7 +296,7 @@ empty chunks, and checks byte-at-a-time input. Its `offset: 0.U64` explicitly
 types the numeric literal. `sublist` and `drop_first` construct the two chunks.
 These tests demonstrate that framing is independent of transport boundaries.
 
-The module has 97 top-level `expect` checks covering framing, EOF, CRLF, invalid
+The module has 99 top-level `expect` checks covering framing, EOF, CRLF, invalid
 UTF-8, diagnostic precedence, depth boundaries, and positive/negative JSON
 grammar. Cases include huge numbers, escaped Unicode surrogate pairs, invalid
 lone surrogates, duplicate keys, and malformed-line recovery. M1 labels in comments
@@ -295,9 +306,9 @@ refer to tasks in the [implementation plan](../plans/jlog-v0.1-plan.md).
 roc test --main=src/main.roc src/Jsonl.roc
 ```
 
-The main context can cause all 182 project checks to run. Line-number and summary
-counter overflow handling remains future work; U64 provides a large range, not
-an implemented exhaustion policy. Long-line resource measurements are also pending.
+The main context can cause all 240 project checks to run. Seeded boundary tests
+cover line-number exhaustion; summary-counter exhaustion is checked in the
+production operations consumer. Long-line resource measurements remain pending.
 
 As an exercise, predict the lines for chunks `"{}\r"`, `"\n\nnu"`, and `"ll"`.
 After EOF there are three: `{}`, an empty body, and `null`. The classifier marks

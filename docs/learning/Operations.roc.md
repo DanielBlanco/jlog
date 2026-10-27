@@ -4,9 +4,9 @@ Read alongside [the source](../../src/Operations.roc). See
 [Jsonl](Jsonl.roc.md) for the numbered lines this module consumes and
 [main.roc](main.roc.md) for the code that writes its result.
 
-Despite the broad module name, the current implementation contains inspection
-summaries and rendering. Count, tail, and filtering have no implementations here
-yet. The guide describes the pinned Roc version used by this checkout.
+The current implementation contains shared validation summaries, inspection and
+count rendering, bounded tail retention, data diagnostics, and progress/error
+policies. Filtering remains an M3 task. The guide describes the pinned Roc version used by this checkout.
 
 ## The module boundary
 
@@ -42,9 +42,9 @@ For summaries produced by the reducer, `records == valid + invalid` and
 relationships: they follow from how `start` and `inspect_line` construct values.
 `report` relies on that construction rather than revalidating the summary.
 
-`U64` gives counters an explicit large nonnegative range. Detected overflow and
-resource-exhaustion handling remain future work; the current increments are not
-a complete exhaustion policy.
+`U64` gives counters an explicit large nonnegative range. The production
+`consume_checked` wrapper detects exhausted counters before incrementing; seeded
+near-limit tests verify the boundary without trying to exhaust the machine.
 
 ## `inspect_line`: a reducer passed as a function value
 
@@ -55,9 +55,11 @@ inspect_line : Summary, Jsonl.Line -> Summary
 The function receives the previous summary and one physical line, calls
 `Jsonl.classify`, and returns the next summary. The `->` type is pure.
 
-Before classification, the function increments `records` once in a record named
-`counted`. Both outcomes build on that value, so the common increment has one
-definition. For `Valid`, it then increments `valid`:
+`inspect_line` delegates classification and counting to the private
+`record_classification` helper. The production stream consumer shares that helper
+and classifies only once. After classification, the helper increments `records`
+once in a record named `counted`. Both outcomes build on it, so the common
+increment has one definition. For `Valid`, it then increments `valid`:
 
 ```roc
 counted = { ..summary, records: summary.records + 1 }
@@ -167,6 +169,111 @@ The function matches a `Jsonl.Reason` and returns its stable display message:
 This keeps JSON byte/grammar rules in `Jsonl` and report language in
 `Operations`. The reason tags do not carry or reproduce the malformed record.
 
+## `count_report` and `data_diagnostics`: data-mode completion
+
+`count_report(summary)` formats the shared valid total as one ungrouped decimal
+integer plus LF. Invalid records contribute zero; an empty input produces `0`
+plus LF. It does not inspect input or decide whether EOF occurred. The effectful
+driver calls it only after a successful completion transition, verified by a
+held-open stdin test. A framing test also confirms that an unterminated last
+record joins the total only when `Jsonl.finish` emits it.
+
+`data_diagnostics(source, summary)` formats retained errors as
+`jlog: SOURCE: line N: REASON`, with one LF per detail. It escapes the source label
+once, preserves physical ordering, and appends `jlog: SOURCE: K more invalid
+records` when details were omitted. Empty/valid summaries produce an empty string.
+Inspection's errors remain inside its stdout report; count and tail instead
+write this diagnostic string to stderr and reserve stdout for data.
+
+## `Tail`, `tail_start`, `tail_push`, and `tail_lines`: a growing ring
+
+`Tail` has three fields: `limit`, the widened U64 version of CLI N; `next`, the
+slot that will be replaced when full; and `bodies`, a list of original byte lists.
+`tail_start` initializes an empty list even for N=4294967295. It allocates no N-slot
+buffer in advance.
+
+`tail_push` accepts an already-valid body. For N=0 it retains nothing. Before
+the list reaches N, it appends. Once full, indexed `List.set` replaces the oldest
+slot and the index advances, wrapping to zero at N. It does not shift the whole
+list on every insertion. The checked set result also makes an impossible index
+violation explicit as an internal crash rather than silently losing a record.
+
+For N=2, receiving 1 and 2 stores `[1, 2]`, next=0. Receiving 3 stores `[3, 2]`,
+next=1: the physical storage order differs from input order. `tail_lines` restores
+input order once at EOF by joining the suffix starting at `next` with the prefix
+before it. This produces `[2, 3]`. Record bodies are not decoded/re-encoded for
+output, so numeric spellings, duplicate keys, whitespace, and Unicode survive.
+
+Roc values remain semantically immutable. A test retaining an older tail snapshot
+still observes its old contents after a push. Production keeps only the current
+state so storage can be reused; the ring API and an insertion smoke probe were
+checked on the pinned compiler. These checks are not full resource benchmarks.
+
+## Shared streaming state and checked consumption
+
+`StreamState` pairs `summary: Summary` with `tail: Tail`. `stream_start(limit)`
+starts both. Inspection and count use a zero retention limit; tail uses its N.
+All modes therefore share validation totals and capped malformed-line details.
+
+`consume_line(state, line)` classifies once, calls `record_classification`, and
+pushes a body only for `Valid`. Even N=0 still classifies every physical line.
+The older `inspect_line` helper lets small pure summary tests use the same
+classification/counting logic without carrying tail storage.
+
+The actual application gives `consume_checked` to the framer. Its accumulator is
+`Try(StreamState, [ResourceFailure])`. It propagates an earlier failure unchanged,
+checks all counters against `U64.highest`, and only then calls `consume_line`.
+An exhaustion result contains no deferred state, so it cannot later be rendered
+as a partial successful count or tail. The low-level reducers assume counters fit;
+production always uses the checked wrapper.
+
+## `exit_code` and `complete_stream`: completion and failure policy
+
+`Failure` names usage, I/O, resource, internal, and unfinished-operation failures.
+`exit_code` maps completed validation to 0 or 4, usage to 2, I/O to 3, and the
+other fatal categories to 1. The effectful boundary wraps the result in `Exit`.
+
+`complete_stream(state, event)` distinguishes `Eof` from `ReadError(reason)`.
+EOF returns the completed state. A reported read failure returns only the error,
+discarding the deferred summary and tail. Both actual terminal paths use this
+pure decision through `finish_input!`; that caller writes results only on success.
+
+Tests seed a prefix containing valid/invalid records and retained bodies, then
+assert that failure cannot yield completed output or malformed-input status 4.
+Real directory-stdin failures and closed-pipe writes are checked separately. A
+pseudo-terminal closure was observed as EOF on this platform, so that attempt
+does not establish executable mid-stream read-fault coverage.
+
+## `Progress`, `progress_start`, `progress_due`, and `progress_text`
+
+Inspection progress uses the existing summary counters, so it does not store
+input records or a second set of validation totals. Its scheduling state is:
+
+```roc
+Progress : { last_update_ns : U64, records : U64 }
+```
+
+`last_update_ns` is a monotonic timestamp from the most recent periodic snapshot,
+or from startup before the first snapshot. `records` is the number of lines shown
+in that snapshot, initially zero. The pure `progress_start(now_ns)` constructs
+this initial state from a timestamp supplied by the effectful caller.
+
+`progress_due(previous, now_ns, summary)` requires both an advanced record count
+and at least 1,000,000,000 elapsed nanoseconds: one second. It first rejects a
+backwards timestamp so unsigned subtraction cannot underflow. It therefore avoids
+repeating unchanged counts or printing on every physical line. Deterministic
+tests can supply timestamps directly, including the exact interval boundary.
+
+`progress_text(summary, complete)` returns a plain message such as
+`jlog: 42 lines inspected, 2 invalid`. A true completion argument adds
+` (complete)`. The renderer does not add a newline, read a clock, or decide
+whether input actually reached EOF: `main.roc` owns those effects and decisions.
+
+Only periodic snapshots use the rate limiter. The final EOF snapshot is always
+emitted when requested, including for zero records or a short run. A read error
+must never call the completion path. See [main.roc](main.roc.md#optional-progress-in-the-read-loop)
+for the effectful coordination.
+
 ## `escape_source`: labels must remain readable on one line
 
 Filenames can contain newlines, tabs, and other controls. Inserting them directly
@@ -245,16 +352,25 @@ The private `summarize(bytes)` helper runs the real framer with
 final `.value`, which is the summary. It gives tests a concise way to exercise
 the production pipeline without reading a file or duplicating classification.
 
-The module has 18 top-level `expect` checks for initial/valid/mixed summaries,
+The module has 64 top-level `expect` checks for initial/valid/mixed summaries,
 physical numbering, first-100 limits, omission counts, exact reports, large
 decimal counters, control escaping, Unicode preservation, and absence of raw
 record text from diagnostics.
+
+Ten of those checks cover progress initialization, interval boundaries, unchanged
+counts, backwards timestamps, and exact progress rendering without using a real
+clock. The Python suite separately tests real progress before EOF.
+
+The M2 additions cover count/data formatting, tail boundaries and ring wraparound,
+near-limit counters, EOF versus prefix read failure, and explicit exit categories.
+These pure checks complement the executable permission, EOF-gating, and broken
+pipe tests rather than simulating operating-system faults with ordinary EOF.
 
 ```sh
 roc test --main=src/main.roc src/Operations.roc
 ```
 
-The compiler can include the entire application's 182 checks through the main
+The compiler can include the entire application's 240 checks through the main
 context. Exact rendering tests complement the executable tests: one checks the
 returned string, and the other checks which stream receives it and the status.
 

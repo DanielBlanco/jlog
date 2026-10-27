@@ -294,3 +294,119 @@ Final verification on the pinned native toolchain and recorded writable cache:
 
 `dist/jlog` is the tested optimized binary. Existing milestone boundaries remain
 unchanged; the additional observed output limitation is recorded above.
+
+## Optional inspection progress — 2026-10-26
+
+The user separately authorized opt-in progress; this is an explicit extension to
+the earlier no-progress contract, not advancement into the pending data modes.
+The specification is in `docs/specs/inspection-progress.md`, and the v0.1 contract
+now permits the modifier. `--progress` emits newline-delimited stderr counts at
+most about once per second as physical lines advance, plus a final `(complete)`
+snapshot after successful EOF. Ordinary inspection stdout/stderr and status
+behavior remain unchanged; help and usage advertise the new modifier.
+
+**RED:** `JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p
+'test_cli.py' -k progress -v` ran the new mixed file/stdin acceptance method
+against the existing binary. It failed all five invocation subcases: file cases
+returned usage status 2 instead of malformed-input status 4; stdin cases returned
+usage output instead of the report and progress snapshot. This was an executed
+behavior failure, not a compiler failure. The baseline pure suite passed 182
+checks before implementation.
+
+**GREEN / REFACTOR:** added a command/state boolean, strict one-use modifier
+parsing, pure monotonic scheduling/rendering, and effectful progress coordination
+in the shared read loop. The pinned platform supplies `Monotonic.now! : () => U64`
+in nanoseconds; its inspected APIs provide no terminal detection. Plain stderr
+lines therefore work consistently without FFI, dependency, or toolchain changes.
+Factored stderr line writing so progress and failure diagnostics share one policy.
+Default runs read no clock and write no progress. Read errors return before
+completion; progress write errors reported by the platform propagate as exit 3.
+
+**Final verification:** all commands used the recorded writable cache and pinned
+native macOS ARM64 toolchain. Both dev and speed `roc test --no-cache src/main.roc`
+passed **202** checks: 77 CLI, 97 JSONL, and 28 inspection/progress. Both builds
+completed with zero errors/warnings. Python discovery against each build passed
+**33** methods with no skips. The seven new executable methods cover file/stdin
+parity, empty/unterminated input, opt-in/argument boundaries, literal filenames,
+input failures without completion, unfinished operations, and live progress.
+The live pipe test holds stdin open, observes a progress line before EOF, asserts
+stdout is still empty, then checks the final report/count/status. Pure policy
+checks cover exact interval boundaries, unchanged counts, and backwards timestamps.
+
+`roc check src/main.roc`, explicit-source formatting checks, and diff whitespace
+checks passed. The README sample produced its exact six-record stdout report and
+stderr completion line. Earlier CLI assertions were retained with an explicit
+false modifier default; existing JSONL/summary assertions remain intact. All new
+functions have documentation and learning-guide explanations; Markdown links and
+heading anchors resolve. `dist/jlog` is the tested optimized binary.
+
+Updates are checked after input reads; blocked reads and very long records can
+delay snapshots. No background heartbeat, percentage, or terminal animation was
+added. Existing stdin/output-descriptor gaps and pending Linux/resource/release
+verification remain. Count, tail, and filtering are still unimplemented.
+
+## M2 implementation — authorized 2026-10-26
+
+The user requested starting M2 using the existing specification and plan. Work
+proceeds one task at a time; previous M1-only resume text is historical. Pending
+progress/fixture changes in the working tree are preserved. Baseline: 202 pure
+checks and 33 executable methods passed on the pinned native toolchain.
+
+| Task | Executed RED | GREEN / refactor verification |
+| --- | --- | --- |
+| M2-01 | Focused `roc test --main=src/main.roc src/Operations.roc` failed the new empty-count assertion: placeholder returned empty text instead of `0\n`; 202 passed, 1 failed, zero compiler errors. | `count_report` renders only the shared summary's valid total plus LF. Empty, valid, all-invalid, mixed, final unterminated, ungrouped large, and maximum-U64 cases pass. Framing checks confirm the pending final record joins the count only at finish; executable EOF gating belongs to M2-03. Focused/regression P: 209 passed; dev build: zero errors/warnings; I: 33 passed. |
+| M2-02 | The same focused command failed mixed-input diagnostics against the empty placeholder: 209 passed, 1 failed, zero compiler errors. | `data_diagnostics` renders source/physical line/reason, uses shared escaping, and reports omitted invalid details after the first 100. Empty/valid input is quiet; mixed/control-label/capped cases pass. P: 214 passed; check/format clean; dev build: zero errors/warnings; I: 33 passed. |
+| M2-03 | Executable `-k m2_03` failed all 12 initial file/stdin cases: unfinished-operation status 1 rather than count status 0/4. | Count now uses the same native-source reader/framer/summary pipeline as inspection. It defers count and capped data diagnostics until EOF, includes the final unterminated line, accepts all JSON kinds/huge numbers, and preserves exit 4 for malformed input. A held-open stdin test proves no premature stdout/stderr. P: 214 passed; dev I: 37 passed; build/check/format clean. Inspection-only progress remains quiet in count mode; its previous unfinished-count expectation was replaced by count-contract coverage. |
+| M2-04 | A one-record tail assertion failed against the compiling no-storage placeholder: 214 passed, 1 failed, zero compiler errors. | Tail starts empty and appends only received valid bodies within N. Empty, zero-N, one, fewer-than-N, order, and maximum-N/tiny-input cases pass without preallocation. P: 220 passed; dev I: 37 passed; check/format/build clean. Eviction remains the next task. |
+| M2-05 | The first full-tail eviction assertion failed: limit 2 retained records 1/2 instead of 2/3; 220 passed, 1 failed, zero compiler errors. | Indexed ring replacement evicts the oldest body, wraps its index, and restores input order only at completion. Repeated wraps, N=1, immutable snapshots, bounded length, and maximum-N/tiny input pass. P: 224 passed; dev I: 37 passed; check/format/build clean. |
+| M2-06 | Executable `-k m2_06` failed 12 initial file/stdin/N cases: unfinished status 1 rather than malformed status 4. | Tail now shares single-pass classification and capped summaries with inspection/count. Zero-N still validates; output preserves original bodies/order and normalizes only terminators after EOF. Empty/max-N, repeated wraps, huge numbers, Unicode, duplicate keys, leading zeroes, malformed records outside the suffix, and held-open stdin pass. P: 224 passed; dev I: 40 passed; build/check/format clean. |
+| M2-07 | A seeded maximum-counter assertion failed against the compiling checked-consumer placeholder: 224 passed, 1 failed, zero compiler errors. | The production consumer propagates sticky resource failures and checks totals before incrementing. Framing records line-number exhaustion without wrapping and stops consuming further bytes; the driver exits 1 before output. Pure checks cover near/max counters, failure categories 0/1/2/3/4, EOF framing exhaustion, and sticky failure. P: 237 passed; dev I: 40 passed; check/format/build clean. A test-local name initially shadowed `framed`; its warnings were corrected during GREEN, not counted as RED. |
+| M2-08 | New cross-mode missing/unreadable/directory tests passed immediately: the shared source reader already maps these failures correctly. Inherited coverage; no RED fabricated. | Real unprivileged permission fixtures and empty deferred outputs are asserted for inspect/count/tail, including N=0. Dev I: 41 passed. |
+| M2-09 | A prefix read-failure transition failed against a compiling completion placeholder: 237 passed, 1 failed, zero compiler errors. | `complete_stream` resolves EOF versus read failure; the actual reader routes both through `finish_input!`, which emits progress/results only for success. Seeded valid/malformed prefixes prove deferred data is dropped and I/O overrides exit 4. Directory-stdin tests exercise actual reported read errors in all modes. P: 240 passed; check/format/build clean. Advanced prefix fault attempt is recorded below. |
+| M2-10 | Closed-pipe acceptance tests passed immediately using existing error-propagating writers; these are inherited coverage, not artificial RED. | Eight real closed stdout cases cover help/version/inspect/count/tail and valid/malformed input; five closed stderr cases cover usage, unimplemented filtering, progress, count/tail diagnostics. All return 3 without crashes, recursion, or deferred stdout after stderr failure. EBADF descriptor ambiguities remain a separately disclosed contract gap. |
+
+S-IO preliminary probe: a closed-reader stdout pipe with help and a closed-reader
+stderr pipe with a usage error both yielded exit 3 on the pinned platform. These
+are distinct from the earlier EBADF descriptor gap, which remains recorded.
+
+S-tail API probe: the pinned compiler passed five isolated checks for indexed
+`List.set`, out-of-bounds results, list retrieval/slicing, and widening U32 to U64.
+This establishes the ring-storage API without assuming current online docs match
+the pin. Production insertion and ownership behavior are verified in M2-05.
+
+S-tail ownership smoke probe: an optimized, argument-driven program used the
+actual production `tail_push` for 200,000 insertions while retaining only its
+current state. N=64/4096/16384 retained exactly N bodies and correct ring indexes;
+observed single-run times were 0.156/0.019/0.015 seconds, including startup. These
+noisy smoke timings rule out an obvious full-list copy on each insertion in this
+probe; they are not release throughput/RSS benchmarks or cross-platform evidence.
+
+Advanced S-IO attempt: a raw pseudo-terminal delivered a malformed/valid prefix;
+the running inspection emitted `3 lines inspected, 1 invalid` before EOF with
+stdout still empty. Closing the slave then yielded EOF, a completed report, and
+exit 4 rather than a read error. This is **not** a mid-stream read-fault injection
+or evidence of that executable scenario; it remains unverified. The mandatory
+pure production transition and ordinary executable read failures are covered.
+
+Strict descriptor-edge conformance remains unresolved on this platform: write-only
+stdin is exposed as EOF, and EBADF stdout/stderr writes can be suppressed by the
+platform. The specification has not been weakened. The available APIs cannot
+distinguish these results from genuine EOF/success; custom platform/FFI or pin
+changes remain outside the implementation plan. Count/tail and the tested M2
+error paths are implemented, but do not describe the full I/O contract as proven
+for these edge cases or silently close that compatibility gate.
+
+Final native M2 verification: `roc check src/main.roc` and explicit-source
+`roc fmt --check` passed. Dev and optimized pure runs each passed **240** checks
+(77 CLI, 99 JSONL, 64 operations). Both builds completed without errors/warnings;
+the Python suite passed **44** methods with no skips against each binary. The dev
+verification binary was `/private/tmp/jlog-m2-storage-dagtny5m/jlog-dev`, selected
+explicitly with `JLOG_BIN`; `dist/jlog` remains the tested optimized artifact.
+All 63 named functions have comments and learning-guide coverage. Local Markdown
+links/anchors resolve, and README count/tail examples were verified against the
+12,000-record fixture, including exact original bytes for the tail suffix.
+
+README, repository guidance, handoff, and learning guides now describe implemented
+count/tail and the shared checked stream architecture. M2's strict descriptor-edge
+gate is explicitly left open; filtering/M3 was not started. No commit, push, PR,
+platform upgrade, new dependency, or FFI change was made.

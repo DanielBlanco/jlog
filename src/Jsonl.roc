@@ -44,11 +44,11 @@ Jsonl :: {}.{
 		parsed.is_ok()
 	}
 
-	State : { pending : List(U8), next_line : U64 }
+	State : { pending : List(U8), next_line : U64, exhausted : Bool }
 	Line : { number : U64, body : List(U8) }
 
 	start : State
-	start = { pending: [], next_line: 1 }
+	start = { pending: [], next_line: 1, exhausted: False }
 
 	## Consume a byte chunk, emitting each LF-terminated physical line to the reducer.
 	## Remove one CR immediately before LF; retain unfinished bytes across chunks.
@@ -56,7 +56,9 @@ Jsonl :: {}.{
 	feed = |state, bytes, value, emit| bytes.fold(
 		{ state, value },
 		|current, byte| {
-			if byte == 10 {
+			if current.state.exhausted {
+				current
+			} else if byte == 10 {
 				emit_line(current.state, without_final_cr(current.state.pending), current.value, emit)
 			} else {
 				{ ..current, state: { ..current.state, pending: current.state.pending.append(byte) } }
@@ -67,7 +69,7 @@ Jsonl :: {}.{
 	## At successful EOF, emit a nonempty pending line without stripping a lone CR.
 	## Clear emitted bytes; empty input and a trailing LF add no phantom record.
 	finish : State, a, (a, Line -> a) -> { state : State, value : a }
-	finish = |state, value, emit| if state.pending.is_empty() {
+	finish = |state, value, emit| if state.exhausted or state.pending.is_empty() {
 		{ state, value }
 	} else {
 		emit_line(state, state.pending, value, emit)
@@ -118,7 +120,15 @@ scan_depth = |state, byte| {
 ## normalization applies; LF and EOF emission share clearing and numbering rules.
 emit_line : Jsonl.State, List(U8), a, (a, Jsonl.Line -> a) -> { state : Jsonl.State, value : a }
 emit_line = |state, body, value, emit| {
-	state: { pending: [], next_line: state.next_line + 1 },
+	state: {
+		pending: [],
+		next_line: if state.next_line == U64.highest {
+			state.next_line
+		} else {
+			state.next_line + 1
+		},
+		exhausted: state.next_line == U64.highest,
+	},
 	value: emit(value, { number: state.next_line, body }),
 }
 
@@ -134,13 +144,13 @@ without_final_cr = |bytes| if bytes.is_empty() {
 
 expect {
 	actual = Jsonl.feed(Jsonl.start, "{}\n".to_utf8(), [], |lines, line| lines.append(line))
-	actual == { state: { pending: [], next_line: 2 }, value: [{ number: 1, body: [123, 125] }] }
+	actual == { state: { pending: [], next_line: 2, exhausted: False }, value: [{ number: 1, body: [123, 125] }] }
 }
 
 expect {
 	partial = Jsonl.feed(Jsonl.start, "{}".to_utf8(), [], |lines, line| lines.append(line))
 	actual = Jsonl.finish(partial.state, partial.value, |lines, line| lines.append(line))
-	actual == { state: { pending: [], next_line: 2 }, value: [{ number: 1, body: [123, 125] }] }
+	actual == { state: { pending: [], next_line: 2, exhausted: False }, value: [{ number: 1, body: [123, 125] }] }
 }
 
 ## Collect framed lines from byte chunks for tests, including final EOF emission.
@@ -173,7 +183,7 @@ expect framed([[195], [169, 10]]).value == [{ number: 1, body: [195, 169] }]
 expect framed([[255], [10], [195]]).value == [{ number: 1, body: [255] }, { number: 2, body: [195] }]
 expect {
 	partial = Jsonl.feed(Jsonl.start, [195], [], |lines, line| lines.append(line))
-	partial == { state: { pending: [195], next_line: 1 }, value: [] }
+	partial == { state: { pending: [195], next_line: 1, exhausted: False }, value: [] }
 }
 
 ## Verify test framing against expected lines for every two-chunk split, empty
@@ -207,7 +217,7 @@ expect {
 expect {
 	body = "x".repeat(32769).to_utf8()
 	actual = framed([body.sublist({ start: 0, len: 16384 }), body.drop_first(16384), [13], [10]])
-	actual.value == [{ number: 1, body }] and actual.state == { pending: [], next_line: 2 }
+	actual.value == [{ number: 1, body }] and actual.state == { pending: [], next_line: 2, exhausted: False }
 }
 
 # M1-09: a blank physical line is an invalid record, not an ignored separator.
@@ -318,3 +328,15 @@ expect Jsonl.classify({ number: 2, body: " ".to_utf8() }) == Invalid(InvalidJso
 expect Jsonl.classify({ number: 2, body: "﻿{}".to_utf8() }) == Invalid(InvalidJson)
 expect Jsonl.classify({ number: 2, body: " ﻿{}".to_utf8() }) == Invalid(InvalidJson)
 expect framed(["[1,\n2]\n".to_utf8()]).value.map(Jsonl.classify) == [Invalid(InvalidJson), Invalid(InvalidJson)]
+
+# M2-07: detect line-number exhaustion without wrapping or consuming more lines.
+expect {
+	initial = { pending: [], next_line: U64.highest, exhausted: False }
+	actual = Jsonl.feed(initial, "{}\nnull\n".to_utf8(), [], |lines, line| lines.append(line))
+	actual.state.exhausted and actual.state.next_line == U64.highest and actual.value == [{ number: U64.highest, body: "{}".to_utf8() }]
+}
+expect {
+	initial = { pending: "null".to_utf8(), next_line: U64.highest, exhausted: False }
+	actual = Jsonl.finish(initial, [], |lines, line| lines.append(line))
+	actual.state.exhausted and actual.value == [{ number: U64.highest, body: "null".to_utf8() }] and Jsonl.finish(actual.state, actual.value, |lines, line| lines.append(line)) == actual
+}

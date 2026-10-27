@@ -6,9 +6,10 @@
 Give it a file or pipe in a stream to get record totals and useful validation
 errors. It reads incrementally and leaves your input unchanged.
 
-> 🚧 **Current status:** file/stdin inspection, validation, help, and version work.
-> Count, tail, and filtering are planned; their flags currently parse but return
-> an unfinished-operation message and exit 1. Field extraction is deferred to v0.2.
+> 🚧 **Current status:** inspection, validation, count, tail, help, and version work
+> with file/stdin input. Filtering still returns an unfinished-operation message
+> and exit 1. Known platform descriptor edge cases remain under review; field
+> extraction is deferred to v0.2.
 
 ## Table of contents
 
@@ -16,7 +17,10 @@ errors. It reads incrementally and leaves your input unchanged.
 - [Using jlog](#using-jlog)
   - [Inspect a file](#inspect-a-file)
   - [Read from stdin](#read-from-stdin)
+  - [Show inspection progress](#show-inspection-progress)
   - [Find malformed records](#find-malformed-records)
+  - [Count valid records](#count-valid-records)
+  - [Show the last valid records](#show-the-last-valid-records)
   - [Use exit codes in scripts](#use-exit-codes-in-scripts)
 - [JSONL rules](#jsonl-rules)
 - [Build and install](#build-and-install)
@@ -91,6 +95,43 @@ it is not a JSONL data stream:
 ./dist/jlog events.jsonl > report.txt
 ```
 
+### Show inspection progress
+
+Add `--progress` to see counts on stderr while the final report stays on stdout:
+
+```sh
+./dist/jlog --progress tests/sample.jsonl
+cat events.jsonl | ./dist/jlog --progress
+./dist/jlog --progress events.jsonl > report.txt
+```
+
+```text
+jlog: 125000 lines inspected, 42 invalid
+jlog: 250000 lines inspected, 65 invalid
+jlog: 250018 lines inspected, 65 invalid (complete)
+```
+
+Counts include all inspected physical lines, including malformed ones. Updates
+appear at most about once per second as input advances. A final count is always
+printed at EOF, so short or empty inputs may show only the completion line.
+For `tests/sample.jsonl`, that line is `jlog: 6 lines inspected, 0 invalid (complete)`.
+
+For a larger example, `tests/sample-big.jsonl` contains 12,000 valid log records
+in about 5.5 MiB, with varied statuses, services, Unicode, and nested data. An
+optimized build may finish before the first periodic update. A development run
+makes intermediate progress easier to see without a much larger fixture:
+
+```sh
+roc run --opt=dev src/main.roc -- --progress tests/sample-big.jsonl
+```
+
+Progress is plain newline-delimited text, suitable for a terminal or redirected
+stderr. It has no colors or cursor controls. Updates can pause during blocked
+reads or a very long individual record; there is no background heartbeat.
+Open/read failures produce no completion line. The flag applies to inspection;
+count and tail keep their data-mode output contracts without progress. Filtering
+remains unfinished. Without the flag, stderr is quiet on successful inspection.
+
 ### Find malformed records
 
 ```sh
@@ -114,15 +155,45 @@ The report lists the first 100 invalid lines, then an omitted-detail count if
 needed. Inspection includes malformed-line details on stdout; input/output
 errors go to stderr. A propagated input read error produces no completed report.
 
+### Count valid records
+
+```sh
+./dist/jlog --count tests/sample.jsonl
+cat events.jsonl | ./dist/jlog --count
+```
+
+The sample prints `6` followed by a newline. Count waits for EOF, counts only valid
+records, and prints zero for empty input. Malformed input still produces its valid
+count and exits 4; the first 100 invalid-line diagnostics and any omitted count
+go to stderr. An open/read failure produces no count.
+
+### Show the last valid records
+
+```sh
+./dist/jlog --tail 2 tests/sample.jsonl
+./dist/jlog tests/sample.jsonl --tail=0002
+cat events.jsonl | ./dist/jlog --tail 10 > recent.jsonl
+```
+
+Tail outputs the last N valid records in input order after EOF, preserving their
+original bodies and adding LF terminators. It validates the entire input, including
+malformed records outside the suffix. Invalid-line diagnostics go to stderr and
+cause exit 4 even when valid records were emitted.
+
+N accepts ASCII digits from 0 through 4294967295, with leading zeroes allowed.
+Zero outputs no records but still validates. Storage grows only as records arrive;
+a large N with a tiny input does not preallocate N slots. Tail memory depends on
+the retained record bytes as well as the current line and capped diagnostics.
+
 ### Use exit codes in scripts
 
 | Code | Meaning |
 | --- | --- |
-| `0` | Inspection completed with valid input, including an empty input. |
-| `1` | Internal failure, or a currently unfinished operation. |
+| `0` | Operation completed with valid input, including empty input. |
+| `1` | Internal/resource failure, or currently unfinished filtering. |
 | `2` | Invalid arguments. |
 | `3` | Input open/read error or reported output write error. |
-| `4` | Inspection completed with malformed JSONL records. |
+| `4` | Operation completed with malformed JSONL records. |
 
 Capture the status immediately; invalid input still produces a useful report:
 
@@ -155,6 +226,12 @@ descriptor as EOF, so that unusual setup currently reports empty input with exit
 0. Actual propagated read errors are handled separately. See the
 [handoff](docs/plans/jlog-handoff.md#known-limitations-and-risks) for this gap and the
 remaining native Linux/resource verification work.
+
+The pinned platform can also suppress EBADF errors when stdout/stderr uses an
+unusable descriptor. Real closed-pipe write failures return 3 in the executable
+tests, but strict detection of every descriptor failure remains unresolved.
+See the [progress record](docs/plans/jlog-v0.1-progress.md#m2-implementation--authorized-2026-10-26)
+for the compatibility gate; the specified I/O contract has not been relaxed.
 
 ## Build and install
 
@@ -291,7 +368,7 @@ include the commands and results used to verify it.
 | Milestone | Status |
 | --- | --- |
 | M1: CLI, framing, file/stdin inspection and validation | ✅ Implemented. |
-| M2: `--count`, `--tail N`, and expanded error handling | Planned; flags currently parse only. |
+| M2: `--count`, `--tail N`, and expanded error handling | Count/tail and tested failure paths implemented; handling some invalid standard descriptors remains unresolved. |
 | M3: `--where KEY=TEXT`, string-only top-level equality | Planned; flag currently parses only. |
 | M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Pending. |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |

@@ -1,9 +1,10 @@
-Usage: jlog [INPUT] [--count | --tail N | --where KEY=TEXT]
+Usage: jlog [INPUT] [--progress] [--count | --tail N | --where KEY=TEXT]
        jlog --help | --version
 
 INPUT is one file, or - for stdin (the default); use ./- for a file named -.
 Options may precede or follow INPUT; -- ends option parsing.
 No operation flag selects inspection and validation.
+  --progress       Show inspection progress on stderr (about once per second).
   --count          Count valid records.
   --tail N         Last N valid records; N is 0..4294967295.
   --where KEY=TEXT Match a literal top-level key against an exact JSON string.

@@ -8,12 +8,29 @@ in `docs/plans/` and `docs/specs/`. Historical verification commands below retai
 the paths used when executed. For current build/test commands, see the
 [README](../../README.md#for-developers). This move adds no milestone behavior.
 
+Feature update (2026-10-26): the user separately authorized `--progress` for
+inspection. It emits plain stderr snapshots at most about once per second as
+input advances and a final snapshot at EOF. See the
+[progress specification](../specs/inspection-progress.md) and the latest progress
+record for implementation/verification. Historical totals and commands below
+remain snapshot evidence; count, tail, and filtering were still unimplemented
+when that extension was added. The later M2 update follows.
+
 ## Current project status
+
+Current implementation update (2026-10-26): the user authorized M2. Count and
+bounded tail, capped data diagnostics, checked counters, EOF/read-failure
+transitions, and actual closed-pipe error paths are implemented. See the latest
+progress record for task-by-task RED/GREEN evidence and current test totals.
+Write-only stdin and suppressed EBADF output errors remain unresolved platform
+compatibility gaps; do not claim strict full-descriptor conformance or advance
+to M3 on the strength of ordinary I/O tests. The snapshot and M1-only resume
+prompt below are historical and do not revoke the later M2 authorization.
 
 **M1-A and M1-B are already implemented and verified.** The handoff request's
 expected next checkpoint, M1-B, is stale for this checkout. Preserve the existing
 implementation; do not restart those tasks or manufacture failing tests. The
-first unimplemented task is **M2-01**, which needs separate authorization. The
+first unimplemented task at that snapshot was **M2-01**. The
 resume prompt below deliberately stays within M1-B verification and genuine gaps.
 
 `jlog` is a small Unix JSONL explorer for inspection/validation, count, tail, and
@@ -110,7 +127,7 @@ cache write failure and original formatting failure are historical; neither was
 reintroduced here. `roc fmt --help` freshly confirms `--check` and path arguments;
 continue using explicit existing project paths rather than recursive `.`.
 
-## Remaining work
+## Historical remaining work (2026-10-18)
 
 No M1-B feature is awaiting its initial implementation on this HEAD. Resume its
 verification/reconciliation only if instructed; preserve the coverage above.
@@ -129,10 +146,12 @@ requires a separate instruction; this handoff does not authorize it.
 
 ## Known limitations and risks
 
-- Fresh smoke checks confirm `--count`, `--tail 1`, and `--where status=failed`
+- At the 2026-10-18 snapshot, smoke checks confirmed `--count`, `--tail 1`, and `--where status=failed`
   remain parsing-only: empty stdout, `jlog: data operations are not implemented
   yet` on stderr, exit 1. Help describes the intended release, not full completion.
-  `--field skill` freshly returns usage exit 2; extraction remains v0.2.
+  `--field skill` returned usage exit 2; extraction remains v0.2. Later M2 work
+  implemented count/tail; filtering remains unavailable. See the latest progress
+  record for current validation and descriptor-edge conformance gaps.
 - **Known stdin gap, freshly reproduced:** passing a write-only pipe descriptor
   as stdin yields an empty inspection report/status 0. Historical independent Roc
   probes showed the pinned platform exposes this as EOF, unlike Python's EBADF.
@@ -147,15 +166,16 @@ requires a separate instruction; this handoff does not authorize it.
   of such a filename on Linux remains unverified.
 - No current check fails. Native Linux application execution, large-file resource
   behavior, tail allocation, full output-fault coverage and packaging are not
-  established by these macOS tests. U64 counter/resource exhaustion handling is
-  still an M2 task. Mid-stream read-fault injection is best effort; production
+  established by these macOS tests. Later M2 work added checked U64 line/summary
+  exhaustion and pure production read-error transitions. Advanced executable
+  mid-stream read-fault injection remains unverified; production
   error handling and ordinary file/output failure tests remain mandatory.
 - Feasibility reports record an earlier compiler crash with a different JSON
   union adapter. Preserve the successful skip adapter; M3 should use the verified
   record-based string classification approach. Retain reproducers and investigate
   compiler crashes/unsupported APIs instead of bypassing tests.
 
-## Exact resume instructions
+## Historical M1-only resume instructions
 
 This prompt preserves the requested M1-B-only boundary while accounting for its
 existing implementation. It does not instruct a fresh session to redo completed

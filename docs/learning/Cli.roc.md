@@ -16,15 +16,18 @@ Three associated type aliases describe the public result:
 | --- | --- |
 | `Source` | `Stdin` or `File(OsStr)`. |
 | `Operation` | `Inspect`, `Count`, `Tail(U32)`, `Where({ key: Str, text: Str })`, `Help`, or `Version`. |
-| `Command` | A record containing `source: Source` and `operation: Operation`. |
+| `Command` | A record containing `source: Source`, `operation: Operation`, and `progress: Bool`. |
 
 The annotation `parse : List(OsStr) -> Try(Command, [Usage])` can now be read
 without repeating the full nested command shape. These aliases name existing
 shapes; they do not introduce nominal wrappers around the result.
 
-Separating source and operation lets options appear before or after the input.
-Parsing a command does not implement its operation: count, tail, and filtering
-still return an unfinished-operation message when dispatched by `main!`.
+The `progress` field defaults to `False` and is an independent modifier; it does
+not select an operation. Separating source and operation lets options appear
+before or after the input.
+Parsing describes a requested operation. Inspection, count, and tail now run
+through the shared reader; filtering still returns an unfinished-operation
+message when dispatched by `main!`.
 
 ## The outer declaration
 
@@ -94,7 +97,7 @@ application never reads stdin for them.
 Other inputs start general parsing with:
 
 ```roc
-parse_args(arguments, { source: Stdin, operation: Inspect, options_ended: False, has_input: False })
+parse_args(arguments, { source: Stdin, operation: Inspect, progress: False, options_ended: False, has_input: False })
 ```
 
 No input means stdin; no operation flag means inspection. Combined information
@@ -111,13 +114,14 @@ parameters and booleans:
 | --- | --- |
 | `source` | Selected input, initially stdin. |
 | `operation` | Selected operation, initially inspection. |
+| `progress` | Whether `--progress` was explicitly supplied; initially false. |
 | `options_ended` | Whether `--` ended option parsing. |
 | `has_input` | Whether an input argument was explicitly supplied. |
 
 `has_input` is necessary because default stdin and an explicit `-` both yield
 `Stdin`, while a second input after an explicit dash must be rejected.
 
-`[]` finishes by returning only the command fields. `[arg, .. as rest]` takes
+`[]` finishes by returning the source, operation, and progress command fields. `[arg, .. as rest]` takes
 one argument and binds the remaining list. If `options_ended` is true, the
 argument goes directly to `parse_input` without option interpretation.
 
@@ -135,12 +139,26 @@ patterns then distinguish these cases:
 | --- | --- |
 | `Ok(["--"])` | Mark options as ended and recurse. |
 | `Ok(["--count"])` | Select `Count`. |
+| `Ok(["--progress"])` | Enable progress once; reject a repeated modifier. |
 | `Ok(["--tail", .. as inline])` | Obtain an operand, validate a tail size, and select `Tail(size)`. |
 | `Ok(["--where", .. as inline])` | Obtain an operand, validate a filter, and select `Where(filter)`. |
 | Anything else | Ask `parse_input` to select a filename or reject an unknown option. |
 
 Branches run in order. Exact list patterns matter: `--count=x` does not match
 `["--count"]`, and `--=x` does not match `["--"]`.
+
+## `--progress`: an independent modifier
+
+`--progress` is handled before input selection: its branch enables the state's
+boolean and recurses, or returns `Usage` if it is already enabled. The exact
+`["--progress"]` pattern rejects a value such as `--progress=true`. Help and
+version remain standalone, so combining either with progress is a usage error.
+
+The flag is independent of `Operation`. Count and tail preserve their data-mode contracts without inspection progress.
+Filtering may parse with it but still returns its unfinished-operation failure
+without starting inspection. After `--`, the same token can be a literal filename.
+As an operand, `--where --progress=x` is a filter request: consuming an operand
+does not dispatch it as another option.
 
 ## `parse_input`: one place for filename selection
 
@@ -266,19 +284,21 @@ help file at runtime. `help_text = usage_text` exposes the constant through
 Edit the file and rebuild to change help. Keep the final newline: `main!` passes
 the text to `write_stdout!`, which adds no newline. Executable tests independently
 verify its exact bytes, so intentional wording changes require updating their
-expected help. Data-operation descriptions still precede their implementations,
-as the [README](../../README.md) explains.
+expected help. Filtering is still unfinished; count and tail are implemented, as the
+[README](../../README.md) explains.
 
-The module's 67 top-level `expect` checks cover valid forms, defaults, ordering,
+The module's 77 top-level `expect` checks cover valid forms, defaults, ordering,
 conflicts, boundaries, native filenames, invalid text, and standalone help/version.
-They assert public behavior rather than depending on the private helper layout.
+The new cases also cover progress defaults, placement, repetition, equals-form
+rejection, and literal filenames/operands. They assert public behavior rather
+than depending on the private helper layout.
 
 ```sh
 roc test --main=src/main.roc src/Cli.roc
 ```
 
 This compiler may include all modules reached through the main context, so it
-can report 182 checks rather than only this module's 67.
+can report 240 checks rather than only this module's 77.
 
 As an exercise, trace `- events.jsonl`: the first argument marks stdin as an
 explicit input, so `parse_input` rejects the second. Then compare `--tail` with

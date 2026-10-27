@@ -2,6 +2,26 @@ import Jsonl
 
 Operations :: {}.{
 
+	## Render the valid-record count for a completed input summary. The effectful
+	## caller must defer this result until successful EOF; malformed lines add zero.
+	count_report : Summary -> Str
+	count_report = |summary| "${summary.valid.to_str()}\n"
+
+	## Render capped data-mode diagnostics and the omitted count after EOF, using
+	## escaped source labels and stable reasons without including record contents.
+	data_diagnostics : Str, Summary -> Str
+	data_diagnostics = |source, summary| {
+		label = escape_source(source)
+		details = summary.errors.fold("", |text, error|
+			text.concat("jlog: ${label}: line ${error.number.to_str()}: ${reason_text(error.reason)}\n"))
+		omitted = summary.invalid - summary.errors.len()
+		if omitted > 0 {
+			details.concat("jlog: ${label}: ${omitted.to_str()} more invalid records\n")
+		} else {
+			details
+		}
+	}
+
 	## Render an EOF inspection summary with an escaped source label, retained error
 	## details, and an omitted-detail count when needed. Always end with LF.
 	report : Str, Summary -> Str
@@ -43,18 +63,148 @@ Operations :: {}.{
 	start : Summary
 	start = { records: 0, valid: 0, invalid: 0, errors: [] }
 
+	Tail : { limit : U64, next : U64, bodies : List(List(U8)) }
+
+	## Start with no stored bodies, regardless of requested N. Widening the CLI's
+	## U32 limit is lossless and matches the list indexing type.
+	tail_start : U32 -> Tail
+	tail_start = |limit| { limit: limit.to_u64(), next: 0, bodies: [] }
+
+	## Retain a valid original record body within the requested bound. Validation
+	## is the caller's job, including when the limit is zero.
+	tail_push : Tail, List(U8) -> Tail
+	tail_push = |tail, body| {
+		if tail.limit == 0 {
+			return tail
+		}
+		if tail.bodies.len() < tail.limit {
+			return { ..tail, bodies: tail.bodies.append(body) }
+		}
+		bodies = match tail.bodies.set(tail.next, body) {
+			Ok(value) => value
+			Err(OutOfBounds) => crash "Tail ring index out of bounds"
+		}
+		next = tail.next + 1
+		{
+			..tail,
+			bodies,
+			next: if next == tail.limit {
+				0
+			} else {
+				next
+			},
+		}
+	}
+
+	## Return retained bodies in input order for output after successful EOF.
+	tail_lines : Tail -> List(List(U8))
+	tail_lines = |tail| if tail.next == 0 {
+		tail.bodies
+	} else {
+		tail.bodies.drop_first(tail.next).concat(tail.bodies.sublist({ start: 0, len: tail.next }))
+	}
+
+	Progress : { last_update_ns : U64, records : U64 }
+
+	## Start the progress rate limiter at a supplied monotonic timestamp. The clock
+	## is read by the caller so scheduling remains pure and deterministic in tests.
+	progress_start : U64 -> Progress
+	progress_start = |now_ns| { last_update_ns: now_ns, records: 0 }
+
+	## Permit a periodic snapshot only after one second and newly inspected lines.
+	## Guard subtraction so a backwards timestamp cannot underflow the timer.
+	progress_due : Progress, U64, Summary -> Bool
+	progress_due = |previous, now_ns, summary| {
+		if now_ns < previous.last_update_ns {
+			return False
+		}
+		summary.records > previous.records and now_ns - previous.last_update_ns >= 1000000000
+	}
+
+	## Render plain progress counts without a newline; the effectful writer supplies
+	## it. Mark successful EOF explicitly so partial progress is never completion.
+	progress_text : Summary, Bool -> Str
+	progress_text = |summary, complete| {
+		text = "jlog: ${summary.records.to_str()} lines inspected, ${summary.invalid.to_str()} invalid"
+		if complete {
+			text.concat(" (complete)")
+		} else {
+			text
+		}
+	}
+
 	## Classify one physical line and increment inspection totals, retaining only
 	## the first 100 invalid line numbers and reasons in encounter order.
 	inspect_line : Summary, Jsonl.Line -> Summary
-	inspect_line = |summary, line| {
-		counted = { ..summary, records: summary.records + 1 }
-		match Jsonl.classify(line) {
-			Valid => { ..counted, valid: counted.valid + 1 }
-			Invalid(reason) => {
-				..counted,
-				invalid: counted.invalid + 1,
-				errors: retain_error(counted.errors, { number: line.number, reason }),
-			}
+	inspect_line = |summary, line| record_classification(summary, line.number, Jsonl.classify(line))
+
+	StreamState : { summary : Summary, tail : Tail }
+	Failure : [UsageFailure, IoFailure, ResourceFailure, InternalFailure, UnimplementedFailure]
+
+	## Map completed validation and explicit fatal categories to the CLI contract.
+	## Fatal input/output failures override any earlier malformed-record status.
+	exit_code : [Completed(Summary), Failed(Failure)] -> I32
+	exit_code = |outcome| match outcome {
+		Completed(summary) => if summary.invalid > 0 {
+			4
+		} else {
+			0
+		}
+		Failed(UsageFailure) => 2
+		Failed(IoFailure) => 3
+		Failed(_) => 1
+	}
+
+	## Start shared validation and optional tail retention. A zero limit retains
+	## no record bodies and serves inspection/count without separate counters.
+	stream_start : U32 -> StreamState
+	stream_start = |limit| { summary: start, tail: tail_start(limit) }
+
+	## Classify each physical line once, update shared totals, and retain only
+	## valid original bodies in the bounded tail. Invalid lines still count.
+	consume_line : StreamState, Jsonl.Line -> StreamState
+	consume_line = |state, line| {
+		classification = Jsonl.classify(line)
+		summary = record_classification(state.summary, line.number, classification)
+		tail = match classification {
+			Valid => tail_push(state.tail, line.body)
+			Invalid(_) => state.tail
+		}
+		{ summary, tail }
+	}
+
+	## Propagate a previous failure or consume one line with checked counters.
+	## The result keeps failure separate from malformed JSONL classification.
+	consume_checked : Try(StreamState, [ResourceFailure]), Jsonl.Line -> Try(StreamState, [ResourceFailure])
+	consume_checked = |current, line| {
+		state = current?
+		if state.summary.records == U64.highest or state.summary.valid == U64.highest or state.summary.invalid == U64.highest {
+			return Err(ResourceFailure)
+		}
+		Ok(consume_line(state, line))
+	}
+
+	## Resolve EOF versus a reported read failure. Failure drops the deferred
+	## summary/tail state; the caller may render results only for a successful EOF.
+	complete_stream : StreamState, [Eof, ReadError(Str)] -> Try(StreamState, [ReadError(Str)])
+	complete_stream = |state, event| match event {
+		Eof => Ok(state)
+		ReadError(reason) => Err(ReadError(reason))
+	}
+
+}
+
+## Update validation totals and bounded details from one already-classified
+## physical line. Inspection tests and production streaming share this reducer.
+record_classification : Operations.Summary, U64, [Valid, Invalid(Jsonl.Reason)] -> Operations.Summary
+record_classification = |summary, number, classification| {
+	counted = { ..summary, records: summary.records + 1 }
+	match classification {
+		Valid => { ..counted, valid: counted.valid + 1 }
+		Invalid(reason) => {
+			..counted,
+			invalid: counted.invalid + 1,
+			errors: retain_error(counted.errors, { number, reason }),
 		}
 	}
 }
@@ -157,3 +307,106 @@ expect Str.from_utf8([194, 128, 194, 133, 194, 159]).map_ok(Operations.escape_so
 expect Operations.escape_source("café λ🙂\\name") == "café λ🙂\\name"
 expect Operations.report("bad", summarize("SECRET not json".to_utf8())).contains("SECRET") == False
 expect Operations.report("all", { records: 5, valid: 0, invalid: 5, errors: [{ number: 1, reason: Blank }, { number: 2, reason: InvalidUtf8 }, { number: 3, reason: Bom }, { number: 4, reason: TooDeep }, { number: 5, reason: InvalidJson }] }) == "File: all\nRecords: 5\nValid: 0\nInvalid: 5\n\nMalformed records:\n  line 1: blank line\n  line 2: invalid UTF-8\n  line 3: BOM is not allowed\n  line 4: nesting exceeds 128\n  line 5: invalid JSON\n"
+
+# M2-01: count output is one ungrouped decimal integer and a final LF at EOF.
+expect Operations.count_report(Operations.start) == "0\n"
+expect Operations.count_report(summarize("{}\nnull\n42".to_utf8())) == "3\n"
+expect Operations.count_report(summarize("\nnot-json\n".to_utf8())) == "0\n"
+expect Operations.count_report(summarize("{}\n\nnot-json\nnull".to_utf8())) == "2\n"
+expect Operations.count_report({ records: 1234569, valid: 1234567, invalid: 2, errors: [] }) == "1234567\n"
+expect Operations.count_report({ records: 18446744073709551615, valid: 18446744073709551615, invalid: 0, errors: [] }) == "18446744073709551615\n"
+expect {
+	partial = Jsonl.feed(Jsonl.start, "{}\nnull".to_utf8(), Operations.start, Operations.inspect_line)
+	completed = Jsonl.finish(partial.state, partial.value, Operations.inspect_line)
+	partial.value.valid == 1 and Operations.count_report(completed.value) == "2\n"
+}
+
+# M2-02: data diagnostics belong on stderr and retain physical line references.
+expect Operations.data_diagnostics("events.jsonl", summarize("{}\n\nnot-json\nnull".to_utf8())) == "jlog: events.jsonl: line 2: blank line\njlog: events.jsonl: line 3: invalid JSON\n"
+expect Operations.data_diagnostics("<stdin>", Operations.start) == ""
+expect Operations.data_diagnostics("valid", summarize("{}\nnull\n".to_utf8())) == ""
+expect Operations.data_diagnostics("a\nb\t", summarize("SECRET not json".to_utf8())) == "jlog: a\\nb\\t: line 1: invalid JSON\n"
+expect {
+	diagnostics = Operations.data_diagnostics("many", summarize("\n".repeat(103).to_utf8()))
+	diagnostics.split_on(": line ").len() == 101 and diagnostics.ends_with("jlog: many: 3 more invalid records\n")
+}
+
+# M2-04: tail grows with received valid records, never with the requested limit.
+expect Operations.tail_lines(Operations.tail_push(Operations.tail_start(1), "null".to_utf8())) == ["null".to_utf8()]
+expect Operations.tail_lines(Operations.tail_start(0)) == []
+expect Operations.tail_lines(Operations.tail_start(10)) == []
+expect {
+	tail = ["{}".to_utf8(), "null".to_utf8(), "42".to_utf8()].fold(Operations.tail_start(0), Operations.tail_push)
+	tail.bodies.is_empty() and tail.next == 0
+}
+expect {
+	tail = ["{}".to_utf8(), "null".to_utf8()].fold(Operations.tail_start(3), Operations.tail_push)
+	Operations.tail_lines(tail) == ["{}".to_utf8(), "null".to_utf8()]
+}
+expect {
+	tail = ["{}".to_utf8(), "null".to_utf8()].fold(Operations.tail_start(4294967295), Operations.tail_push)
+	tail.limit == 4294967295 and tail.bodies.len() == 2 and Operations.tail_lines(tail) == ["{}".to_utf8(), "null".to_utf8()]
+}
+
+# M2-05: overflowing a full tail evicts the oldest valid record.
+expect {
+	tail = ["1".to_utf8(), "2".to_utf8(), "3".to_utf8()].fold(Operations.tail_start(2), Operations.tail_push)
+	Operations.tail_lines(tail) == ["2".to_utf8(), "3".to_utf8()]
+}
+expect {
+	tail = ["1".to_utf8(), "2".to_utf8(), "3".to_utf8(), "4".to_utf8(), "5".to_utf8()].fold(Operations.tail_start(2), Operations.tail_push)
+	tail.bodies.len() == 2 and Operations.tail_lines(tail) == ["4".to_utf8(), "5".to_utf8()]
+}
+expect {
+	tail = ["1".to_utf8(), "2".to_utf8(), "3".to_utf8()].fold(Operations.tail_start(1), Operations.tail_push)
+	Operations.tail_lines(tail) == ["3".to_utf8()] and tail.next == 0
+}
+expect {
+	before = ["1".to_utf8(), "2".to_utf8()].fold(Operations.tail_start(2), Operations.tail_push)
+	after = Operations.tail_push(before, "3".to_utf8())
+	Operations.tail_lines(before) == ["1".to_utf8(), "2".to_utf8()] and Operations.tail_lines(after) == ["2".to_utf8(), "3".to_utf8()]
+}
+
+# M2-07: detected exhaustion is a fatal resource failure, never wrapped totals.
+expect Operations.consume_checked(Ok({ ..Operations.stream_start(0), summary: { records: 18446744073709551615, valid: 18446744073709551615, invalid: 0, errors: [] } }), { number: 1, body: "{}".to_utf8() }) == Err(ResourceFailure)
+expect Operations.consume_checked(Err(ResourceFailure), { number: 1, body: "{}".to_utf8() }) == Err(ResourceFailure)
+expect {
+	seed = { ..Operations.stream_start(0), summary: { records: 18446744073709551614, valid: 18446744073709551614, invalid: 0, errors: [] } }
+	first = Operations.consume_checked(Ok(seed), { number: 1, body: "{}".to_utf8() })
+	first.map_ok(|state| state.summary.valid) == Ok(18446744073709551615) and Operations.consume_checked(first, { number: 2, body: "null".to_utf8() }) == Err(ResourceFailure)
+}
+expect Operations.consume_checked(Ok({ ..Operations.stream_start(0), summary: { records: 18446744073709551615, valid: 0, invalid: 18446744073709551615, errors: [] } }), { number: 1, body: [] }) == Err(ResourceFailure)
+expect Operations.exit_code(Completed(Operations.start)) == 0
+expect Operations.exit_code(Completed({ ..Operations.start, records: 1, invalid: 1 })) == 4
+expect Operations.exit_code(Failed(UsageFailure)) == 2
+expect Operations.exit_code(Failed(IoFailure)) == 3
+expect Operations.exit_code(Failed(ResourceFailure)) == 1
+expect Operations.exit_code(Failed(InternalFailure)) == 1
+expect Operations.exit_code(Failed(UnimplementedFailure)) == 1
+
+# M2-09: a reported read failure discards all deferred results after a prefix.
+expect {
+	prefix = Operations.consume_line(Operations.stream_start(2), { number: 1, body: "{}".to_utf8() })
+	Operations.complete_stream(prefix, ReadError("injected read failure")) == Err(ReadError("injected read failure"))
+}
+expect {
+	prefix = Operations.consume_line(Operations.stream_start(2), { number: 1, body: "{}".to_utf8() })
+	Operations.complete_stream(prefix, Eof) == Ok(prefix)
+}
+expect {
+	invalid = Operations.consume_line(Operations.stream_start(2), { number: 1, body: [] })
+	prefix = Operations.consume_line(invalid, { number: 2, body: "null".to_utf8() })
+	Operations.exit_code(Completed(prefix.summary)) == 4 and Operations.complete_stream(prefix, ReadError("mid-read")) == Err(ReadError("mid-read")) and Operations.exit_code(Failed(IoFailure)) == 3
+}
+
+# Progress scheduling and rendering are independent of a real clock or stream.
+expect Operations.progress_start(123) == { last_update_ns: 123, records: 0 }
+expect Operations.progress_due(Operations.progress_start(0), 999999999, { ..Operations.start, records: 1, valid: 1 }) == False
+expect Operations.progress_due(Operations.progress_start(0), 1000000000, { ..Operations.start, records: 1, valid: 1 })
+expect Operations.progress_due(Operations.progress_start(0), 1000000000, Operations.start) == False
+expect Operations.progress_due({ last_update_ns: 1000000000, records: 2 }, 1999999999, { ..Operations.start, records: 3, valid: 3 }) == False
+expect Operations.progress_due({ last_update_ns: 1000000000, records: 2 }, 2000000000, { ..Operations.start, records: 3, valid: 3 })
+expect Operations.progress_due({ last_update_ns: 1000000000, records: 2 }, 3000000000, { ..Operations.start, records: 2, valid: 2 }) == False
+expect Operations.progress_due({ last_update_ns: 100, records: 0 }, 99, { ..Operations.start, records: 1, valid: 1 }) == False
+expect Operations.progress_text(Operations.start, True) == "jlog: 0 lines inspected, 0 invalid (complete)"
+expect Operations.progress_text({ ..Operations.start, records: 42, valid: 40, invalid: 2 }, False) == "jlog: 42 lines inspected, 2 invalid"

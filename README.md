@@ -22,6 +22,7 @@ errors. It reads incrementally and leaves your input unchanged.
   - [Show the last valid records](#show-the-last-valid-records)
   - [Filter by a string field](#filter-by-a-string-field)
   - [Use exit codes in scripts](#use-exit-codes-in-scripts)
+  - [Preserve pipeline failures](#preserve-pipeline-failures)
 - [JSONL rules](#jsonl-rules)
 - [Build and install](#build-and-install)
 - [For developers](#for-developers)
@@ -52,8 +53,8 @@ New to the format? [What is JSONL?](docs/jsonl.md) explains the basics.
 
 ## Using jlog
 
-The examples use the locally built `./dist/jlog`. After installing it on your
-`PATH`, use `jlog` instead.
+Run these Bash or zsh examples from the repository root after building
+`./dist/jlog`. After installing it on your `PATH`, use `jlog` instead.
 
 ### Inspect a file
 
@@ -223,17 +224,34 @@ line, temporary decoded fields, and capped diagnostics rather than all matches.
 Capture the status immediately; invalid input still produces a useful report:
 
 ```sh
-status=0
-./dist/jlog events.jsonl > report.txt || status=$?
-case "$status" in
+jlog_status=0
+./dist/jlog events.jsonl > report.txt || jlog_status=$?
+case "$jlog_status" in
   0) echo 'All records are valid.' ;;
   4) echo 'Malformed records found; see report.txt.' ;;
-  *) echo "jlog failed with exit $status" >&2 ;;
+  *) echo "jlog failed with exit $jlog_status" >&2 ;;
 esac
 ```
 
-For pipelines, enable `set -o pipefail` in shells that support it so producer
-failures are visible too.
+### Preserve pipeline failures
+
+In Bash or zsh, `pipefail` makes an upstream failure affect the whole pipeline:
+
+```sh
+set -o pipefail
+./dist/jlog --where status=failed mixed.jsonl | ./dist/jlog --count
+```
+
+With `mixed.jsonl` above, this prints `0`, emits malformed-line diagnostics on
+stderr, and exits **4**. Without `pipefail`, the downstream count succeeds and
+the pipeline status is 0, hiding the filter's malformed-input status.
+
+Filtering may leave an emitted prefix if a later input or output error occurs.
+Count, tail and inspection defer their result until EOF; a read failure produces
+no completed result. A failed write can leave partial output, including a
+truncated JSONL record. Check the exit status before treating output as complete.
+OS signals retain their normal termination behavior; a shell may report a signal
+status outside the application's 0–4 exit-code table.
 
 ## JSONL rules
 
@@ -268,20 +286,42 @@ the corrected native host and retains the strict regression tests. See the
 [native CI evidence](docs/plans/m4-03-native-ci.md).
 Use the exact compiler pin: Roc syntax and APIs are evolving.
 
+The verified native environments are macOS **15.7.9 and 27.0.1 ARM64**, and
+Ubuntu **24.04.5 x86-64** with a statically linked musl executable. Debian 12
+ARM64 Docker results are supplemental. These are tested environments; minimum
+supported OS versions remain part of the final release audit.
+
+On macOS, the native C compiler comes from Xcode or its Command Line Tools;
+`xcode-select -p` checks that a developer directory is selected. Install the
+pinned Rust toolchain if it is not already available:
+
+```sh
+rustup toolchain install 1.99.0 --profile minimal
+```
+
+On Ubuntu/Debian **x86-64**, also prepare the native musl tools and Rust target:
+
+```sh
+sudo apt-get update
+sudo apt-get install --yes musl-tools zstd
+rustup target add --toolchain 1.99.0 x86_64-unknown-linux-musl
+```
+
+### Get the sources
+
+Until the current work is merged into `master`, use the development branch:
+
+```sh
+git clone --branch ci/native-m4 https://github.com/DanielBlanco/jlog.git
+cd jlog
+```
+
 ### Build an optimized executable
 
 ```sh
-git clone https://github.com/DanielBlanco/jlog.git
-cd jlog
-
 roc version
 # Expected: Roc compiler version nightly-2026-10-09-258ab27
 
-rustup toolchain install 1.99.0 --profile minimal
-# Linux x86-64 also needs:
-# sudo apt-get update
-# sudo apt-get install --yes musl-tools zstd
-# rustup target add --toolchain 1.99.0 x86_64-unknown-linux-musl
 python3 scripts/build_platform.py
 
 mkdir -p dist
@@ -289,18 +329,22 @@ roc build --opt=speed --no-cache --output=dist/jlog src/main.roc
 ./dist/jlog --version
 ```
 
-Use `dist/jlog` directly; running the compiled tool requires neither Roc nor Rust.
-To install for your user account:
+### Install the executable
+
+Running the compiled tool requires neither Roc nor Rust. Install to your user
+prefix, or set `JLOG_INSTALL_PREFIX` to a different directory first:
 
 ```sh
-mkdir -p "$HOME/.local/bin"
-install -m 755 dist/jlog "$HOME/.local/bin/jlog"
-export PATH="$HOME/.local/bin:$PATH"
+JLOG_INSTALL_PREFIX="${JLOG_INSTALL_PREFIX:-$HOME/.local}"
+mkdir -p "$JLOG_INSTALL_PREFIX/bin"
+install -m 755 dist/jlog "$JLOG_INSTALL_PREFIX/bin/jlog"
+export PATH="$JLOG_INSTALL_PREFIX/bin:$PATH"
 jlog --version
 ```
 
-The `export` applies to the current shell; add it to your shell configuration if
-needed. Build outputs are ignored by Git.
+This prints `jlog 0.1.0`. The `export` applies to the current shell; add your
+chosen bin directory to your shell configuration for later sessions. Build
+outputs and generated platform files are ignored by Git.
 
 If the compiler cannot write its default cache, choose a writable location before
 building, for example `export ROC_CACHE_DIR="$PWD/.cache/roc"`. A fresh cache must
@@ -311,8 +355,8 @@ paths recorded in earlier development sessions.
 
 Start with [AGENTS.md](AGENTS.md) and the [development handoff](docs/plans/jlog-handoff.md).
 M1 through M3 behavior is implemented; M4 release verification continues. Work on
-one agreed TDD task at a time, preserving
-existing behavior and tests.
+one agreed TDD task at a time, preserving existing behavior and tests. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the contribution and verification workflow.
 
 ### Code map
 
@@ -325,6 +369,7 @@ existing behavior and tests.
 | `src/Operations.roc` | Shared summaries, bounded tail/filter buffers, diagnostics, progress, and exit policy. |
 | `tests/test_cli.py` | Python stdlib tests against the actual executable. |
 | `tests/test_io_contract.py` | Strict descriptor regressions, including errors hidden by the original platform. |
+| `tests/verify_readme.py` | Executed README examples and temporary user-install verification. |
 | `platform/`, `scripts/build_platform.py` | Checksums, host patch and bootstrap for the ignored local platform. |
 | `tests/measure_resources.py` | macOS/Linux resource measurements, with normalized RSS units and environment provenance. |
 | `tests/test_measure_resources.py`, `tests/docker/` | Timing-unit checks and a pinned unprivileged Linux Docker workflow. |
@@ -363,6 +408,7 @@ adds 213 platform checks to the 273 project checks, giving 486 in the current
 full run. The Python harness checks
 actual stdout/stderr bytes and exit codes. Build before invoking the harness;
 `JLOG_BIN` selects the executable and the harness never builds it for you.
+Discovery below runs the ordinary CLI, strict descriptor, and tooling unit suites.
 
 ```sh
 python3 scripts/build_platform.py
@@ -371,12 +417,12 @@ mkdir -p dist
 # Development mode
 roc test --opt=dev --no-cache src/main.roc
 roc build --opt=dev --no-cache --output=dist/jlog src/main.roc
-JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
+JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -v
 
 # Optimized mode: repeat executable tests against this new build
 roc test --opt=speed --no-cache src/main.roc
 roc build --opt=speed --no-cache --output=dist/jlog src/main.roc
-JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
+JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -v
 ```
 
 Run permission tests as an ordinary user; the harness deliberately rejects a
@@ -385,7 +431,7 @@ root-only run. A focused pure check can use
 through the application context. Focus executable tests with `-k m1_16` before
 `-v` in the discovery command above.
 
-Release verification also requires the strict descriptor conformance suite:
+The strict descriptor suite is included above. To run it on its own:
 
 ```sh
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_io_contract.py' -v
@@ -454,17 +500,10 @@ macOS matrix is retained with the [CI evidence](docs/plans/m4-03-native-ci.md).
 
 ### Keep the TDD loop honest
 
-1. **RED:** write and execute a small behavior test; confirm its assertion fails
-   for the missing behavior. Test syntax errors are not RED.
-2. **GREEN:** implement the minimum change, then run focused and regression tests.
-3. **REFACTOR:** simplify without changing behavior; rerun tests and checks.
-4. **VERIFY:** record the task ID, failing assertion/command, passing results,
-   compiler/format status, and limitations in the [progress log](docs/plans/jlog-v0.1-progress.md).
-
-Already-passing coverage needs no artificial RED or production rewrite. Keep I/O
-at the boundary, reuse the verified JSON adapter, and investigate compiler/API
-failures instead of weakening tests. PRs should explain the behavior change and
-include the commands and results used to verify it.
+Follow the behavior-test, minimal-fix, refactor and verification workflow in
+[CONTRIBUTING.md](CONTRIBUTING.md). Already-passing coverage and documentation
+checks need no artificial application RED. Record actual evidence and limitations
+in the [progress log](docs/plans/jlog-v0.1-progress.md).
 
 ## Roadmap
 

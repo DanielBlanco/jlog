@@ -9,6 +9,10 @@ M4-04/05/06 release preparation remains. Read the latest
 [development handoff](docs/plans/jlog-handoff.md) before resuming for current state,
 verification, and checkpoint limits.
 
+The user has authorized M4-04: verify documented source build, installation and
+usage in clean temporary locations, update the README and add contribution
+guidance. Packaging, license decisions and release publication remain later tasks.
+
 The separately authorized `--progress` extension adds opt-in, rate-limited stderr
 counts to inspection. See its [specification](docs/specs/inspection-progress.md).
 The later authorizations cover M2 count/tail and error handling, and M3 streaming
@@ -33,6 +37,9 @@ constraint; it does not authorize a Roc compiler upgrade. See
 - `src/help.txt` contains the CLI help, imported as a string at compile time by
   `src/Cli.roc`. Preserve the final newline when editing and rebuild to apply changes.
 - `tests/test_cli.py` runs executable acceptance tests using Python's stdlib.
+- `tests/verify_readme.py` executes documented usage/install blocks against a
+  supplied binary in a temporary workspace. `--source-checks` explicitly adds
+  documented build/check/test commands and writes ignored `dist/` outputs.
 - `tests/test_io_contract.py` is the strict standard-descriptor regression gate.
   Preserve its exit-3 expectations; the approved platform patch addresses the
   published platform's known failures.
@@ -72,7 +79,7 @@ Run commands from the repository root:
 python3 scripts/build_platform.py
 mkdir -p dist
 roc build --opt=dev --no-cache --output=dist/jlog src/main.roc
-JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
+JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -v
 ```
 
 - `roc --help`: inspect available compiler commands.
@@ -84,7 +91,8 @@ JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py'
 - `roc fmt src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc`: format project sources. Add `--check` to verify formatting without edits.
 
 No npm scripts are configured. The native CI command driver is documented in
-[`tests/ci/README.md`](tests/ci/README.md).
+[`tests/ci/README.md`](tests/ci/README.md); contributor setup and review guidance
+live in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Coding Style & Naming Conventions
 

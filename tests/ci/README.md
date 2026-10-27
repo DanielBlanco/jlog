@@ -29,6 +29,14 @@ green on both targets, including all strict descriptor assertions and resource c
 3. The same pure/build/executable/descriptor sequence with speed optimization.
 4. Source/platform integrity and binary hashes, runner/image identity and source commit.
 
+The following README step executes the actual usage/install blocks in a fresh
+temporary workspace against the tested optimized binary. It also explicitly
+runs the documented source-build/check/dev-progress/test blocks, including broad
+Python discovery against both builds. On macOS it checks the exit-code and
+pipeline snippets with zsh too. Installation uses a temporary prefix containing
+spaces, then exercises the installed executable with neither Roc nor Rust on
+`PATH`. `evidence/readme.json` retains every script, status and output hash.
+
 Any failed command fails verification and the CI job. The strict descriptor suite
 checks the published platform's former failures; it runs normally, without skips
 or expected-failure annotations. The driver still checks the other optimization

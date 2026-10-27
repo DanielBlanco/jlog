@@ -70,6 +70,15 @@ jobs:
         run: |
           python3 tests/ci/verify.py --target '${{ matrix.target }}' --output "$RUNNER_TEMP/evidence"
 
+      - name: Verify README examples and user installation
+        if: ${{ !cancelled() && steps.verify.outputs.measure-ready == 'true' }}
+        shell: bash
+        run: |
+          python3 tests/verify_readme.py \
+            --source-checks \
+            --binary "$RUNNER_TEMP/evidence/jlog-speed" \
+            --report "$RUNNER_TEMP/evidence/readme.json"
+
       # A real conformance failure must fail the job, but need not discard
       # independent measurements of a successfully tested optimized build.
       - name: Measure the optimized executable

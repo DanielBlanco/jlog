@@ -868,3 +868,45 @@ closed; M4-02 is refreshed for the corrected host. Next are M4-04 docs/install
 verification, M4-05 archives/offline checks and M4-06 license/notices/OS/final
 audit. The existing PR was neither created nor merged by this work, and no
 release or upstream platform publication was performed.
+
+## M4-04 documentation/build/install verification — authorized 2026-10-27
+
+The user confirmed CI green and requested M4-04. No application, compiler or
+platform change is needed. Two actual documentation failures are reproduced:
+the README's default clone selects `master` at `76ff743`, where
+`python3 scripts/build_platform.py` exits 2 because the script does not exist;
+the exit-code block exits 1 in `/bin/zsh` with `read-only variable: status`.
+These are documentation failures, not fabricated application RED.
+
+The README now explicitly selects the current development branch, separates
+native prerequisites/build/install steps, uses `jlog_status`, and accepts
+`JLOG_INSTALL_PREFIX` for an isolated user install. It adds an executable
+malformed-pipeline example and partial-output/signal guidance, and records
+tested OS/architecture versions without declaring unverified minimums.
+`CONTRIBUTING.md` supplies scoped development, function documentation, test/pin
+and review guidance. Broad Python discovery is documented for both builds,
+including the strict descriptor gate and tooling units.
+
+The new `tests/verify_readme.py` reads the actual fenced command blocks rather
+than maintaining copied shell examples. It verifies exact outputs/statuses,
+redirected bytes, documented sample counts, pipefail versus default pipeline
+status, a path-with-spaces install and runtime with no Roc/Rust on PATH. The
+optional `--source-checks` explicitly runs five documented Roc/build/test blocks;
+the default remains binary-only. Native CI executes both modes' coverage and
+retains its JSON report.
+
+A fresh remote `ci/native-m4` checkout at `f05f326` in
+`/private/tmp/jlog-m404-clean-source` starts without generated platform/cache/dist
+outputs. Current documentation and the verifier are overlaid for this working
+tree check. With installed exact prerequisites, the documented bootstrap downloads
+and verifies both archives, rebuilds the corrected host and produces the optimized
+executable. Cargo's registry and the existing external HTTP package cache are
+reused; this is a clean source build, not an empty-OS or hermetic-cache claim.
+
+That clean macOS ARM64 checkout passes all **19** usage/install cases and all
+**five** source blocks. Full documented regressions pass 486 inline checks and
+72 Python methods (64 ordinary + three strict + five tooling) against each build;
+the focused strict suite also passes. Source dev progress reports exactly 12,000
+records at completion. The installed mode is 0755 and binary/input hashes match.
+Raw cases, source stdout/stderr and JSON are under
+`/private/tmp/jlog-m404-clean-verification`. Native CI results follow.

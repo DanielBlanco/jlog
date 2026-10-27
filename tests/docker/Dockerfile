@@ -1,10 +1,16 @@
-FROM debian@sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8
+FROM rust:1.99.0-slim-bookworm@sha256:2c3a22f0a5533ea2dd5a16627bc841228151faa2d4de2644ac9987e4a2f1f2fa
 
 ARG TARGETARCH
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl file git python3 time \
+    && apt-get install -y --no-install-recommends ca-certificates curl file git python3 time musl-tools zstd \
     && rm -rf /var/lib/apt/lists/*
+
+RUN case "$TARGETARCH" in \
+      arm64) rustup target add aarch64-unknown-linux-musl ;; \
+      amd64) rustup target add x86_64-unknown-linux-musl ;; \
+      *) exit 1 ;; \
+    esac
 
 # Both archives come from the same immutable compiler release; neither target
 # may silently fall back to a different nightly.
@@ -24,7 +30,7 @@ RUN useradd --create-home --uid 1000 jlog \
     && mkdir -p /work/artifacts /work/cache /src \
     && chown -R jlog:jlog /work
 
-ENV PATH="/opt/roc:${PATH}" ROC_CACHE_DIR=/work/cache PYTHONDONTWRITEBYTECODE=1
+ENV PATH="/opt/roc:${PATH}" ROC_CACHE_DIR=/work/cache CARGO_HOME=/work/cargo-cache PYTHONDONTWRITEBYTECODE=1
 USER jlog
 WORKDIR /src
 CMD ["sleep", "infinity"]

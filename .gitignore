@@ -6,6 +6,9 @@
 # Local Roc caches and compiler distributions
 /.roc_cache/
 /.cache/roc/
+/.cache/platform/
+/platform/basic-cli/
+/platform/.basic-cli-*/
 /roc_nightly-*/
 /roc_nightly-*.tar.gz
 

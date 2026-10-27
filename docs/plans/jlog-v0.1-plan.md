@@ -13,7 +13,10 @@ Do not decode these numbers into finite numeric types. Retain depth 128, strict
 blank-line handling, full-input validation, and original record bytes in tail and
 filter output, normalizing only line terminators to LF.
 
-Use Roc `nightly-2026-10-09-258ab27` with the existing `basic-cli` 0.25.0 URL.
+Use Roc `nightly-2026-10-09-258ab27` with the checksum-pinned basic-cli 0.25.0
+descriptor correction in [the platform lock](../../platform/basic-cli.lock.json).
+The user's later approval explicitly supersedes the original official-archive
+constraint while preserving the Roc compiler pin and all exit-3 assertions.
 [Feasibility research](../roc-feasibility.md) supplies executed compatibility
 probes; [the JSONL introduction](../jsonl.md) supplies format background.
 Those probes are not application acceptance tests.

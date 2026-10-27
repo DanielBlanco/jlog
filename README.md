@@ -7,8 +7,8 @@ Give it a file or pipe in a stream to get record totals and useful validation
 errors. It reads incrementally and leaves your input unchanged.
 
 > 🚧 **Current status:** inspection, validation, count, tail, string filtering,
-> help, and version work with file/stdin input. Known platform descriptor edge
-> cases remain under review; field extraction is deferred to v0.2.
+> help, and version work with file/stdin input. Release preparation is underway;
+> field extraction is deferred to v0.2.
 
 ## Table of contents
 
@@ -246,18 +246,6 @@ failures are visible too.
 - Valid huge integers and exponents such as `1e9999` are checked without
   conversion to floating point. Unicode surrogate escapes must form valid pairs.
 
-**Known platform edge case:** the pinned platform exposes a write-only stdin
-descriptor as EOF, so that unusual setup currently reports empty input with exit
-0. Actual propagated read errors are handled separately. See the
-[handoff](docs/plans/jlog-handoff.md#known-limitations-and-risks) for this gap and the
-remaining release verification work.
-
-The pinned platform can also suppress EBADF errors when stdout/stderr uses an
-unusable descriptor. Real closed-pipe write failures return 3 in the executable
-tests, but strict detection of every descriptor failure remains unresolved.
-See the [progress record](docs/plans/jlog-v0.1-progress.md#m2-implementation--authorized-2026-10-26)
-for the compatibility gate; the specified I/O contract has not been relaxed.
-
 ## Build and install
 
 ### Prerequisites
@@ -265,15 +253,19 @@ for the compatibility gate; the specified I/O contract has not been relaxed.
 - **Roc `nightly-2026-10-09-258ab27`** from the
   [pinned nightly release](https://github.com/roc-lang/nightlies/releases/tag/nightly-2026-10-09-258ab27).
   Unpack the matching compiler archive and put its directory on your `PATH`.
-- **basic-cli 0.25.0** is already pinned by URL in `src/main.roc`; the compiler resolves
-  it during the build. Initial dependency downloads need network access.
-- **Python 3** is needed for executable tests only. No third-party Python packages
-  or Node/npm setup are required.
+- **Rust 1.99.0 with rustup**, a native C compiler, Python 3.9+, Git, curl and tar
+  prepare the platform. Linux also needs musl-tools, zstd and the native musl Rust
+  target. No third-party Python packages or Node/npm setup are required.
+- **basic-cli 0.25.0 with the approved descriptor-access patch** is pinned in
+  [the platform lock](platform/basic-cli.lock.json). The bootstrap verifies both
+  upstream archives and the patch before rebuilding the native host. Initial
+  downloads require network access. See [platform details](platform/README.md).
 
 Native builds, pure/ordinary tests and resource measurements run on **macOS
 ARM64** and **Linux x86-64** in CI, with supplemental **Linux ARM64 Docker**
-results. Strict descriptor tests still fail on all three environments; full
-release conformance remains open. See the [native CI evidence](docs/plans/m4-03-native-ci.md).
+results. The published platform hid some descriptor errors; this checkout uses
+the corrected native host and retains the strict regression tests. See the
+[native CI evidence](docs/plans/m4-03-native-ci.md).
 Use the exact compiler pin: Roc syntax and APIs are evolving.
 
 ### Build an optimized executable
@@ -285,12 +277,19 @@ cd jlog
 roc version
 # Expected: Roc compiler version nightly-2026-10-09-258ab27
 
+rustup toolchain install 1.99.0 --profile minimal
+# Linux x86-64 also needs:
+# sudo apt-get update
+# sudo apt-get install --yes musl-tools zstd
+# rustup target add --toolchain 1.99.0 x86_64-unknown-linux-musl
+python3 scripts/build_platform.py
+
 mkdir -p dist
-roc build --opt=speed --output=dist/jlog src/main.roc
+roc build --opt=speed --no-cache --output=dist/jlog src/main.roc
 ./dist/jlog --version
 ```
 
-Use `dist/jlog` directly; running the compiled tool does not require Roc.
+Use `dist/jlog` directly; running the compiled tool requires neither Roc nor Rust.
 To install for your user account:
 
 ```sh
@@ -311,8 +310,8 @@ paths recorded in earlier development sessions.
 ## For developers
 
 Start with [AGENTS.md](AGENTS.md) and the [development handoff](docs/plans/jlog-handoff.md).
-M1 through M3 behavior is implemented; M2 descriptor compatibility and M4 release
-verification remain open. Work on one agreed TDD task at a time, preserving
+M1 through M3 behavior is implemented; M4 release verification continues. Work on
+one agreed TDD task at a time, preserving
 existing behavior and tests.
 
 ### Code map
@@ -325,7 +324,8 @@ existing behavior and tests.
 | `src/Jsonl.roc` | Pure framing, UTF-8/BOM classification, depth precheck, builtin JSON validation, and string-field lookup. |
 | `src/Operations.roc` | Shared summaries, bounded tail/filter buffers, diagnostics, progress, and exit policy. |
 | `tests/test_cli.py` | Python stdlib tests against the actual executable. |
-| `tests/test_io_contract.py` | Strict descriptor conformance gate; currently fails on the pinned native host. |
+| `tests/test_io_contract.py` | Strict descriptor regressions, including errors hidden by the original platform. |
+| `platform/`, `scripts/build_platform.py` | Checksums, host patch and bootstrap for the ignored local platform. |
 | `tests/measure_resources.py` | macOS/Linux resource measurements, with normalized RSS units and environment provenance. |
 | `tests/test_measure_resources.py`, `tests/docker/` | Timing-unit checks and a pinned unprivileged Linux Docker workflow. |
 | `.github/workflows/native-ci.yml`, `tests/ci/` | Native Linux x86-64/macOS ARM64 CI, exact compiler installation and retained verification evidence. |
@@ -348,6 +348,7 @@ the compiled executable includes the text and needs no separate help file at run
 ### Run locally and check sources
 
 ```sh
+python3 scripts/build_platform.py
 roc run src/main.roc -- --help
 roc check src/main.roc
 roc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc
@@ -357,21 +358,24 @@ To apply formatting, run `roc fmt` with those same explicit source paths.
 
 ### Test development and optimized builds
 
-Roc's top-level `expect` checks cover pure behavior. The Python harness checks
+Roc's top-level `expect` checks cover pure behavior. The prepared local platform
+adds 213 platform checks to the 273 project checks, giving 486 in the current
+full run. The Python harness checks
 actual stdout/stderr bytes and exit codes. Build before invoking the harness;
 `JLOG_BIN` selects the executable and the harness never builds it for you.
 
 ```sh
+python3 scripts/build_platform.py
 mkdir -p dist
 
 # Development mode
 roc test --opt=dev --no-cache src/main.roc
-roc build --opt=dev --output=dist/jlog src/main.roc
+roc build --opt=dev --no-cache --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 
 # Optimized mode: repeat executable tests against this new build
 roc test --opt=speed --no-cache src/main.roc
-roc build --opt=speed --output=dist/jlog src/main.roc
+roc build --opt=speed --no-cache --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
 
@@ -387,10 +391,11 @@ Release verification also requires the strict descriptor conformance suite:
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_io_contract.py' -v
 ```
 
-This currently fails three methods (15 subcases): the pinned platform hides
-errors from write-only stdin and read-only stdout/stderr. Ordinary closed-pipe
-and directory-read tests pass, but do not close this gate. Both suites must pass
-for release; broad discovery includes these failures. See the
+These three methods cover 15 subcases involving write-only stdin and read-only
+stdout/stderr. They require exit 3 without skips or expected-failure markers.
+The corrected host preserves these errors; ordinary tests also cover broken
+pipes, directory reads, silent streams and actual mid-stream failures. Both
+suites must pass for release. See the
 [M4-01 audit](docs/plans/m4-01-audit.md) and
 [reproducer](docs/repros/stdio-descriptor-errors.md).
 
@@ -401,11 +406,10 @@ optimized builds on Linux x86-64 and macOS ARM64, then collects resource
 measurements. Compiler downloads are checksum-verified; actions are pinned by
 commit. Strict descriptor failures fail the job while allowing independent
 resource evidence to be collected. See [CI details](tests/ci/README.md) for the
-command sequence and artifact contents. The
-[first native run](https://github.com/DanielBlanco/jlog/actions/runs/40549245469)
-passes 273 pure checks and 63 ordinary CLI methods per build, plus all 70 resource
-cases per architecture. Both jobs correctly remain red because of the known
-descriptor failures; see the [execution report](docs/plans/m4-03-native-ci.md).
+command sequence and artifact contents. CI rebuilds the same pinned platform as
+local development and verifies its hashes around both optimization suites.
+The [execution report](docs/plans/m4-03-native-ci.md) retains native results,
+including the original unpatched failure evidence.
 
 ### Measure resources
 

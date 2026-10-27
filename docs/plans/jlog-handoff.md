@@ -1,7 +1,7 @@
 # jlog development handoff
 
 Historical snapshot: 2026-10-18, native macOS ARM64. Later updates below record
-the user-authorized development through M4-02 measurements on 2026-10-27.
+the user-authorized development through M4-03 and its descriptor correction on 2026-10-27.
 
 Layout update (2026-10-26): application modules and their inline checks now live
 in `src/`; the entry point is `src/main.roc`. Plans and the specification live
@@ -86,6 +86,16 @@ closes the missing M4-02 architecture evidence; full descriptor/M4-03 conformanc
 and M4-04/05/06 remain open. Tested artifacts/provenance are downloaded; source,
 input and binary hashes are verified. Local/remote `master` were not changed;
 the prior pending measurement/docs work remains present on the CI branch.
+
+Descriptor correction update: after receiving the failing CI output and reviewing
+an isolated fix, the user approved integrating the basic-cli 0.25.0 host patch
+and native verification. The original Roc pin remains mandatory. Prepare the
+corrected platform with `python3 scripts/build_platform.py` before Roc commands;
+see [platform prerequisites/provenance](../../platform/README.md). This approval
+supersedes earlier prohibitions on a platform change for this specific patch.
+Local dev/speed now pass 486 inline checks, 64 ordinary methods and all 15 strict
+subcases. Native CI results are recorded in the latest progress entries; do not
+infer native Linux success from the local candidate alone.
 
 **M1-A and M1-B are already implemented and verified.** The handoff request's
 expected next checkpoint, M1-B, is stale for this checkout. Preserve the existing

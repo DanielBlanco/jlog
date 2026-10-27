@@ -257,6 +257,24 @@ class CliTests(unittest.TestCase):
                                  (stdout, stderr, 0))
         self.assertEqual(hashlib.sha256(source.read_bytes()).digest(), before)
 
+    def test_m4_03_unused_streams_do_not_fail(self):
+        """Preserve silent-stream no-ops when an unused output descriptor is read-only."""
+        cases = [(('--count',), 'stderr', b'1\n'),
+                 (('--tail', '0'), 'stdout', b''),
+                 (('--where', 'x=y'), 'stdout', b'')]
+        for operation, stream, expected in cases:
+            with self.subTest(operation=operation, unused_stream=stream):
+                descriptor = os.open(os.devnull, os.O_RDONLY)
+                try:
+                    streams = {'stdout': subprocess.PIPE, 'stderr': subprocess.PIPE}
+                    streams[stream] = descriptor
+                    result = subprocess.run([self.binary, *operation], input=b'{}\n',
+                                            timeout=5, **streams)
+                finally:
+                    os.close(descriptor)
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.stdout if stream == 'stderr' else result.stderr, expected)
+
     def test_m4_01_mid_read_failure_all_modes(self):
         """Inject real WouldBlock after a consumed prefix without closing the pipe."""
         selected = b'{"status":"failed","id":1}\n'

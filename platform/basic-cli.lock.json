@@ -1,0 +1,19 @@
+{
+  "version": "0.25.0",
+  "rust_version": "1.99.0",
+  "source": {
+    "url": "https://codeload.github.com/roc-lang/basic-cli/tar.gz/6e787d231017e9888027330de5d651f388e807fd",
+    "commit": "6e787d231017e9888027330de5d651f388e807fd",
+    "sha256": "c9d77f74ebac97b2f52c56b92fa9fbd6e82bf1c88f614c884579354298d17044"
+  },
+  "bundle": {
+    "url": "https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst",
+    "sha256": "9c06b27e671ad8d307ed118de62d6bae4eef4131b9eda4414adf643a604ad545"
+  },
+  "patch": {
+    "path": "platform/patches/stdio-access.patch",
+    "sha256": "2be177af0a580e2748763b8ad99e3a4315c6cb1d89327971acd94f5e12bc662e",
+    "original_source_sha256": "e746d562a5a0e1872d43a03105422cd3d2f05c687c9d72fea3774831ad36b8bf",
+    "patched_source_sha256": "aec1c6e04b564607d0e4c5b5dd94114d9c7e87f8fc64fbda60735c4b0f1ad892"
+  }
+}

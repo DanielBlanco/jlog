@@ -18,6 +18,11 @@ measurements, while retaining the unresolved M4-01 release gates. The later
 request authorizes M4-03 native CI alongside Linux x86-64 measurements. Release
 publishing remains a separate action.
 
+The user subsequently approved adopting the tested basic-cli 0.25 descriptor
+patch in local/CI builds. This supersedes the original official-archive-only
+constraint; it does not authorize a Roc compiler upgrade. See
+[`platform/README.md`](platform/README.md) for pinned provenance and preparation.
+
 ## Project Structure & Module Organization
 
 - `src/main.roc` is the application entry point and owns I/O and exit mapping.
@@ -27,9 +32,12 @@ publishing remains a separate action.
 - `src/help.txt` contains the CLI help, imported as a string at compile time by
   `src/Cli.roc`. Preserve the final newline when editing and rebuild to apply changes.
 - `tests/test_cli.py` runs executable acceptance tests using Python's stdlib.
-- `tests/test_io_contract.py` is the strict standard-descriptor conformance gate.
-  It currently fails on the pin; run it explicitly and preserve its exit-3
-  expectations. Passing `test_cli.py` alone is not full release verification.
+- `tests/test_io_contract.py` is the strict standard-descriptor regression gate.
+  Preserve its exit-3 expectations; the approved platform patch addresses the
+  published platform's known failures.
+- `platform/basic-cli.lock.json`, `platform/patches/`, and
+  `scripts/build_platform.py` pin and prepare the corrected native platform.
+  Generated `platform/basic-cli/` and `.cache/platform/` stay out of Git.
 - `tests/measure_resources.py` runs macOS/Linux resource measurements against an
   explicitly supplied optimized binary. It records architecture/environment,
   generates large fixtures outside the checkout, and verifies outputs/hashes.
@@ -49,23 +57,24 @@ Keep application code in `src/`, separate from compiler and cache directories.
 
 Use Roc `nightly-2026-10-09-258ab27` on your `PATH`; the compiler is outside the
 checkout. Discover it with `command -v roc` and confirm the pin with `roc version`.
-The application pins `basic-cli` 0.25.0. Native CI now executes macOS ARM64 and
-Linux x86-64 check/build/test/resource sequences; ordinary suites and all resource
-cases pass, while strict descriptor conformance still fails on both. See the
-[CI evidence](docs/plans/m4-03-native-ci.md). Linux ARM64 Docker remains supplemental.
+The application uses the approved checksum-pinned basic-cli 0.25.0 host patch,
+built with Rust 1.99.0. Prepare it before Roc checks/builds. Native CI executes
+macOS ARM64 and Linux x86-64 sequences; the earlier unpatched results are in the
+[CI evidence](docs/plans/m4-03-native-ci.md). Linux ARM64 Docker is supplemental.
 
 Run commands from the repository root:
 
 ```sh
+python3 scripts/build_platform.py
 mkdir -p dist
-roc build --opt=dev --output=dist/jlog src/main.roc
+roc build --opt=dev --no-cache --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
 
 - `roc --help`: inspect available compiler commands.
 - `roc repl`: start an interactive session without an application file.
 - `roc run src/main.roc -- --help`: run the CLI locally.
-- `roc build --opt=speed --output=dist/jlog src/main.roc`: build an optimized binary.
+- `roc build --opt=speed --no-cache --output=dist/jlog src/main.roc`: build an optimized binary.
 - `roc check src/main.roc`: check source code without building or running it.
 - `roc test --opt=dev --no-cache src/main.roc`: run inline `expect` checks in the application and its imported local modules. Repeat with `--opt=speed` for optimized verification.
 - `roc fmt src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc`: format project sources. Add `--check` to verify formatting without edits.

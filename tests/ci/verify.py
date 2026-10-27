@@ -8,6 +8,9 @@ import platform
 import subprocess
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+import build_platform
+
 
 PIN = "Roc compiler version nightly-2026-10-09-258ab27"
 TARGETS = {("Darwin", "arm64"): "arm64mac", ("Linux", "x86_64"): "x64musl"}
@@ -52,12 +55,17 @@ def main():
     version = subprocess.check_output(["roc", "version"], text=True).strip()
     if version != PIN:
         parser.error(f"Unexpected compiler: {version}")
+    _, _, platform_identity = build_platform.configuration()
+    platform_build = build_platform.prepared(build_platform.OUTPUT, platform_identity, args.target)
+    if platform_build is None:
+        parser.error("Run python3 scripts/build_platform.py to prepare and verify the pinned platform")
     source_paths = sorted(Path("src").glob("*"))
     source_hashes = {str(path): sha256(path) for path in source_paths if path.is_file()}
     environment = {"execution": "native", "target": args.target, "uid": os.geteuid(),
                    "uname": list(platform.uname()), "python": sys.version, "roc": version,
                    "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
                    "source_sha256": source_hashes,
+                   "platform_build": platform_build,
                    "github": {name: os.environ.get(name) for name in
                               ("GITHUB_REPOSITORY", "GITHUB_SHA", "GITHUB_REF", "GITHUB_RUN_ID",
                                "GITHUB_RUN_ATTEMPT", "RUNNER_OS", "RUNNER_ARCH", "ImageOS", "ImageVersion")}}
@@ -68,12 +76,14 @@ def main():
                    "src/Jsonl.roc", "src/Operations.roc"], output, results)
     units_ok = run("measurement-units", ["python3", "-m", "unittest", "discover", "-s", "tests",
                                         "-p", "test_measure_resources.py", "-v"], output, results)
+    platform_units_ok = run("platform-units", ["python3", "-m", "unittest", "discover", "-s", "tests",
+                                             "-p", "test_build_platform.py", "-v"], output, results)
     measure_ready = False
     for optimization in ("dev", "speed"):
         binary = output / f"jlog-{optimization}"
         pure_ok = run(f"pure-{optimization}", ["roc", "test", f"--opt={optimization}", "--no-cache",
                                               "src/main.roc"], output, results)
-        built = run(f"build-{optimization}", ["roc", "build", f"--opt={optimization}",
+        built = run(f"build-{optimization}", ["roc", "build", "--no-cache", f"--opt={optimization}",
                                               f"--target={args.target}", f"--output={binary}",
                                               "src/main.roc"], output, results)
         if not built:
@@ -85,16 +95,18 @@ def main():
                                            "-p", "test_io_contract.py", "-v"], output, results, binary)
         environment[f"binary_{optimization}_sha256"] = sha256(binary)
         if optimization == "speed":
-            measure_ready = pure_ok and ordinary_ok and units_ok
+            measure_ready = pure_ok and ordinary_ok and units_ok and platform_units_ok
     unchanged = all(sha256(Path(path)) == digest for path, digest in source_hashes.items())
     environment["source_hashes_unchanged"] = unchanged
+    platform_unchanged = build_platform.prepared(build_platform.OUTPUT, platform_identity, args.target) is not None
+    environment["platform_hashes_unchanged"] = platform_unchanged
     (output / "environment.json").write_text(json.dumps(environment, indent=2) + "\n")
     if os.environ.get("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"], "a") as handle:
-            handle.write(f"measure-ready={str(measure_ready and unchanged).lower()}\n")
+            handle.write(f"measure-ready={str(measure_ready and unchanged and platform_unchanged).lower()}\n")
     failures = [item["name"] for item in results if item["status"] != 0]
     print(f"Failed commands: {', '.join(failures) if failures else 'none'}", flush=True)
-    return 1 if failures or not unchanged else 0
+    return 1 if failures or not unchanged or not platform_unchanged else 0
 
 
 if __name__ == "__main__":

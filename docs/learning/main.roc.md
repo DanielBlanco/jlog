@@ -37,8 +37,11 @@ inspection report is emitted before successful EOF.
 ## The application declaration and imports
 
 The `app [main!]` declaration exposes the entry point to the pinned platform and
-binds that platform to `pf`. The long URL identifies the exact basic-cli bundle
-used to build this executable. A platform supplies operating-system integration.
+binds that platform to `pf`. It now imports a prepared local copy of the pinned
+basic-cli bundle, whose native host has the approved descriptor-access correction.
+Run [the platform bootstrap](../../platform/README.md) before compiling. Its lock
+file pins both upstream archives and the patch. A platform supplies
+operating-system integration.
 
 `import Cli`, `import Jsonl`, and `import Operations` resolve neighboring source
 modules. Imports beginning with `pf.` resolve platform modules:

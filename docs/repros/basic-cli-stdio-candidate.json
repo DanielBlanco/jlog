@@ -1,0 +1,94 @@
+{
+  "base_commit": "e72d7571b260f9cc5c3254b07ee4f00790767f76",
+  "platform_commit": "6e787d231017e9888027330de5d651f388e807fd",
+  "roc": "nightly-2026-10-09-258ab27",
+  "rust": "1.99.0 (b940084d7 2026-09-28)",
+  "host": "native macOS ARM64",
+  "official_025_strict_failing_subcases_per_build": 15,
+  "candidate_025_dev": {
+    "pure_pass": 486,
+    "ordinary_methods_pass": 63,
+    "strict_methods_pass": 3,
+    "strict_subcases_pass": 15
+  },
+  "candidate_025_speed": {
+    "pure_pass": 486,
+    "ordinary_methods_pass": 63,
+    "strict_methods_pass": 3,
+    "strict_subcases_pass": 15
+  },
+  "pure_count_note": "A local platform import includes its 213 inline checks in addition to the 273 project checks.",
+  "candidate_026": {
+    "compiler": "nightly-2026-10-12-2664a27",
+    "pure_pass": 961,
+    "strict_failing_subcases": 15,
+    "ordinary_methods": 63,
+    "ordinary_errors": 6,
+    "ordinary_error": "Existing nonblocking WouldBlock injection cases time out; no speed build attempted."
+  },
+  "silent_stream_controls": [
+    {
+      "opt": "dev",
+      "operation": [
+        "--count"
+      ],
+      "unused_read_only_stream": "stderr",
+      "exit": 0
+    },
+    {
+      "opt": "dev",
+      "operation": [
+        "--tail",
+        "0"
+      ],
+      "unused_read_only_stream": "stdout",
+      "exit": 0
+    },
+    {
+      "opt": "dev",
+      "operation": [
+        "--where",
+        "x=y"
+      ],
+      "unused_read_only_stream": "stdout",
+      "exit": 0
+    },
+    {
+      "opt": "speed",
+      "operation": [
+        "--count"
+      ],
+      "unused_read_only_stream": "stderr",
+      "exit": 0
+    },
+    {
+      "opt": "speed",
+      "operation": [
+        "--tail",
+        "0"
+      ],
+      "unused_read_only_stream": "stdout",
+      "exit": 0
+    },
+    {
+      "opt": "speed",
+      "operation": [
+        "--where",
+        "x=y"
+      ],
+      "unused_read_only_stream": "stdout",
+      "exit": 0
+    }
+  ],
+  "sha256": {
+    "/private/tmp/jlog-basic-cli-source.tar.gz": "c9d77f74ebac97b2f52c56b92fa9fbd6e82bf1c88f614c884579354298d17044",
+    "/private/tmp/jlog-stdio-platform/target/release/libhost.a": "a6651f2143267c46e05ad729ac1513becfc6e933edceb37e6c598fec78b01d69",
+    "/private/tmp/jlog-stdio-backport/jlog-dev": "93da1c30b9de50a976346a96c863b036a6b5d438ffd136e9d2be3118ffc9e046",
+    "/private/tmp/jlog-stdio-backport/jlog-speed": "e136efb172a824ab677a24af4fe5ad9acead2d0111c0d9e63e3bf570decb5a3d"
+  },
+  "native_linux_verification": "Not performed for this candidate; existing CI still uses the official unpatched platform.",
+  "active_project_pins_changed": false,
+  "original_host_source_sha256": "e746d562a5a0e1872d43a03105422cd3d2f05c687c9d72fea3774831ad36b8bf",
+  "patched_host_source_sha256": "aec1c6e04b564607d0e4c5b5dd94114d9c7e87f8fc64fbda60735c4b0f1ad892",
+  "patch_sha256": "2be177af0a580e2748763b8ad99e3a4315c6cb1d89327971acd94f5e12bc662e"
+}

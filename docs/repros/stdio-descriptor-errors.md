@@ -111,3 +111,78 @@ changes, and opening OS-specific descriptor paths are not suitable portable
 substitutes for incremental byte I/O. No platform, FFI, dependency, contract, or
 pin change was made. A platform correction needs its own tested change; these
 acceptance assertions should become green without changing their expected exit.
+
+## Root cause and isolated correction (2026-10-27)
+
+The reported GitHub failure is reproduced locally with the unchanged published
+platform: the same 15 subcases fail. The 0.25.0 Rust host at release commit
+`6e787d231017e9888027330de5d651f388e807fd` uses Rust's standard stream locks in
+`hosted_stdin_*`, `hosted_stdout_*` and `hosted_stderr_*`.
+[Rust's standard stream implementation](https://doc.rust-lang.org/src/std/io/stdio.rs.html)
+explicitly handles `EBADF` as a successful zero-byte read or successful write.
+This explains why jlog's existing error mapping receives EOF/success instead of
+the operating-system error. Flushing again cannot recover the hidden error.
+
+An isolated upgrade experiment uses the published basic-cli 0.26.0 archive and
+its minimum compiler `nightly-2026-10-12-2664a27`. Only the temporary copy is
+adapted for the new raw-file-read, EOF and monotonic-clock APIs. Its check and
+961 inline checks pass, but all 15 descriptor subcases still fail. The
+[0.26 native Unix backend](https://github.com/roc-lang/basic-cli/blob/0.26.0/src/native_stdio/unix.rs)
+explicitly converts `EBADF` to EOF/success too. Six existing ordinary nonblocking
+read-failure subcases additionally time out because that backend waits on
+`EAGAIN`. No optimized upgrade build is attempted after these mandatory failures.
+An upgrade alone is therefore not a demonstrated fix.
+
+The [candidate patch](../../platform/patches/stdio-access.patch) instead targets the exact
+0.25.0 source. Before each standard-stream operation it checks Unix descriptor
+access with `fcntl(F_GETFL)`, returning the OS error for an invalid descriptor or
+`EBADF` for an incompatible read/write mode. This query consumes no input and
+emits no output. Existing Rust buffering, 16-KiB stdin chunks, flushing, error
+conversion and ABI are retained. Empty output writes remain no-ops. All nine
+standard-stream host functions use the guard; no new dependency is added.
+
+The host is built separately with `cargo build --locked --release --lib` using
+installed Rust 1.99.0, then linked into a temporary copy of the published 0.25.0
+platform. Roc stays at `nightly-2026-10-09-258ab27`; application modules are
+unchanged apart from the temporary platform path in the copied entry point.
+
+| Check on native macOS ARM64 | Dev | Speed |
+| --- | --- | --- |
+| Compiler check / source formatting | Pass | Same sources. |
+| Inline checks with local platform | 486 pass | 486 pass |
+| Ordinary executable suite | 63 methods pass | 63 methods pass |
+| Strict descriptor gate | Three methods / all 15 subcases pass | Three methods / all 15 subcases pass |
+| Silent output controls | Three pass | Three pass |
+
+The local platform import includes 213 platform checks in addition to the 273
+project checks; this is not 486 distinct project requirements. Silent controls
+verify that a valid count ignores unusable stderr when it has no diagnostics,
+and tail-zero/nonmatching filtering ignore unusable stdout when they emit no
+records. Existing prefix WouldBlock, broken pipes and permission checks pass.
+No assertion is weakened or skipped.
+
+[Candidate evidence](basic-cli-stdio-candidate.json) records source/patch/archive/
+host/binary hashes and actual results. The zero-context patch intentionally has
+no whitespace-only context lines. To check/apply it to the exact upstream source:
+
+```sh
+git apply --check --unidiff-zero /path/to/stdio-access.patch
+git apply --unidiff-zero /path/to/stdio-access.patch
+```
+
+The temporary host source/build is `/private/tmp/jlog-stdio-platform`; the
+application/platform copies and tested binaries are in
+`/private/tmp/jlog-stdio-backport`. The unsuccessful upgrade experiment is in
+`/private/tmp/jlog-stdio-upgrade`. These paths are local diagnostic artifacts.
+
+**Adoption is pending.** jlog still references the original official archive;
+the compiler pin, CI workflow, Dockerfile and existing acceptance tests are
+unchanged. The correction has not executed on native Linux x86-64, and no new
+resource baseline is claimed. Adoption requires a reproducible patched-platform
+build with pinned provenance and native CI verification. No upstream issue/PR,
+dependency publication or project commit/push was made during this investigation.
+
+The user subsequently approved adoption. The patch now lives under `platform/`,
+and [the pinned bootstrap](../../platform/README.md) prepares the local and CI
+platform. The candidate results above remain a historical snapshot; current
+integration and native verification are tracked in the progress record.

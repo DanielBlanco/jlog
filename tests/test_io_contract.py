@@ -1,8 +1,8 @@
-"""Strict descriptor conformance gate; known to fail on the pinned native host.
+"""Strict descriptor conformance gate, including the patched host's exit-3 regressions.
 
 Run explicitly with JLOG_BIN and unittest discovery using this filename. These
 assert the specified exit-3 behavior, without skips or expected-failure markers.
-The ordinary test_cli.py suite covers errors actually reported by the platform.
+The ordinary test_cli.py suite also covers broken pipes and real read failures.
 """
 import errno
 import os

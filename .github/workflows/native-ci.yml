@@ -26,12 +26,14 @@ jobs:
             os: Linux
             arch: x86_64
             target: x64musl
+            rust-target: x86_64-unknown-linux-musl
             artifact: linux-x86_64
           - name: macOS ARM64
             runner: macos-15
             os: Darwin
             arch: arm64
             target: arm64mac
+            rust-target: aarch64-apple-darwin
             artifact: macos-arm64
     env:
       PYTHONDONTWRITEBYTECODE: '1'
@@ -48,6 +50,19 @@ jobs:
           bash tests/ci/install-roc.sh '${{ matrix.os }}' '${{ matrix.arch }}' "$RUNNER_TEMP/roc"
           echo "$RUNNER_TEMP/roc" >> "$GITHUB_PATH"
           echo "ROC_CACHE_DIR=$RUNNER_TEMP/roc-cache" >> "$GITHUB_ENV"
+
+      - name: Prepare the pinned patched platform
+        shell: bash
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          if [ "$(uname -s)" = Linux ]; then
+            sudo apt-get update
+            sudo apt-get install --yes musl-tools zstd
+            rustup target add --toolchain 1.99.0 '${{ matrix.rust-target }}'
+          fi
+          python3 scripts/build_platform.py --work-dir "$RUNNER_TEMP/platform-build" \
+            2>&1 | tee "$RUNNER_TEMP/platform-build.log"
+          cp platform/basic-cli/jlog-platform.json "$RUNNER_TEMP/platform.json"
 
       - name: Check and test both builds, including strict I/O conformance
         id: verify
@@ -79,3 +94,5 @@ jobs:
             ${{ runner.temp }}/measurements/results.json
             ${{ runner.temp }}/measurements/*.time
             ${{ runner.temp }}/measurements/*.stderr
+            ${{ runner.temp }}/platform-build.log
+            ${{ runner.temp }}/platform.json

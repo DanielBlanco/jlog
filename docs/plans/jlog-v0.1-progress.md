@@ -777,3 +777,60 @@ is implemented and executed, but full native conformance and M4-01 remain open
 because the strict descriptor gate fails. M4-04/05/06, release publication and
 minimum OS support decisions remain later work. The CI workflow/tooling is
 committed/pushed; measurement reports and documentation updates remain pending.
+
+## Descriptor failure investigation — 2026-10-27
+
+The user supplied the GitHub `io-contract-speed` failure output. The unchanged
+optimized binary freshly reproduces all 15 subcases locally. Source inspection
+traces this to Rust's intentional `handle_ebadf` standard-stream behavior, used
+by basic-cli 0.25.0. The [descriptor reproducer](../repros/stdio-descriptor-errors.md#root-cause-and-isolated-correction-2026-10-27)
+now records the exact cause and a tested candidate correction.
+
+A temporary basic-cli 0.26.0 / minimum compiler October-12 upgrade passes 961
+inline checks but still fails all 15 descriptor subcases. Six ordinary
+WouldBlock-injection subcases also time out. Its native backend explicitly
+preserves EBADF suppression and waits on EAGAIN. The experiment stops after
+these mandatory failures; no active project pin is changed.
+
+A narrow [patch](../../platform/patches/stdio-access.patch) for the exact 0.25.0
+host instead checks descriptor access before calling Rust's standard streams.
+It preserves empty-write no-ops, buffering, existing errors and the hosted ABI.
+The isolated patched platform uses the original pinned Roc compiler and a
+temporary application copy with only its platform path changed. Both dev and
+speed pass 486 inline checks (273 project + 213 local-platform), all 63 ordinary
+CLI methods and all 15 descriptor subcases. Six silent-stream controls also
+pass across the two builds. Check and explicit-source formatting pass; the patch
+applies cleanly to the original release source and reproduces the tested source.
+Source/archive/patch/host/binary identities are retained in the
+[candidate JSON](../repros/basic-cli-stdio-candidate.json).
+
+This is a proven native macOS candidate, not a fixed GitHub workflow. Native
+Linux execution, reproducible dependency integration and resource remeasurement
+remain pending adoption. The active source/platform/compiler/CI pins and test
+assertions remain unchanged, so the existing release blocker is still open.
+
+## Adopt the basic-cli descriptor correction — authorized 2026-10-27
+
+The user approved integrating the tested 0.25.0 platform correction in local
+builds and CI, then verifying native Linux. This supersedes the original
+official-archive-only constraint, preserving Roc `nightly-2026-10-09-258ab27`
+and the unchanged strict exit-3 expectations. The correction moves to
+`platform/patches/stdio-access.patch`; a lock file pins both upstream archives,
+source commit, original/patched Rust source hashes, patch checksum and Rust 1.99.0.
+
+`scripts/build_platform.py` verifies downloads and the exact patched source,
+builds the native host with Cargo.lock enforced, and prepares ignored
+`platform/basic-cli/`. Every generated file is recorded in a manifest and checked
+before reuse. CI verifies that manifest before and after both build suites,
+retains it in artifacts and uses native musl tooling on Linux. Docker uses the
+same bootstrap from a writable copy of the read-only source mount.
+
+Local macOS integration passes check/format, 486 dev and speed inline checks
+(273 project + 213 local-platform), **64** ordinary CLI methods and all 15 strict
+descriptor subcases per build. Three timing-unit and two platform-integrity
+checks pass. The new ordinary method preserves the three previously passing
+silent-output controls; it is regression coverage rather than fabricated RED.
+The two platform checks reject corrupted artifacts and mismatched input/target
+identities. The bootstrap is exercised from verified cached archives, then its
+reuse path verifies every generated file. Raw local results are retained under
+`/private/tmp/jlog-patched-local-evidence`. Native CI/Docker results follow.

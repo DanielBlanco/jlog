@@ -1,0 +1,78 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -2025,0 +2026,30 @@
++/// Check Unix descriptor access without consuming input or emitting output.
++/// Rust standard streams intentionally hide EBADF; the platform must preserve
++/// it for callers that distinguish a real I/O error from EOF or a successful write.
++fn ensure_standard_stream_access(fd: i32, writing: bool) -> io::Result<()> {
++    #[cfg(unix)]
++    {
++        // SAFETY: F_GETFL only queries the descriptor and takes no third argument.
++        let flags = unsafe { libc::fcntl(fd, libc::F_GETFL) };
++        if flags == -1 {
++            return Err(io::Error::last_os_error());
++        }
++        let access = flags & libc::O_ACCMODE;
++        if (writing && access == libc::O_RDONLY) || (!writing && access == libc::O_WRONLY) {
++            return Err(io::Error::from_raw_os_error(libc::EBADF));
++        }
++    }
++    #[cfg(not(unix))]
++    let _ = (fd, writing);
++    Ok(())
++}
++
++/// Preserve empty-write no-ops while validating every nonempty output request.
++fn ensure_standard_output_access(fd: i32, bytes: &[u8]) -> io::Result<()> {
++    if bytes.is_empty() {
++        Ok(())
++    } else {
++        ensure_standard_stream_access(fd, true)
++    }
++}
++
+@@ -2029 +2059 @@
+-    let result = {
++    let result = ensure_standard_output_access(2, b"\n").and_then(|()| {
+@@ -2032 +2062 @@
+-    };
++    });
+@@ -2044 +2074 @@
+-    let result = {
++    let result = ensure_standard_output_access(2, message.as_str().as_bytes()).and_then(|()| {
+@@ -2047 +2077 @@
+-    };
++    });
+@@ -2059 +2089 @@
+-    let result = {
++    let result = ensure_standard_output_access(2, bytes.as_slice()).and_then(|()| {
+@@ -2064 +2094 @@
+-    };
++    });
+@@ -2077 +2107 @@
+-    match io::stdin().lock().read_line(&mut line) {
++    match ensure_standard_stream_access(0, false).and_then(|()| io::stdin().lock().read_line(&mut line)) {
+@@ -2093 +2123 @@
+-    match io::stdin().lock().read(&mut buffer) {
++    match ensure_standard_stream_access(0, false).and_then(|()| io::stdin().lock().read(&mut buffer)) {
+@@ -2108 +2138 @@
+-    match io::stdin().lock().read_to_end(&mut buffer) {
++    match ensure_standard_stream_access(0, false).and_then(|()| io::stdin().lock().read_to_end(&mut buffer)) {
+@@ -2117 +2147 @@
+-    let result = {
++    let result = ensure_standard_output_access(1, b"\n").and_then(|()| {
+@@ -2120 +2150 @@
+-    };
++    });
+@@ -2132 +2162 @@
+-    let result = {
++    let result = ensure_standard_output_access(1, message.as_str().as_bytes()).and_then(|()| {
+@@ -2135 +2165 @@
+-    };
++    });
+@@ -2147 +2177 @@
+-    let result = {
++    let result = ensure_standard_output_access(1, bytes.as_slice()).and_then(|()| {
+@@ -2152 +2182 @@
+-    };
++    });

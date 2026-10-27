@@ -1,9 +1,9 @@
 # Linux resource measurements in Docker
 
-This image installs the exact Roc compiler pin and GNU time, then runs jlog as
+This image installs the exact Roc compiler pin, Rust 1.99.0, musl tooling and GNU time, then runs jlog as
 UID 1000. It mounts application sources read-only and stores build outputs,
 caches, generated fixtures, and results on the container's Linux filesystem.
-The compiler archive and Debian base manifest are pinned by SHA-256 in
+The compiler archive and Rust/Debian base manifest are pinned by SHA-256 in
 [Dockerfile](Dockerfile). Apt tooling versions are recorded with the measurements;
 future image rebuilds can receive Debian security updates.
 
@@ -23,12 +23,13 @@ docker exec jlog-m4-linux-arm64 sh tests/docker/verify.sh
 ```
 
 [verify.sh](verify.sh) checks the compiler version, formatting and types, runs
-273 pure checks and 63 ordinary executable methods against both dev and speed
-builds, and checks timing-parser units. Permission fixtures run unprivileged.
+486 inline checks (273 project + 213 platform), 64 ordinary executable methods
+and all 15 strict descriptor subcases against both dev and speed builds. It also
+checks timing-parser and platform-integrity units. Permission fixtures run unprivileged.
 The optimized ELF is `/work/jlog-speed`; the macOS `dist/jlog` is untouched.
 
-The separate strict descriptor suite is a release gate, currently failing on
-both measured OSes. Run it explicitly and retain its nonzero status:
+The strict descriptor suite is a release gate and now runs inside `verify.sh`.
+To run it separately:
 
 ```sh
 docker exec --env JLOG_BIN=/work/jlog-speed jlog-m4-linux-arm64 \
@@ -37,8 +38,10 @@ docker exec --env JLOG_BIN=/work/jlog-speed jlog-m4-linux-arm64 \
 
 Before measuring, record the image ID, engine/guest architectures, virtual CPU
 and memory limits, physical-host identity, and whether execution is emulated.
-`--environment` accepts a JSON file containing that provenance. Sources remain
-under `/src`; `/work` and `/tmp` are inside the Linux guest, so input/output does
+`--environment` accepts a JSON file containing that provenance. Original sources
+remain read-only under `/src`; verification uses `/work/source` so the platform
+bootstrap can generate its ignored local files. `/work` and `/tmp` are inside
+the Linux guest, so input/output does
 not cross the source bind mount during timing.
 
 Once dependencies have been resolved, disconnect the container network and

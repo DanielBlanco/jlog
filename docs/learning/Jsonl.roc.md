@@ -4,16 +4,18 @@ Read alongside [the source](../../src/Jsonl.roc). This guide follows the pinned
 Roc nightly used by the project. See [main.roc](main.roc.md) for I/O and
 [Operations](Operations.roc.md) for what happens to each classified line.
 
-The source places classification first. This guide starts with framing because
-the program must establish a physical line before it can validate that record.
+The source places its custom field decoder before the public module to work
+around a pinned-compiler issue described below. This guide starts with framing
+because a physical line must exist before validation or lookup.
 
-## Three separate jobs
+## Four separate jobs
 
 | Job | Definitions | Result |
 | --- | --- | --- |
 | Framing | `State`, `Line`, `start`, `feed`, `finish`, `emit_line`, `without_final_cr` | Numbered physical lines from byte chunks. |
 | Classification | `Reason`, `classify`, `is_blank`, `has_initial_bom` | A valid line or one stable defect reason. |
 | JSON validation | `within_depth`, `scan_depth`, `valid_json`, `AnyJson.parser_for` | A resource precheck followed by builtin grammar validation. |
+| String lookup | `matches_valid`, `starts_object`, `StringField.parser_for` | Exact top-level string comparison on an already-valid record. |
 
 Everything in this file is pure. It accepts values and produces values; callers
 supply bytes and handle output. `Jsonl :: {}.{ ... }` groups associated types and
@@ -56,8 +58,9 @@ feed : State, List(U8), a, (a, Line -> a) -> { state : State, value : a }
 
 Lowercase `a` is a type variable. It means that the framer can carry any consumer
 state, provided the callback accepts that state and a line and returns the same
-state type. In production, `a` is `Operations.Summary`; in framing tests it is a
-list of emitted lines.
+state type. In production, `a` is `Operations.StreamResult`, containing operation
+state or a sticky failure; summary tests use `Operations.Summary`, and framing
+tests use a list of emitted lines.
 
 `emit` is the callback parameter. “Emit” here means call that function; it does
 not mean perform I/O. The callback itself has a pure `->` function type.
@@ -188,8 +191,9 @@ different module maps the reason to a report message.
 | 4 | Unquoted nesting would exceed 128. | `TooDeep` |
 | 5 | Builtin JSON grammar validation fails. | `InvalidJson` |
 
-`is_blank` names the byte-whitespace predicate. Its `all` call returns true for
-an empty list, so a zero-byte body is classified as blank.
+`is_blank` applies `is_json_whitespace` to every byte. That shared predicate
+recognizes only 32, 9, 10, and 13, and is also used by object-prefix lookup.
+The `all` call returns true for an empty list, so a zero-byte body is blank.
 The whitespace rule does not accept every Unicode whitespace character.
 
 `has_initial_bom` names the first-line prefix check. It recognizes the UTF-8 byte-order mark
@@ -285,28 +289,98 @@ skipped data: its value is only a success marker.
 [feasibility report](../roc-feasibility.md) records the adapter experiments and
 why arbitrary field extraction remains deferred.
 
+## `matches_valid`: a second parse only for object lookup
+
+```roc
+matches_valid : List(U8), Str, Str -> Try(Bool, [LookupFailure])
+```
+
+The body must already have passed `classify`, including UTF-8, depth, and full
+grammar validation. The other arguments are the literal key and unchanged text
+from CLI parsing. Keeping this precondition explicit avoids mixing malformed
+input with a legitimate nonmatch.
+
+`starts_object` recursively drops leading JSON whitespace and checks whether the
+first significant byte is `{` (123). It is only a prefix check on validated
+input, not a second JSON grammar. Scalars and arrays immediately return
+`Ok(False)`. This matters for valid enormous numbers: an object decoder should
+never try converting a non-object value or turn it into an internal failure.
+
+For an object, strict `Str.from_utf8` and a typed `Json.parse` produce
+`Dict(Str, StringField)`. A missing key returns false. A present field compares
+its marker with `[text]`. Unexpected UTF-8 or object-decoder failures return
+`Err(LookupFailure)`; they are distinct from false and from malformed-line
+reasons. `Operations.filter_checked` adds the physical line number, and the
+effectful caller reports this disagreement as an internal failure (exit 1).
+
+Validation is performed once per line; matching performs an additional object
+decode to obtain strings. Output still uses the original byte body, preserving
+spacing, escapes, duplicate keys, and numeric spellings.
+
+### `StringField.parser_for`: keep strings and skip other values
+
+`StringField :: { text : List(Str) }` is a nominal record representation. Its
+parser first tries `Json.parse_str(encoding, state)`. Success constructs a
+singleton list containing the decoded string. Otherwise it calls
+`Json.skip_json_value` on the original state and constructs an empty list.
+
+| Field value | Stored marker |
+| --- | --- |
+| `"failed"` | `["failed"]` |
+| `""` | `[""]`, distinct from a non-string. |
+| Null, boolean, number, array, object | `[]` after builtin validation/skipping. |
+
+The parser produces only zero or one list element. This record-backed marker
+uses the compiler-verified adapter shape without constructing a JSON value tree.
+Non-string numbers are skipped without narrowing, including `1e9999`. The
+parser function returns another function accepting parser state, just like
+`AnyJson.parser_for`; `?` propagates any skip failure.
+
+The builtin dictionary decoder overwrites an earlier decoded duplicate key.
+Consequently `{"status":"failed","status":null}` is a nonmatch, whereas the
+reverse order matches. Escaped key aliases such as `"stat\\u0075s"` refer to the
+same decoded key. Keeping an empty marker for non-strings is essential: omitting
+them would incorrectly leave an earlier matching string in the dictionary.
+
+Comparison is exact: decoded `"fa\\u0069led"` matches text `failed`, but `Failed`,
+extra whitespace, and a differently normalized Unicode spelling do not. Dots
+and brackets in keys have no path meaning. No trimming, coercion, or shell
+unquoting occurs here; the shell has already supplied the argument text.
+
+### Why declare the adapter first?
+
+On this compiler pin, declaring the custom decoder after its dictionary consumer
+can crash checking/testing. The same code passes when the decoder appears first.
+`StringField` therefore precedes `Jsonl ::`, while the existing validation-only
+adapter keeps its working placement. This is a compiler workaround, not a
+general language rule. See the preserved
+[minimal reproducer](../repros/m3-dict-parser-order.md) before reordering it.
+
 ## The test helpers and regression groups
 
 `framed` feeds a list of chunks through the real `feed` and `finish`, using a list
 as the consumer state. Collecting every line is useful in a small test fixture;
-production instead reduces each line into a summary.
+production reduces lines into checked operation state and drains matching bodies
+after each read.
 
 `all_cuts_match` checks the expected lines at every two-chunk split, including
 empty chunks, and checks byte-at-a-time input. Its `offset: 0.U64` explicitly
 types the numeric literal. `sublist` and `drop_first` construct the two chunks.
 These tests demonstrate that framing is independent of transport boundaries.
 
-The module has 99 top-level `expect` checks covering framing, EOF, CRLF, invalid
+The module has 127 top-level `expect` checks covering framing, EOF, CRLF, invalid
 UTF-8, diagnostic precedence, depth boundaries, and positive/negative JSON
 grammar. Cases include huge numbers, escaped Unicode surrogate pairs, invalid
 lone surrogates, duplicate keys, and malformed-line recovery. M1 labels in comments
-refer to tasks in the [implementation plan](../plans/jlog-v0.1-plan.md).
+refer to tasks in the [implementation plan](../plans/jlog-v0.1-plan.md). M3 cases
+add string/non-string/non-object distinctions, literal keys, exact Unicode and
+escape comparisons, duplicate overwrites, and separate lookup failures.
 
 ```sh
 roc test --main=src/main.roc src/Jsonl.roc
 ```
 
-The main context can cause all 240 project checks to run. Seeded boundary tests
+The main context can cause all 273 project checks to run. Seeded boundary tests
 cover line-number exhaustion; summary-counter exhaustion is checked in the
 production operations consumer. Long-line resource measurements remain pending.
 

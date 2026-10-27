@@ -1,5 +1,37 @@
+# The pinned compiler requires this decoder before Dict(Str, StringField) use.
+# See docs/repros/m3-dict-parser-order.md for the minimized ordering crash.
+StringField :: { text : List(Str) }.{
+
+	## Retain one decoded string, or an empty marker list for any other JSON value.
+	## Skipping non-strings validates them without numeric conversion or a value tree.
+	parser_for = |encoding| |state| match Json.parse_str(encoding, state) {
+		Ok(parsed) => Ok({ value: StringField.{ text: [parsed.value] }, rest: parsed.rest })
+		Err(_) => {
+			rest = Json.skip_json_value(encoding, state)?
+			Ok({ value: StringField.{ text: [] }, rest })
+		}
+	}
+}
+
 Jsonl :: {}.{
 	Reason : [Blank, InvalidUtf8, Bom, TooDeep, InvalidJson]
+
+	## Match a literal top-level key and decoded JSON string in an already-validated
+	## record. Unexpected object decoding failures are distinct from non-matches.
+	matches_valid : List(U8), Str, Str -> Try(Bool, [LookupFailure])
+	matches_valid = |body, key, text| {
+		if !starts_object(body) {
+			return Ok(False)
+		}
+		source = Str.from_utf8(body).map_err(|_| LookupFailure)?
+		parsed : Try(Dict(Str, StringField), _)
+		parsed = Json.parse(source)
+		fields = parsed.map_err(|_| LookupFailure)?
+		match fields.get(key) {
+			Ok(field) => Ok(field.text == [text])
+			Err(_) => Ok(False)
+		}
+	}
 
 	## Validate a framed line in diagnostic order: blank, UTF-8, initial first-line
 	## BOM, depth limit, then JSON grammar. Preserve the original record bytes.
@@ -79,7 +111,21 @@ Jsonl :: {}.{
 ## Recognize empty bodies and bodies containing only the four JSON whitespace
 ## bytes: space, tab, LF, and CR. Other Unicode whitespace is not blank JSONL.
 is_blank : List(U8) -> Bool
-is_blank = |bytes| bytes.all(|byte| byte == 32 or byte == 9 or byte == 10 or byte == 13)
+is_blank = |bytes| bytes.all(is_json_whitespace)
+
+## Recognize only JSON's ASCII whitespace, shared by blank classification and
+## first-token selection. This is not a Unicode whitespace normalization rule.
+is_json_whitespace : U8 -> Bool
+is_json_whitespace = |byte| byte == 32 or byte == 9 or byte == 10 or byte == 13
+
+## Inspect the first significant byte of already-validated JSON. A leading {
+## identifies an object; builtin decoders still own every grammar decision.
+starts_object : List(U8) -> Bool
+starts_object = |bytes| match bytes {
+	[byte, .. as rest] if is_json_whitespace(byte) => starts_object(rest)
+	[123, ..] => True
+	_ => False
+}
 
 ## Recognize a UTF-8 BOM only at the beginning of physical line 1.
 has_initial_bom : Jsonl.Line -> Bool
@@ -328,6 +374,47 @@ expect Jsonl.classify({ number: 2, body: " ".to_utf8() }) == Invalid(InvalidJso
 expect Jsonl.classify({ number: 2, body: "﻿{}".to_utf8() }) == Invalid(InvalidJson)
 expect Jsonl.classify({ number: 2, body: " ﻿{}".to_utf8() }) == Invalid(InvalidJson)
 expect framed(["[1,\n2]\n".to_utf8()]).value.map(Jsonl.classify) == [Invalid(InvalidJson), Invalid(InvalidJson)]
+
+# M3-01: a validated object can match its literal top-level string value.
+expect Jsonl.matches_valid("{\"status\":\"failed\"}".to_utf8(), "status", "failed") == Ok(True)
+
+# M3-02: non-object records are valid non-matches, not decoder failures.
+expect Jsonl.matches_valid("1e9999".to_utf8(), "status", "failed") == Ok(False)
+expect ["null", "true", "false", "42", "340282366920938463463374607431768211456", "\"failed\"", "[1,true,null,{}]"].all(|text|
+	Jsonl.matches_valid(text.to_utf8(), "status", "failed") == Ok(False))
+expect Jsonl.matches_valid("{}".to_utf8(), "status", "failed") == Ok(False)
+expect ["null", "true", "42", "1e9999", "340282366920938463463374607431768211456", "[]", "{}"].all(|value|
+	Jsonl.matches_valid("{\"status\":${value}}".to_utf8(), "status", "failed") == Ok(False))
+expect Jsonl.matches_valid(" \t{\"status\":\"failed\",\"other\":1e9999}\r ".to_utf8(), "status", "failed") == Ok(True)
+expect Jsonl.matches_valid("{not-json}".to_utf8(), "status", "failed") == Err(LookupFailure)
+
+# M3-03: compare decoded strings exactly, with no case/whitespace normalization.
+expect Jsonl.matches_valid("{\"v\":\"FAILED\"}".to_utf8(), "v", "failed") == Ok(False)
+expect Jsonl.matches_valid("{\"v\":\" failed \"}".to_utf8(), "v", "failed") == Ok(False)
+expect Jsonl.matches_valid("{\"v\":\" failed \"}".to_utf8(), "v", " failed ") == Ok(True)
+expect Jsonl.matches_valid("{\"v\":\"caf\\u00e9\\n\\u03bb\"}".to_utf8(), "v", "café\nλ") == Ok(True)
+expect Jsonl.matches_valid("{\"v\":\"a\\\"b\\\\c\"}".to_utf8(), "v", "a\"b\\c") == Ok(True)
+expect Jsonl.matches_valid("{\"v\":\"e\\u0301\"}".to_utf8(), "v", "é") == Ok(False)
+expect Jsonl.matches_valid("{\"v\":\"\\\"failed\\\"\"}".to_utf8(), "v", "\"failed\"") == Ok(True)
+
+# M3-04: keys are literal decoded strings, never nested paths or queries.
+expect Jsonl.matches_valid("{\"\":\"x\"}".to_utf8(), "", "x") == Ok(True)
+expect Jsonl.matches_valid("{\"a\":\"\"}".to_utf8(), "a", "") == Ok(True)
+expect Jsonl.matches_valid("{\"a\":\"x=y\"}".to_utf8(), "a", "x=y") == Ok(True)
+expect Jsonl.matches_valid("{\"request.status\":\"failed\",\"a[0]\":\"yes\"}".to_utf8(), "request.status", "failed") == Ok(True)
+expect Jsonl.matches_valid("{\"request.status\":\"failed\",\"a[0]\":\"yes\"}".to_utf8(), "a[0]", "yes") == Ok(True)
+expect Jsonl.matches_valid("{\"request\":{\"status\":\"failed\"}}".to_utf8(), "request.status", "failed") == Ok(False)
+expect Jsonl.matches_valid("{\" key \":\"yes\"}".to_utf8(), " key ", "yes") == Ok(True)
+expect Jsonl.matches_valid("{\"caf\\u00e9\":\"yes\",\"\\u0073tatus\":\"failed\"}".to_utf8(), "café", "yes") == Ok(True)
+expect Jsonl.matches_valid("{\"\\u0073tatus\":\"failed\"}".to_utf8(), "status", "failed") == Ok(True)
+
+# M3-05: the last decoded duplicate key replaces the complete string marker.
+expect Jsonl.matches_valid("{\"status\":\"first\",\"status\":\"last\"}".to_utf8(), "status", "last") == Ok(True)
+expect Jsonl.matches_valid("{\"status\":\"first\",\"status\":\"last\"}".to_utf8(), "status", "first") == Ok(False)
+expect Jsonl.matches_valid("{\"status\":\"first\",\"\\u0073tatus\":\"last\"}".to_utf8(), "status", "last") == Ok(True)
+expect ["null", "42", "1e9999", "[]", "{}"].all(|value|
+	Jsonl.matches_valid("{\"status\":\"failed\",\"status\":${value}}".to_utf8(), "status", "failed") == Ok(False))
+expect Jsonl.matches_valid("{\"status\":null,\"status\":\"failed\"}".to_utf8(), "status", "failed") == Ok(True)
 
 # M2-07: detect line-number exhaustion without wrapping or consuming more lines.
 expect {

@@ -1,6 +1,8 @@
 """Executable checks; set JLOG_BIN to the binary under test (never built here)."""
 import os
 import errno
+import hashlib
+import json
 from pathlib import Path
 import subprocess
 import select
@@ -90,6 +92,68 @@ class CliTests(unittest.TestCase):
                         self.assertEqual((result.stdout, result.stderr), (count, diagnostics))
                 self.assertEqual(path.read_bytes(), data)
 
+    def test_m3_06_filter_file_and_stdin(self):
+        """Filter exact original bodies with file/stdin parity and no data decoration."""
+        lines = [
+            b'{"status":"ok","skill":"Roc","detail":{"attempts":[1,2]}}',
+            b' \t{"status":"failed","skill":"caf\\u00e9\\n\\u03bb","n":9007199254740993} ',
+            b'{"status":"failed","skill":null,"huge":1e9999,"x":1,"x":null}',
+            b'{"status":false}', b'42',
+        ]
+        data = b'\r\n'.join(lines)
+        expected = b'\n'.join(lines[1:3]) + b'\n'
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'events.jsonl'
+            path.write_bytes(data)
+            for args in [('--where', 'status=failed', str(path)),
+                         (str(path), '--where=status=failed'),
+                         ('--where', 'status=failed'), ('-', '--where=status=failed')]:
+                with self.subTest(args=args):
+                    result = self.run_cli(*args, input_bytes=data)
+                    self.assertEqual(result.returncode, 0)
+                    self.assertEqual((result.stdout, result.stderr), (expected, b''))
+            self.assertEqual(path.read_bytes(), data)
+
+    def test_m3_06_filter_operands_and_final_record(self):
+        """Preserve literal operands, decoded escapes, and an unterminated last body."""
+        cases = [('=x', b'{"":"x"}'), ('a=', b'{"a":""}'),
+                 ('a=x=y', b'{"a":"x=y"}'),
+                 ('request.status=failed', b'{"request.status":"failed"}'),
+                 (' key = value ', b'{" key ":" value "}'),
+                 ('status=failed', b'{"status":"failed"}\r')]
+        text = 'a"b\\c\nλ'
+        cases.append(('v=' + text, json.dumps({'v': text}).encode()))
+        for operand, body in cases:
+            with self.subTest(operand=operand):
+                result = self.run_cli('--where', operand, input_bytes=body)
+                self.assertEqual((result.stdout, result.stderr, result.returncode),
+                                 (body + b'\n', b'', 0))
+
+    def test_m3_06_filter_streams_before_eof(self):
+        """Emit selected records while stdin is open and flush the final pending line."""
+        process = subprocess.Popen([self.binary, '--where', 'status=failed'],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, bufsize=0)
+        first = b' {"status":"failed","id":1} '
+        last = b'{"status":"failed","id":2}'
+        try:
+            process.stdin.write(first + b'\n')
+            self.assertTrue(select.select([process.stdout], [], [], 3)[0],
+                            'A matching record must stream before EOF')
+            self.assertEqual(process.stdout.readline(), first + b'\n')
+            self.assertIsNone(process.poll())
+            process.stdin.write(b'bad\n' + last)
+            self.assertFalse(select.select([process.stdout, process.stderr], [], [], 0.2)[0])
+            process.stdin.close()
+            process.stdin = None
+            stdout, stderr = process.communicate(timeout=5)
+            self.assertEqual((stdout, stderr, process.returncode),
+                             (last + b'\n', b'jlog: <stdin>: line 2: invalid JSON\n', 4))
+        finally:
+            if process.poll() is None:
+                process.kill()
+            process.communicate(timeout=5)
+
     def test_m2_06_tail_file_and_stdin(self):
         """Tail valid original records in order while validating the whole input."""
         data = b' \t{}\r\n\nnot-json\nnull\r\n42'
@@ -111,6 +175,111 @@ class CliTests(unittest.TestCase):
                                          (expected, diagnostics))
             self.assertEqual(path.read_bytes(), data)
 
+    def test_m3_07_filter_no_matches(self):
+        """Treat all valid nonobjects and missing/nonstring fields as nonmatches."""
+        for data in [b'', b'null\ntrue\n42\n1e9999\n["failed"]\n"failed"',
+                     b'{}\n{"status":null}\n{"status":1e9999}\n{"status":false}\n'
+                     b'{"status":[]}\n{"status":{}}\n{"status":"Failed"}',
+                     b'{"status":"failed","status":null}\n'
+                     b'{"status":"failed","stat\\u0075s":"ok"}']:
+            with self.subTest(data=data):
+                result = self.run_cli('--where=status=failed', input_bytes=data)
+                self.assertEqual((result.stdout, result.stderr, result.returncode),
+                                 (b'', b'', 0))
+
+    def test_m3_07_filter_defects_recovery_and_cap(self):
+        """Continue after every malformed kind, count physical lines, and cap details."""
+        match = b' {"status":"failed","status":"failed","n":1e9999} '
+        bad = [b'\xef\xbb\xbf{}', b'\xff', b'', b'not-json', b'[' * 129 + b'0' + b']' * 129]
+        reasons = [b'BOM is not allowed', b'invalid UTF-8', b'blank line',
+                   b'invalid JSON', b'nesting exceeds 128']
+        lines = []
+        for invalid in bad:
+            lines.extend([invalid, match])
+        result = self.run_cli('--where', 'status=failed', input_bytes=b'\r\n'.join(lines))
+        self.assertEqual((result.stdout, result.returncode), ((match + b'\n') * 5, 4))
+        self.assertEqual(result.stderr, b''.join(
+            b'jlog: <stdin>: line ' + str(index * 2 + 1).encode() + b': ' + reason + b'\n'
+            for index, reason in enumerate(reasons)))
+        result = self.run_cli('--where=status=failed', input_bytes=(
+            match + b'\n' + b'bad\n' * 103 + match))
+        expected = b''.join(f'jlog: <stdin>: line {n}: invalid JSON\n'.encode()
+                            for n in range(2, 102))
+        self.assertEqual((result.stdout, result.stderr, result.returncode),
+                         ((match + b'\n') * 2,
+                          expected + b'jlog: <stdin>: 3 more invalid records\n', 4))
+
+    def test_m3_07_filter_diagnostic_failure_keeps_emitted_prefix(self):
+        """An actual broken stderr pipe yields 3 after already-streamed matches."""
+        read_fd, write_fd = os.pipe()
+        os.close(read_fd)
+        body = b'{"status":"failed"}\n'
+        try:
+            result = subprocess.run([self.binary, '--where', 'status=failed'],
+                                    input=body + b'bad\n', stdout=subprocess.PIPE,
+                                    stderr=write_fd, timeout=5)
+        finally:
+            os.close(write_fd)
+        self.assertEqual((result.stdout, result.returncode), (body, 3))
+
+    def test_m3_08_filter_count_pipeline(self):
+        """Pipe selected JSONL into count and check both processes independently."""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "events.jsonl"
+            for malformed in (False, True):
+                data = (b'{"status":"failed","n":1e9999}\n{"status":"ok"}\n'
+                        + (b"bad\n" if malformed else b"")
+                        + b'{"status":null,"status":"failed"}')
+                path.write_bytes(data)
+                before = hashlib.sha256(data).digest()
+                with self.subTest(malformed=malformed):
+                    producer = subprocess.Popen(
+                        [self.binary, "--where", "status=failed", str(path)],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    consumer = None
+                    try:
+                        consumer = subprocess.Popen(
+                            [self.binary, "--count"], stdin=producer.stdout,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        producer.stdout.close()
+                        stdout, stderr = consumer.communicate(timeout=5)
+                        _, producer_errors = producer.communicate(timeout=5)
+                        self.assertEqual((stdout, stderr, consumer.returncode),
+                                         (b"2\n", b"", 0))
+                        self.assertEqual(producer.returncode, 4 if malformed else 0)
+                        expected_errors = (f"jlog: {path}: line 3: invalid JSON\n".encode()
+                                           if malformed else b"")
+                        self.assertEqual(producer_errors, expected_errors)
+                        self.assertEqual(hashlib.sha256(path.read_bytes()).digest(), before)
+                    finally:
+                        for process in (producer, consumer):
+                            if process is not None:
+                                if process.poll() is None:
+                                    process.kill()
+                                process.communicate(timeout=5)
+
+    def test_m3_08_filter_redirect_and_unchanged_source(self):
+        """Redirect byte-preserved output to a file accepted by an independent parser."""
+        bodies = [b' \t{"status":"failed","message":"caf\\u00e9","n":9007199254740993} ',
+                  b'{"status":"ok"}', b'{"status":0,"status":"failed","n":1e9999}']
+        data = b"\r\n".join(bodies)
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "events.jsonl"
+            output = Path(directory) / "selected.jsonl"
+            source.write_bytes(data)
+            before = hashlib.sha256(data).digest()
+            with output.open("wb") as handle:
+                result = subprocess.run(
+                    [self.binary, str(source), "--where=status=failed"],
+                    stdout=handle, stderr=subprocess.PIPE, timeout=5)
+            self.assertEqual((result.stderr, result.returncode), (b"", 0))
+            self.assertEqual(output.read_bytes(), bodies[0] + b"\n" + bodies[2] + b"\n")
+            parsed = [json.loads(body) for body in output.read_bytes().splitlines()]
+            self.assertEqual(len(parsed), 2)
+            self.assertTrue(all(record["status"] == "failed" for record in parsed))
+            self.assertEqual(parsed[0]["n"], 9007199254740993)
+            self.assertEqual(hashlib.sha256(source.read_bytes()).digest(), before)
+
     def test_m2_08_file_errors_all_modes(self):
         """Keep all deferred outputs empty on real missing/permission/directory errors."""
         self.assertNotEqual(os.geteuid(), 0, 'Permission test requires an unprivileged user')
@@ -122,7 +291,8 @@ class CliTests(unittest.TestCase):
                 for path, category in [(Path(directory) / 'missing', b'not found'),
                                        (denied, b'permission denied'),
                                        (Path(directory), b'directory')]:
-                    for operation in [(), ('--count',), ('--tail', '1'), ('--tail', '0')]:
+                    for operation in [(), ('--count',), ('--tail', '1'), ('--tail', '0'),
+                                      ('--where', 'status=failed')]:
                         with self.subTest(path=path, operation=operation):
                             result = self.run_cli(*operation, str(path))
                             self.assertEqual((result.stdout, result.returncode), (b'', 3))
@@ -134,7 +304,8 @@ class CliTests(unittest.TestCase):
     def test_m2_09_stdin_read_errors_all_modes(self):
         """A reported stdin read error suppresses every deferred output and completion."""
         with tempfile.TemporaryDirectory() as directory:
-            for operation in [('--progress',), ('--count',), ('--tail', '1'), ('--tail', '0')]:
+            for operation in [('--progress',), ('--count',), ('--tail', '1'), ('--tail', '0'),
+                              ('--where', 'status=failed')]:
                 with self.subTest(operation=operation):
                     descriptor = os.open(directory, os.O_RDONLY)
                     try:
@@ -151,7 +322,9 @@ class CliTests(unittest.TestCase):
         cases = [(('--help',), b''), (('--version',), b''), ((), b'{}\n'),
                  (('--count',), b'{}\n'), (('--tail', '1'), b'{}\n'),
                  ((), b'bad\n{}\n'), (('--count',), b'bad\n{}\n'),
-                 (('--tail', '1'), b'bad\n{}\n')]
+                 (('--tail', '1'), b'bad\n{}\n'),
+                 (('--where', 'x=y'), b'{"x":"y"}\n'),
+                 (('--where', 'x=y'), b'bad\n{"x":"y"}\n')]
         for args, data in cases:
             with self.subTest(args=args, data=data):
                 read_fd, write_fd = os.pipe()
@@ -166,7 +339,7 @@ class CliTests(unittest.TestCase):
 
     def test_m2_10_closed_stderr_pipes(self):
         """Stop cleanly on diagnostic/progress write failure without deferred stdout."""
-        cases = [(('--unknown',), b''), (('--where', 'x=y'), b''),
+        cases = [(('--unknown',), b''), (('--where', 'x=y'), b'bad\n'),
                  (('--progress',), b'{}\n'), (('--count',), b'bad\n{}\n'),
                  (('--tail', '1'), b'bad\n{}\n')]
         for args, data in cases:
@@ -342,13 +515,13 @@ class CliTests(unittest.TestCase):
             self.assertIn(b'jlog: <stdin>:', result.stderr)
             self.assertNotIn(b'(complete)', result.stderr)
 
-    def test_progress_unfinished_operations(self):
-        """The modifier does not start inspection for unfinished data operations."""
-        for args in [('--where', 'status=failed')]:
-            with self.subTest(args=args):
-                result = self.run_cli('--progress', *args)
-                self.assertEqual((result.stdout, result.stderr, result.returncode),
-                                 (b'', b'jlog: data operations are not implemented yet\n', 1))
+    def test_progress_filter_keeps_data_contract(self):
+        """Inspection progress does not decorate streamed filtering or diagnostics."""
+        result = self.run_cli('--progress', '--where', 'status=failed',
+                              input_bytes=b'{"status":"failed"}\nbad\n')
+        self.assertEqual((result.stdout, result.stderr, result.returncode),
+                         (b'{"status":"failed"}\n',
+                          b'jlog: <stdin>: line 2: invalid JSON\n', 4))
 
     def test_m1_16_file_single_record(self):
         """Verify the complete report for a file containing one valid record."""

@@ -2,22 +2,22 @@
 
 ## Development Status & Resumption
 
-M1-A and M1-B are implemented. M2 has been authorized and count/tail plus the
-tested error paths are implemented; strict descriptor-edge conformance remains
-open. Read the latest [progress record](docs/plans/jlog-v0.1-progress.md) and the
+M1 through M3 behavior is implemented. Strict descriptor-edge conformance from
+M2 remains open; the user explicitly authorized proceeding to M3 with that gap
+recorded. Read the latest [progress record](docs/plans/jlog-v0.1-progress.md) and the
 [development handoff](docs/plans/jlog-handoff.md) before resuming for current state,
 verification, and checkpoint limits.
 
 The separately authorized `--progress` extension adds opt-in, rate-limited stderr
 counts to inspection. See its [specification](docs/specs/inspection-progress.md).
-The later M2 authorization covers count/tail and error handling. Filtering remains
-an M3 task and is not part of the current scope.
+The later authorizations cover M2 count/tail and error handling, and M3 streaming
+string-only filtering. M4 release work has not been authorized or started.
 
 ## Project Structure & Module Organization
 
 - `src/main.roc` is the application entry point and owns I/O and exit mapping.
 - `src/Cli.roc`, `src/Jsonl.roc`, and `src/Operations.roc` own pure parsing,
-  framing/validation, and inspection summaries/rendering, respectively. Pure
+  framing/validation/lookup, and operation reducers/rendering, respectively. Pure
   tests are inline `expect` checks in these modules.
 - `src/help.txt` contains the CLI help, imported as a string at compile time by
   `src/Cli.roc`. Preserve the final newline when editing and rebuild to apply changes.

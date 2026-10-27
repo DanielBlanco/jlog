@@ -1,6 +1,7 @@
 # jlog development handoff
 
-Snapshot: 2026-10-18, native macOS ARM64. Development is paused.
+Historical snapshot: 2026-10-18, native macOS ARM64. Later updates below record
+the user-authorized development through M3 on 2026-10-26.
 
 Layout update (2026-10-26): application modules and their inline checks now live
 in `src/`; the entry point is `src/main.roc`. Plans and the specification live
@@ -23,9 +24,17 @@ bounded tail, capped data diagnostics, checked counters, EOF/read-failure
 transitions, and actual closed-pipe error paths are implemented. See the latest
 progress record for task-by-task RED/GREEN evidence and current test totals.
 Write-only stdin and suppressed EBADF output errors remain unresolved platform
-compatibility gaps; do not claim strict full-descriptor conformance or advance
-to M3 on the strength of ordinary I/O tests. The snapshot and M1-only resume
-prompt below are historical and do not revoke the later M2 authorization.
+compatibility gaps; do not claim strict full-descriptor conformance on the
+strength of ordinary I/O tests.
+
+Later M3 update (2026-10-26): the user requested committing the existing work and
+starting M3. M2/progress/fixture work was committed as `f174c25`. That explicit
+authorization supersedes the earlier milestone checkpoint while leaving the M2
+descriptor gate open. String-only `--where` filtering is now implemented with
+original-byte streaming, capped diagnostics, and filter-to-count pipeline tests.
+The latest progress record contains current verification totals and the new
+[compiler declaration-order reproducer](../repros/m3-dict-parser-order.md).
+The snapshot and M1-only prompt below are historical; M4 has not been started.
 
 **M1-A and M1-B are already implemented and verified.** The handoff request's
 expected next checkpoint, M1-B, is stale for this checkout. Preserve the existing
@@ -150,7 +159,7 @@ requires a separate instruction; this handoff does not authorize it.
   remain parsing-only: empty stdout, `jlog: data operations are not implemented
   yet` on stderr, exit 1. Help describes the intended release, not full completion.
   `--field skill` returned usage exit 2; extraction remains v0.2. Later M2 work
-  implemented count/tail; filtering remains unavailable. See the latest progress
+implemented count/tail and M3 implemented filtering. See the latest progress
   record for current validation and descriptor-edge conformance gaps.
 - **Known stdin gap, freshly reproduced:** passing a write-only pipe descriptor
   as stdin yields an empty inspection report/status 0. Historical independent Roc
@@ -172,8 +181,10 @@ requires a separate instruction; this handoff does not authorize it.
   error handling and ordinary file/output failure tests remain mandatory.
 - Feasibility reports record an earlier compiler crash with a different JSON
   union adapter. Preserve the successful skip adapter; M3 should use the verified
-  record-based string classification approach. Retain reproducers and investigate
-  compiler crashes/unsupported APIs instead of bypassing tests.
+  record-based string classification approach. M3 exposed a separate declaration-
+  order crash; keep the custom `StringField` decoder above its dictionary consumer
+  and preserve its reproducer. Investigate compiler crashes/unsupported APIs
+  instead of bypassing tests.
 
 ## Historical M1-only resume instructions
 

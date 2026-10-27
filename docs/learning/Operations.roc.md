@@ -5,8 +5,9 @@ Read alongside [the source](../../src/Operations.roc). See
 [main.roc](main.roc.md) for the code that writes its result.
 
 The current implementation contains shared validation summaries, inspection and
-count rendering, bounded tail retention, data diagnostics, and progress/error
-policies. Filtering remains an M3 task. The guide describes the pinned Roc version used by this checkout.
+count rendering, bounded tail retention, streaming filter selection, data
+diagnostics, and progress/error policies. The guide describes the pinned Roc
+version used by this checkout.
 
 ## The module boundary
 
@@ -182,7 +183,7 @@ record joins the total only when `Jsonl.finish` emits it.
 `jlog: SOURCE: line N: REASON`, with one LF per detail. It escapes the source label
 once, preserves physical ordering, and appends `jlog: SOURCE: K more invalid
 records` when details were omitted. Empty/valid summaries produce an empty string.
-Inspection's errors remain inside its stdout report; count and tail instead
+Inspection's errors remain inside its stdout report; count, tail, and filtering
 write this diagnostic string to stderr and reserve stdout for data.
 
 ## `Tail`, `tail_start`, `tail_push`, and `tail_lines`: a growing ring
@@ -211,38 +212,72 @@ checked on the pinned compiler. These checks are not full resource benchmarks.
 
 ## Shared streaming state and checked consumption
 
-`StreamState` pairs `summary: Summary` with `tail: Tail`. `stream_start(limit)`
-starts both. Inspection and count use a zero retention limit; tail uses its N.
-All modes therefore share validation totals and capped malformed-line details.
+`StreamState` contains `summary: Summary`, `tail: Tail`, and
+`matches: List(List(U8))`. `stream_start(limit)` starts counters and tail with an
+empty match buffer. Inspection, count, and filtering use a zero tail limit; tail
+uses its N. All modes share validation totals and capped malformed-line details.
 
-`consume_line(state, line)` classifies once, calls `record_classification`, and
-pushes a body only for `Valid`. Even N=0 still classifies every physical line.
+`consume_line(state, line)` classifies once and delegates to `record_validated`.
+That helper calls `record_classification`, pushes a body into the tail only for
+`Valid`, and preserves the match buffer. Even N=0 classifies every physical line.
 The older `inspect_line` helper lets small pure summary tests use the same
 classification/counting logic without carrying tail storage.
 
-The actual application gives `consume_checked` to the framer. Its accumulator is
-`Try(StreamState, [ResourceFailure])`. It propagates an earlier failure unchanged,
-checks all counters against `U64.highest`, and only then calls `consume_line`.
-An exhaustion result contains no deferred state, so it cannot later be rendered
-as a partial successful count or tail. The low-level reducers assume counters fit;
-production always uses the checked wrapper.
+The actual application selects `consume_checked` or `filter_checked`. Their
+accumulator is `StreamResult`, an alias for `Try(StreamState, StreamFailure)`.
+`StreamFailure` distinguishes `ResourceFailure` from `LookupFailure(U64)`, whose
+payload is the physical line number.
+
+Both consumers call private `checked_line`. It propagates earlier failures,
+checks all counters against `U64.highest`, classifies once, then returns
+`{ state, valid }` using `record_validated`. `consume_checked` keeps only the
+updated state; filtering also needs the validity decision. This avoids repeating
+validation or counter rules in the two consumers. Exhaustion contains no deferred
+state, so it cannot become a partial successful count or tail. The low-level
+reducers assume counters fit; production always uses checked consumption.
+
+## `filter_checked` and `drain_matches`: selection with bounded retention
+
+`filter_checked(current, line, filter)` first calls `checked_line`. Invalid lines
+update diagnostics and return without lookup. Valid lines use
+`Jsonl.matches_valid(body, key, text)`; a nonmatch returns the counted state, while
+a match appends the original byte body to `state.matches`. A decoder disagreement
+becomes `LookupFailure(line.number)`, which the driver treats as internal exit 1.
+Neither an invalid line nor a legitimate nonmatch is a fatal lookup failure.
+
+Framing callbacks are pure, so they cannot write each match directly.
+`drain_matches(state)` returns `{ bodies, state }`: it hands the buffered bodies
+to the effectful writer and returns the next state with an empty buffer. The
+reader calls it after each read and before reading again. This bounds retention
+to the current read plus a potentially large line spanning earlier reads. It
+does not accumulate all matches. Tail and other modes leave this buffer empty.
+
+For example, a read containing a match, `bad`, and another match records three
+physical lines, one invalid detail, and two original bodies. The driver writes
+the two bodies plus LF, then stores the drained state. The next read starts with
+the same totals but no previously emitted bodies. A final unterminated match is
+selected by `Jsonl.finish` and written during EOF completion.
 
 ## `exit_code` and `complete_stream`: completion and failure policy
 
-`Failure` names usage, I/O, resource, internal, and unfinished-operation failures.
+`Failure` names usage, I/O, resource, and internal failures.
 `exit_code` maps completed validation to 0 or 4, usage to 2, I/O to 3, and the
 other fatal categories to 1. The effectful boundary wraps the result in `Exit`.
 
 `complete_stream(state, event)` distinguishes `Eof` from `ReadError(reason)`.
 EOF returns the completed state. A reported read failure returns only the error,
-discarding the deferred summary and tail. Both actual terminal paths use this
-pure decision through `finish_input!`; that caller writes results only on success.
+discarding the deferred summary, tail, and any pending matches. Both terminal
+paths use this pure decision through `finish_input!`; that caller writes final
+results only on success. Earlier filter bodies were handed off by draining and
+may already have been written; an input error cannot retract that prefix.
 
 Tests seed a prefix containing valid/invalid records and retained bodies, then
 assert that failure cannot yield completed output or malformed-input status 4.
 Real directory-stdin failures and closed-pipe writes are checked separately. A
-pseudo-terminal closure was observed as EOF on this platform, so that attempt
-does not establish executable mid-stream read-fault coverage.
+pseudo-terminal closure was observed as EOF on this platform in both inspection
+and filtering, so those attempts do not establish executable mid-stream
+read-fault coverage. Pure filter tests verify the drained prefix remains
+separate from discarded state and I/O status 3 overrides malformed status 4.
 
 ## `Progress`, `progress_start`, `progress_due`, and `progress_text`
 
@@ -352,7 +387,7 @@ The private `summarize(bytes)` helper runs the real framer with
 final `.value`, which is the summary. It gives tests a concise way to exercise
 the production pipeline without reading a file or duplicating classification.
 
-The module has 64 top-level `expect` checks for initial/valid/mixed summaries,
+The module has 69 top-level `expect` checks for initial/valid/mixed summaries,
 physical numbering, first-100 limits, omission counts, exact reports, large
 decimal counters, control escaping, Unicode preservation, and absence of raw
 record text from diagnostics.
@@ -363,6 +398,9 @@ clock. The Python suite separately tests real progress before EOF.
 
 The M2 additions cover count/data formatting, tail boundaries and ring wraparound,
 near-limit counters, EOF versus prefix read failure, and explicit exit categories.
+M3 checks add shared validation/selection, draining, sticky failures, exhausted
+counters, and read failure after an emitted prefix. The obsolete unfinished-
+operation category was removed now that every v0.1 operation is implemented.
 These pure checks complement the executable permission, EOF-gating, and broken
 pipe tests rather than simulating operating-system faults with ordinary EOF.
 
@@ -370,7 +408,7 @@ pipe tests rather than simulating operating-system faults with ordinary EOF.
 roc test --main=src/main.roc src/Operations.roc
 ```
 
-The compiler can include the entire application's 240 checks through the main
+The compiler can include the entire application's 273 checks through the main
 context. Exact rendering tests complement the executable tests: one checks the
 returned string, and the other checks which stream receives it and the status.
 

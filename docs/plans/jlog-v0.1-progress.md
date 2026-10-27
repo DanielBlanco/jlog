@@ -410,3 +410,59 @@ README, repository guidance, handoff, and learning guides now describe implement
 count/tail and the shared checked stream architecture. M2's strict descriptor-edge
 gate is explicitly left open; filtering/M3 was not started. No commit, push, PR,
 platform upgrade, new dependency, or FFI change was made.
+
+## M3 implementation — authorized 2026-10-26
+
+The user requested committing the current work and starting M3. The preceding
+changes were committed as `f174c25`; the working tree was clean afterward. This
+explicit M3 instruction supersedes the earlier scope checkpoint while retaining
+the unresolved M2 platform descriptor gate. No specification or I/O guarantee is
+weakened. Baseline: 240 pure checks and 44 executable methods passed.
+
+The pinned record-based dictionary capability probe freshly passed its nine
+checks. Integration then exposed a declaration-order compiler crash: a custom
+field decoder declared after a function using `Dict(Str, Field)` causes SIGSEGV
+in checking/testing. Moving the decoder above the consumer passes unchanged
+behavior assertions. The minimized reproducer and observations are preserved in
+`docs/repros/m3-dict-parser-order.md`; the pin and decoder semantics are unchanged.
+Compiler crashes/timeouts are investigation evidence, not feature RED results.
+
+| Task | Executed RED | GREEN / regression / refactor verification |
+| --- | --- | --- |
+| M3-01 | Focused `roc test --main=src/main.roc src/Jsonl.roc` failed the positive string match against `Ok(False)`: 240 passed, 1 failed, zero compiler errors. | A record-backed marker retains decoded strings and skips other values; typed dictionary lookup compares the literal key/text. After resolving the ordering issue, check/build were clean, P: 241 passed, dev I: 44 passed. |
+| M3-02 | A huge valid scalar returned `LookupFailure` instead of a non-match: 241 passed, 1 failed, zero compiler errors. | A first-significant-byte check bypasses object decoding for valid scalars/arrays. Missing and non-string fields, huge numbers, whitespace-wrapped objects, and unexpected object decoder failures are distinct and tested. Shared JSON-whitespace recognition avoids separate trim rules. P: 247 passed; check/build clean; dev I: 44 passed. |
+| M3-03 | Exact-comparison regression cases passed immediately using the builtin string decoder; inherited coverage, no artificial RED. | Case, surrounding whitespace, decoded Unicode/newline escapes, quotes/backslashes, literal quotes in TEXT, and Unicode-normalization differences pass. |
+| M3-04 | Literal-key regression cases passed immediately; existing CLI first-equals assertions remain covered. | Empty keys/values, RHS equals signs, spaces, Unicode-escaped keys, dots/brackets, and nested-path non-matches pass. |
+| M3-05 | Duplicate-key regression cases passed immediately using the verified dictionary overwrite semantics. | Last string wins; escaped aliases overwrite; null/number/array/object replace an earlier string marker, and a later string replaces a non-string. After M3-03..05: P 268 passed, dev I 44 passed, check/format/build clean. |
+| M3-06 | Executable `-k m3_06` initially failed all four source/flag forms: unfinished-operation status 1 instead of 0. | Filtering now selects valid string matches through the shared framer, drains current-read bodies, and writes original bytes plus LF before the next read. The representative fixture selects exact original lines 2/3; file/stdin, CRLF, final lone CR/unterminated bodies, literal operands, escaped values, huge numeric spellings, and live output before EOF pass. P 268 passed; the three focused executable methods passed; full dev regression is recorded under M3-08. Check/build clean. |
+| M3-07 | New failure/recovery assertions passed immediately using M3-06 selection and the M2 completion/error policies. Inherited coverage; no artificial RED. | No-match and every malformed-kind recovery/cap tests pass. Production pure transitions verify drained prefixes, discarded deferred state on read failure, I/O-over-malformed status, sticky lookup/resource failures, and exhausted counters. Existing real file/stdin error and closed stdout matrices now include filtering; a broken stderr test preserves already-emitted matches with status 3. P reached 274; removing the obsolete unfinished-operation category/assertion leaves 273. The three focused M3-07 executable methods passed; full cross-mode regression is recorded under M3-08. The advanced read-fault attempt is described below. |
+| M3-08 | Pipeline and redirected-output assertions passed immediately; no special pipeline implementation or artificial RED was needed. | Real filter→count processes have independently checked statuses/stderr, including upstream malformed status 4 with downstream successful count 2. Redirected output is checked by Python's JSON parser and exact raw bytes; SHA-256 source hashes remain unchanged. Full dev I 52 passed. |
+
+Advanced M3 S-IO attempt: a raw pseudo-terminal delivered a malformed line and a
+matching object. Filtering emitted the original matching body plus LF while the
+input was open. Closing the slave produced EOF, one invalid-line diagnostic, and
+status 4; no additional stdout appeared. As with the M2 attempt, this is **not**
+a mid-stream read-fault injection. That executable scenario remains unverified;
+the mandatory pure production prefix-failure transition and ordinary executable
+read errors pass. Existing strict descriptor-edge gaps remain open.
+
+Final native M3 verification: `roc check src/main.roc` and explicit-source
+`roc fmt --check` passed. Dev and speed `roc test --no-cache src/main.roc` each
+passed **273** checks (77 CLI, 127 JSONL, 69 operations). Both builds completed
+with zero errors/warnings. Python discovery against each fresh binary passed
+**52** methods with no skips; the optimized artifact remains at `dist/jlog`.
+
+The 12,000-record sample selects **706** failed-status records. File and stdin
+output exactly equal those original bodies plus LF, downstream count is 706,
+and the fixture's SHA-256 is unchanged. Executable help equals `src/help.txt`.
+All 71 named Roc functions have comments and learning-guide coverage; Python
+functions have docstrings. Changed Markdown links/anchors and code fences, and
+diff whitespace checks pass. README, repository guidance, handoff, and all four
+learning guides reflect filtering and current checked stream state.
+
+M3-01 through M3-08 are implemented and verified within the recorded native
+scope. The unresolved M2 descriptor gate, actual mid-stream executable read-fault
+scenario, native Linux checks, and large-file resource/release work remain open.
+No M4 work, platform/pin/FFI/dependency change, push, or PR was performed. M3
+changes were left uncommitted at the implementation checkpoint; the preceding-
+work commit is `f174c25`. The user authorized committing M3 on 2026-10-27.

@@ -15,10 +15,10 @@ import pf.Monotonic
 
 ProgressOutput : [Quiet, Reporting(Operations.Progress)]
 
-InputMode : [Inspect, Count, Tail(U32)]
+InputMode : [Inspect, Count, Tail(U32), Where({ key : Str, text : Str })]
 
 ## Parse arguments before I/O and dispatch help/version or an implemented input
-## mode. Count/tail share validation; filtering remains unavailable with exit 1.
+## mode. Every implemented operation shares framing and checked validation.
 main! : List(OsStr) => Try({}, [Exit(I32)])
 main! = |args| match Cli.parse(args) {
 	Ok({ operation: Help, .. }) => write_stdout!(Cli.help_text)
@@ -27,7 +27,7 @@ main! = |args| match Cli.parse(args) {
 	Ok({ operation: Inspect, source, progress }) => read_source!(source, Inspect, progress)
 	Ok({ operation: Count, source, .. }) => read_source!(source, Count, False)
 	Ok({ operation: Tail(size), source, .. }) => read_source!(source, Tail(size), False)
-	Ok(_) => report_failure!("jlog: data operations are not implemented yet", UnimplementedFailure)
+	Ok({ operation: Where(filter), source, .. }) => read_source!(source, Where(filter), False)
 }
 
 ## Write result text exactly as supplied; callers include any required newline.
@@ -68,13 +68,17 @@ read_source! = |source, mode, progress| match source {
 	Stdin => process_reader!(FromStdin, "<stdin>", mode, progress)
 }
 
-## Feed file or stdin chunks through shared framing and checked validation/tail
-## reduction. Emit completed results only at EOF; reported read failures exit 3.
+## Feed file or stdin chunks through shared framing and checked validation.
+## Drain filter matches per read; inspect/count/tail results wait for EOF.
 process_reader! : [FromFile(File.Reader), FromStdin], Str, InputMode, Bool => Try({}, [Exit(I32)])
 process_reader! = |source, label, mode, progress| {
 	limit = match mode {
 		Tail(size) => size
 		_ => 0
+	}
+	consume = |value, line| match mode {
+		Where(filter) => Operations.filter_checked(value, line, filter)
+		_ => Operations.consume_checked(value, line)
 	}
 	var $current = { state: Jsonl.start, value: Ok(Operations.stream_start(limit)) }
 	var $progress = start_progress!(progress)
@@ -83,20 +87,28 @@ process_reader! = |source, label, mode, progress| {
 		bytes = match read_bytes!(source) {
 			Ok(value) => value
 			Err(InputError(err)) => {
-				previous = checked_state!($current.state, $current.value)?
+				previous = checked_state!(label, $current.state, $current.value)?
 				return finish_input!(label, mode, $progress, previous, ReadError(IOErr.to_str(err)))
 			}
 		}
 		if bytes.is_empty() {
 			$reading = False
 		} else {
-			$current = Jsonl.feed($current.state, bytes, $current.value, Operations.consume_checked)
-			checked = checked_state!($current.state, $current.value)?
+			$current = Jsonl.feed($current.state, bytes, $current.value, consume)
+			checked = checked_state!(label, $current.state, $current.value)?
 			$progress = update_progress!($progress, checked.summary)?
+			match mode {
+				Where(_) => {
+					ready = Operations.drain_matches(checked)
+					write_records!(ready.bodies)?
+					$current = { ..$current, value: Ok(ready.state) }
+				}
+				_ => {}
+			}
 		}
 	}
-	finished = Jsonl.finish($current.state, $current.value, Operations.consume_checked)
-	completed = checked_state!(finished.state, finished.value)?
+	finished = Jsonl.finish($current.state, $current.value, consume)
+	completed = checked_state!(label, finished.state, finished.value)?
 	finish_input!(label, mode, $progress, completed, Eof)
 }
 
@@ -112,16 +124,17 @@ finish_input! = |label, mode, progress, state, event| {
 	complete_output!(label, mode, completed)
 }
 
-## Stop with resource exit 1 if framing or validation counters are exhausted.
-## Failed reductions contain no deferred tail/report state and never reach output.
-checked_state! : Jsonl.State, Try(Operations.StreamState, [ResourceFailure]) => Try(Operations.StreamState, [Exit(I32)])
-checked_state! = |framing, result| {
+## Map exhausted counters or unexpected validated-object lookup failure to exit 1.
+## Failed reductions contain no deferred results; earlier filter output may exist.
+checked_state! : Str, Jsonl.State, Operations.StreamResult => Try(Operations.StreamState, [Exit(I32)])
+checked_state! = |label, framing, result| {
 	if framing.exhausted {
 		return report_failure!("jlog: resource/counter exhausted", ResourceFailure)
 	}
 	match result {
 		Ok(state) => Ok(state)
 		Err(ResourceFailure) => report_failure!("jlog: resource/counter exhausted", ResourceFailure)
+		Err(LookupFailure(number)) => report_failure!("jlog: ${Operations.escape_source(label)}: line ${number.to_str()}: validated JSON lookup failed", InternalFailure)
 	}
 }
 
@@ -170,7 +183,7 @@ read_bytes! = |source| match source {
 	}
 }
 
-## Write a completed inspection report, count, or tail after successful EOF.
+## Write deferred inspection/count/tail results or final filter matches at EOF.
 ## Data diagnostics stay on stderr; a reported write failure overrides exit 4.
 complete_output! : Str, InputMode, Operations.StreamState => Try({}, [Exit(I32)])
 complete_output! = |label, mode, completed| {
@@ -183,17 +196,21 @@ complete_output! = |label, mode, completed| {
 		}
 		Tail(_) => {
 			write_stderr!(Operations.data_diagnostics(label, summary))?
-			write_tail!(completed.tail)?
+			write_records!(Operations.tail_lines(completed.tail))?
+		}
+		Where(_) => {
+			write_records!(completed.matches)?
+			write_stderr!(Operations.data_diagnostics(label, summary))?
 		}
 	}
 	validation_status(summary)
 }
 
-## Write retained original bodies in input order after EOF, adding exactly one
-## LF per record. Avoid building a second copy of the entire retained output.
-write_tail! : Operations.Tail => Try({}, [Exit(I32)])
-write_tail! = |tail| {
-	for body in Operations.tail_lines(tail) {
+## Write one bounded group of original bodies, adding exactly one LF per record.
+## Shared by EOF tail output and per-read filtering without a combined byte copy.
+write_records! : List(List(U8)) => Try({}, [Exit(I32)])
+write_records! = |bodies| {
+	for body in bodies {
 		Stdout.write_bytes!(body).map_err(|_| Exit(3))?
 		write_stdout!("\n")?
 	}

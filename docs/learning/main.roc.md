@@ -1,7 +1,7 @@
 # Learning `main.roc`: effects, shared streaming, and completion
 
 Read alongside [the source](../../src/main.roc). This guide describes the current
-M1/M2 implementation using Roc `nightly-2026-10-09-258ab27` and `basic-cli` 0.25.0.
+M1–M3 implementation using Roc `nightly-2026-10-09-258ab27` and `basic-cli` 0.25.0.
 Commands run from the repository root. Newer examples may use different APIs.
 
 Start here for overall flow, then read [Cli](Cli.roc.md), [Jsonl](Jsonl.roc.md),
@@ -18,15 +18,16 @@ flowchart TD
     A[Cli.parse native arguments] --> B[Help/version, usage failure, or input mode]
     B --> C[read_source! selects native file or stdin]
     C --> D[Read raw bytes]
-    D -->|Chunk| E[Jsonl.feed with Operations.consume_checked]
+    D -->|Chunk| E[Jsonl.feed with checked operation callback]
     E --> F[checked_state! and optional progress]
-    F --> D
+    F --> N[Filter: drain and write matches; other modes: defer]
+    N --> D
     D -->|EOF| G[Jsonl.finish and checked_state!]
     G --> H[finish_input!: Eof]
     D -->|Read failure| I[finish_input!: ReadError]
     I --> J[stderr diagnostic and exit 3]
     H --> K[Optional progress completion]
-    K --> L[complete_output!: inspect/count/tail]
+    K --> L[complete_output!: deferred results and diagnostics]
     L --> M[Validation exit 0 or 4]
 ```
 
@@ -91,12 +92,12 @@ The dispatcher matches `Cli.parse(args)`. A record pattern such as
 | Inspect | Read the selected source with optional progress. |
 | Count | Use the same reader with no inspection progress. |
 | Tail(N) | Use the same reader with N-body retention and no inspection progress. |
-| Filtering | Return the existing unfinished-operation status 1. |
+| Where(filter) | Use the same reader, streaming matches without inspection progress. |
 
-`InputMode` contains only implemented input operations: `Inspect`, `Count`, and
-`Tail(U32)`. It prevents the shared reader from accidentally receiving help or
-an unfinished filter. Count and tail deliberately ignore the inspection-only
-progress modifier; stderr remains available for their data diagnostics.
+`InputMode` contains `Inspect`, `Count`, `Tail(U32)`, and
+`Where({ key: Str, text: Str })`. It prevents the shared reader from receiving
+information-only commands such as help and version. Data operations ignore the inspection-
+only progress modifier; stderr remains available for their diagnostics.
 
 Parsing first means help finishes even if stdin stays open, and malformed flags
 beat an inaccessible filename. Tests exercise both cases against the executable.
@@ -157,7 +158,7 @@ record, CRLF, or UTF-8 character; validation waits until the physical line exist
 
 ## `process_reader!`: framing and checked operation state
 
-The mode chooses a retention limit: tail uses its N; inspection/count use zero.
+The mode chooses a retention limit: tail uses its N; other modes use zero.
 The loop begins with this shape:
 
 ```roc
@@ -172,18 +173,26 @@ bindings such as `bytes = ...` remain immutable within their scopes.
 | Part | Contents |
 | --- | --- |
 | `$current.state` | Framing: pending bytes, physical line number, and exhaustion flag. |
-| `$current.value` | `Try` containing shared counters/details and bounded tail, or a resource failure. |
+| `$current.value` | `StreamResult`: shared counters/details, bounded tail/current-read matches, or a resource/lookup failure. |
 | `$progress` | Quiet mode or the most recent displayed count and timestamp. |
 
-A nonempty read is passed to `Jsonl.feed` with `Operations.consume_checked` as its
-pure callback. Each line is classified once. The callback updates the shared
-summary and retains a valid body only when tail storage is enabled. A fatal
-counter error remains sticky in the accumulator.
+A local `consume` closure selects `Operations.filter_checked` for `Where(filter)`
+and `Operations.consume_checked` otherwise. Capturing `mode` lets both `feed` and
+`finish` use the same callback without duplicating their orchestration. Each
+line is classified once; filtering additionally decodes valid objects to inspect
+string fields. Both callbacks share counters, diagnostic caps, and sticky errors.
 
 After framing, `checked_state!` rejects either a framing-exhaustion flag or a
-failed consumer. It reports a resource error and exit 1 before progress or
-results can be written. Otherwise the summary is available for a progress check.
-The loop does not retain earlier stream-state snapshots between iterations.
+failed consumer. Resource failures exit 1. `LookupFailure(number)` also exits 1
+with an escaped source label and physical line number: validated JSON could not
+be looked up as expected. It is never treated as malformed input or a nonmatch.
+Otherwise the summary is available for a progress check.
+
+For filtering, `Operations.drain_matches(checked)` then hands the current read's
+matches to `write_records!`. Only the returned state with an empty match buffer
+is stored in `$current` before the next read. This lets the pure callback select
+records while the effectful loop writes them incrementally. A held-open stdin
+test observes output before EOF. The loop retains no earlier state snapshots.
 
 An empty read ends the loop. `Jsonl.finish` emits a final pending unterminated
 record, if present, using the same checked callback. Its result is checked again,
@@ -197,13 +206,16 @@ on the incomplete prefix.
 
 The helper calls the pure `Operations.complete_stream(state, event)`. For an
 error it immediately returns through `input_error!`, dropping deferred output.
-Only EOF success can call `finish_progress!` and `complete_output!`.
+Only EOF success can call `finish_progress!` and `complete_output!`, which also
+writes any match selected from the final unterminated line.
 
 This is why malformed records before an I/O failure cannot cause a completed
 count/tail/report or exit 4: the terminal read-error branch wins. Pure tests seed
 prefixes with errors and retained bodies. Directory-stdin tests exercise actual
-reported read errors; the advanced pseudo-terminal closure attempt was EOF, so
-executable failure specifically after a consumed prefix remains unverified.
+reported read errors. Filtering may already have emitted a prefix; failure drops
+deferred state, leaves that prefix intact, and exits 3. The advanced pseudo-
+terminal closure attempts appeared as EOF in inspection and filtering, so an
+executable read failure specifically after a consumed prefix remains unverified.
 
 ## Optional progress in the read loop
 
@@ -224,7 +236,7 @@ very long records can delay them. The pinned API has no terminal detection;
 newline-delimited text works for terminals and redirected stderr without cursor
 controls, colors, or extra dependencies. A reported progress write failure is 3.
 
-## `complete_output!`, `write_tail!`, and `validation_status`
+## `complete_output!`, `write_records!`, and `validation_status`
 
 `complete_output!` receives a completed stream state and selects rendering:
 
@@ -233,16 +245,23 @@ controls, colors, or extra dependencies. A reported progress write failure is 3.
 | Inspect | `Operations.report`: header and malformed detail section. | Only requested progress or operational errors. |
 | Count | `Operations.count_report`: valid count and LF. | Capped `Operations.data_diagnostics`. |
 | Tail | Original retained bodies, each followed by LF. | Capped `Operations.data_diagnostics`. |
+| Where | Any final pending match, plus bodies already streamed per read. | Capped `Operations.data_diagnostics` at EOF. |
 
 Data diagnostics are written before count/tail data. A reported stderr failure
 stops completion rather than producing apparently successful data without its
 diagnostics.
 
-`write_tail!` iterates `Operations.tail_lines` with a `for` loop. It writes each
-byte body through `Stdout.write_bytes!`, then adds LF. `?` inside the loop returns
-from the whole function on a write failure. It does not serialize JSON or build
-one large string containing all retained bytes. A failed write may leave partial
-output; already-written bytes cannot be retracted.
+`write_records!` accepts a list of original byte bodies and iterates with a `for`
+loop. Tail supplies `Operations.tail_lines`; filtering supplies drained matches
+or the final EOF buffer. Each body goes through `Stdout.write_bytes!`, followed
+by LF. `?` inside the loop returns from the whole function on a write failure.
+It does not serialize JSON or build one large combined string. A failed write
+may leave partial output; already-written bytes cannot be retracted.
+
+Filtering writes its final pending match before EOF diagnostics, following the
+same data-first behavior as its per-read matches. A broken stderr pipe can thus
+yield exit 3 with a valid emitted prefix. The executable suite checks this
+separately from count/tail's diagnostics-first deferred output.
 
 After successful writes, `validation_status` calls the pure exit-code policy:
 valid/empty input becomes `Ok({})`, mapped to process status 0 by the platform;
@@ -257,9 +276,13 @@ original record contents.
 
 Inspection/count retain the largest current line, buffers, validation temporaries,
 and at most 100 malformed details. Tail additionally retains at most N valid
-bodies, growing with received records rather than preallocating N slots. There
-is no fixed total-input or individual-line cap. Large-file resource measurements
-and native Linux execution remain release work.
+bodies, growing with received records rather than preallocating N slots.
+Filtering additionally retains current-read matching bodies and temporary
+top-level decoded fields. Stdin reads at most 16 KiB at a time, but a line spanning
+reads can be arbitrarily large. File reads supply one buffered physical line.
+Draining prevents match storage from growing with total output. There is no
+fixed total-input or individual-line cap. Large-file resource measurements and
+native Linux execution remain release work.
 
 The platform exposes write-only stdin as EOF and can suppress EBADF errors on
 unusable stdout/stderr descriptors. These remain strict-contract gaps; mapping
@@ -274,13 +297,17 @@ for the observations and pending compatibility gate.
 roc run src/main.roc -- tests/sample.jsonl
 roc run src/main.roc -- --count tests/sample.jsonl
 roc run src/main.roc -- --tail 2 tests/sample.jsonl
+roc run src/main.roc -- --where status=failed tests/sample-big.jsonl
 printf '{}\n\nnot-json\nnull' | roc run src/main.roc -- --count
 ```
 
 The sample count is 6. The final command prints `2` and LF to stdout, details for
 physical lines 2/3 to stderr, and exits 4. Tail's two sample records keep their
 original bodies. The [Python suite](../../tests/test_cli.py) checks real streams,
-EOF gating, native paths, permission failures, ring boundaries, and broken pipes.
+EOF gating, streaming before EOF, literal string matching, native paths,
+permission failures, ring boundaries, broken pipes, and real filter/count
+pipelines. M3's representative test selects the original bodies at lines 2 and 3,
+including nested data, escapes, duplicate keys, and huge numeric spellings.
 See [README](../../README.md#for-developers) for complete build/test commands.
 
 As an exercise, trace `missing.jsonl --unknown`: parsing fails before opening.

@@ -6,10 +6,9 @@
 Give it a file or pipe in a stream to get record totals and useful validation
 errors. It reads incrementally and leaves your input unchanged.
 
-> 🚧 **Current status:** inspection, validation, count, tail, help, and version work
-> with file/stdin input. Filtering still returns an unfinished-operation message
-> and exit 1. Known platform descriptor edge cases remain under review; field
-> extraction is deferred to v0.2.
+> 🚧 **Current status:** inspection, validation, count, tail, string filtering,
+> help, and version work with file/stdin input. Known platform descriptor edge
+> cases remain under review; field extraction is deferred to v0.2.
 
 ## Table of contents
 
@@ -21,6 +20,7 @@ errors. It reads incrementally and leaves your input unchanged.
   - [Find malformed records](#find-malformed-records)
   - [Count valid records](#count-valid-records)
   - [Show the last valid records](#show-the-last-valid-records)
+  - [Filter by a string field](#filter-by-a-string-field)
   - [Use exit codes in scripts](#use-exit-codes-in-scripts)
 - [JSONL rules](#jsonl-rules)
 - [Build and install](#build-and-install)
@@ -129,8 +129,8 @@ Progress is plain newline-delimited text, suitable for a terminal or redirected
 stderr. It has no colors or cursor controls. Updates can pause during blocked
 reads or a very long individual record; there is no background heartbeat.
 Open/read failures produce no completion line. The flag applies to inspection;
-count and tail keep their data-mode output contracts without progress. Filtering
-remains unfinished. Without the flag, stderr is quiet on successful inspection.
+count, tail, and filtering keep their data-mode output contracts without progress.
+Without the flag, stderr is quiet on successful inspection.
 
 ### Find malformed records
 
@@ -185,12 +185,37 @@ Zero outputs no records but still validates. Storage grows only as records arriv
 a large N with a tiny input does not preallocate N slots. Tail memory depends on
 the retained record bytes as well as the current line and capped diagnostics.
 
+### Filter by a string field
+
+```sh
+./dist/jlog --where status=failed tests/sample-big.jsonl
+./dist/jlog tests/sample-big.jsonl --where=status=failed > failed.jsonl
+set -o pipefail
+./dist/jlog --where status=failed tests/sample-big.jsonl | ./dist/jlog --count
+```
+
+The pipeline prints `706`. Filtering compares a literal top-level key with an
+exact decoded JSON string. It is case-sensitive, with no type coercion or Unicode
+normalization. Missing keys, non-string values, and non-object records are valid
+nonmatches. For duplicate keys, the last decoded key wins.
+
+Quote operands containing spaces or shell characters. The first `=` separates
+key and text; later equals signs belong to the text. Empty keys and text work
+(`=x`, `a=`). A key such as `request.status` is literal, not a nested query.
+
+Matches stream to stdout as input arrives, preserving original bodies and adding
+LF terminators. Every line is validated, even after a match. Malformed lines are
+skipped; capped diagnostics go to stderr at EOF and the command exits 4. No
+matches with valid input exits 0 with empty stdout. A later I/O failure exits 3
+and may leave an already-emitted prefix. Filtering retains the current read and
+line, temporary decoded fields, and capped diagnostics rather than all matches.
+
 ### Use exit codes in scripts
 
 | Code | Meaning |
 | --- | --- |
 | `0` | Operation completed with valid input, including empty input. |
-| `1` | Internal/resource failure, or currently unfinished filtering. |
+| `1` | Internal/resource failure. |
 | `2` | Invalid arguments. |
 | `3` | Input open/read error or reported output write error. |
 | `4` | Operation completed with malformed JSONL records. |
@@ -284,7 +309,8 @@ paths recorded in earlier development sessions.
 ## For developers
 
 Start with [AGENTS.md](AGENTS.md) and the [development handoff](docs/plans/jlog-handoff.md).
-M1-A and M1-B are implemented. Work on one agreed TDD task at a time, preserving
+M1 through M3 behavior is implemented; M2 descriptor compatibility and M4 release
+verification remain open. Work on one agreed TDD task at a time, preserving
 existing behavior and tests.
 
 ### Code map
@@ -294,8 +320,8 @@ existing behavior and tests.
 | `src/main.roc` | File/stdin effects, shared input loop, output, and exit mapping. |
 | `src/Cli.roc` | Pure argument parsing and help text. |
 | `src/help.txt` | Editable help text, embedded into the executable at compile time. |
-| `src/Jsonl.roc` | Pure framing, UTF-8/BOM classification, depth precheck, and builtin JSON validation adapter. |
-| `src/Operations.roc` | Pure inspection summaries, capped details, and report rendering. |
+| `src/Jsonl.roc` | Pure framing, UTF-8/BOM classification, depth precheck, builtin JSON validation, and string-field lookup. |
+| `src/Operations.roc` | Shared summaries, bounded tail/filter buffers, diagnostics, progress, and exit policy. |
 | `tests/test_cli.py` | Python stdlib tests against the actual executable. |
 | `docs/specs/`, `docs/plans/`, `docs/` | Behavior contracts, TDD tasks/evidence, and research. |
 
@@ -369,7 +395,7 @@ include the commands and results used to verify it.
 | --- | --- |
 | M1: CLI, framing, file/stdin inspection and validation | ✅ Implemented. |
 | M2: `--count`, `--tail N`, and expanded error handling | Count/tail and tested failure paths implemented; handling some invalid standard descriptors remains unresolved. |
-| M3: `--where KEY=TEXT`, string-only top-level equality | Planned; flag currently parses only. |
+| M3: `--where KEY=TEXT`, string-only top-level equality | Implemented and tested on native macOS ARM64, including streaming and pipelines. |
 | M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Pending. |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |
 

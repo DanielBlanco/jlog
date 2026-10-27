@@ -25,9 +25,8 @@ shapes; they do not introduce nominal wrappers around the result.
 The `progress` field defaults to `False` and is an independent modifier; it does
 not select an operation. Separating source and operation lets options appear
 before or after the input.
-Parsing describes a requested operation. Inspection, count, and tail now run
-through the shared reader; filtering still returns an unfinished-operation
-message when dispatched by `main!`.
+Parsing describes a requested operation. Inspection, count, tail, and filtering
+run through the shared reader when dispatched by `main!`.
 
 ## The outer declaration
 
@@ -154,9 +153,9 @@ boolean and recurses, or returns `Usage` if it is already enabled. The exact
 `["--progress"]` pattern rejects a value such as `--progress=true`. Help and
 version remain standalone, so combining either with progress is a usage error.
 
-The flag is independent of `Operation`. Count and tail preserve their data-mode contracts without inspection progress.
-Filtering may parse with it but still returns its unfinished-operation failure
-without starting inspection. After `--`, the same token can be a literal filename.
+The flag is independent of `Operation`. Count, tail, and filtering preserve their
+data-mode contracts without inspection progress. After `--`, the same token can
+be a literal filename.
 As an operand, `--where --progress=x` is a filter request: consuming an operand
 does not dispatch it as another option.
 
@@ -284,8 +283,8 @@ help file at runtime. `help_text = usage_text` exposes the constant through
 Edit the file and rebuild to change help. Keep the final newline: `main!` passes
 the text to `write_stdout!`, which adds no newline. Executable tests independently
 verify its exact bytes, so intentional wording changes require updating their
-expected help. Filtering is still unfinished; count and tail are implemented, as the
-[README](../../README.md) explains.
+expected help. All advertised operations are implemented, as the
+[README](../../README.md) explains; known platform I/O gaps remain documented.
 
 The module's 77 top-level `expect` checks cover valid forms, defaults, ordering,
 conflicts, boundaries, native filenames, invalid text, and standalone help/version.
@@ -298,7 +297,7 @@ roc test --main=src/main.roc src/Cli.roc
 ```
 
 This compiler may include all modules reached through the main context, so it
-can report 240 checks rather than only this module's 77.
+can report 273 checks rather than only this module's 77.
 
 As an exercise, trace `- events.jsonl`: the first argument marks stdin as an
 explicit input, so `parse_input` rejects the second. Then compare `--tail` with

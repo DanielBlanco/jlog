@@ -138,8 +138,10 @@ Operations :: {}.{
 	inspect_line : Summary, Jsonl.Line -> Summary
 	inspect_line = |summary, line| record_classification(summary, line.number, Jsonl.classify(line))
 
-	StreamState : { summary : Summary, tail : Tail }
-	Failure : [UsageFailure, IoFailure, ResourceFailure, InternalFailure, UnimplementedFailure]
+	StreamState : { summary : Summary, tail : Tail, matches : List(List(U8)) }
+	StreamFailure : [ResourceFailure, LookupFailure(U64)]
+	StreamResult : Try(StreamState, StreamFailure)
+	Failure : [UsageFailure, IoFailure, ResourceFailure, InternalFailure]
 
 	## Map completed validation and explicit fatal categories to the CLI contract.
 	## Fatal input/output failures override any earlier malformed-record status.
@@ -158,31 +160,38 @@ Operations :: {}.{
 	## Start shared validation and optional tail retention. A zero limit retains
 	## no record bodies and serves inspection/count without separate counters.
 	stream_start : U32 -> StreamState
-	stream_start = |limit| { summary: start, tail: tail_start(limit) }
+	stream_start = |limit| { summary: start, tail: tail_start(limit), matches: [] }
 
 	## Classify each physical line once, update shared totals, and retain only
 	## valid original bodies in the bounded tail. Invalid lines still count.
 	consume_line : StreamState, Jsonl.Line -> StreamState
-	consume_line = |state, line| {
-		classification = Jsonl.classify(line)
-		summary = record_classification(state.summary, line.number, classification)
-		tail = match classification {
-			Valid => tail_push(state.tail, line.body)
-			Invalid(_) => state.tail
+	consume_line = |state, line| record_validated(state, line, Jsonl.classify(line))
+
+	## Propagate sticky stream failures and consume one line with checked counters.
+	## Classification is shared with filtering rather than repeated for matching.
+	consume_checked : StreamResult, Jsonl.Line -> StreamResult
+	consume_checked = |current, line| checked_line(current, line).map_ok(|step| step.state)
+
+	## Validate and match one line, buffering only matching original bodies from
+	## the current read. The caller must drain this buffer before the next read.
+	filter_checked : StreamResult, Jsonl.Line, { key : Str, text : Str } -> StreamResult
+	filter_checked = |current, line, filter| {
+		step = checked_line(current, line)?
+		if !step.valid {
+			return Ok(step.state)
 		}
-		{ summary, tail }
+		matches = Jsonl.matches_valid(line.body, filter.key, filter.text).map_err(|_| LookupFailure(line.number))?
+		if matches {
+			Ok({ ..step.state, matches: step.state.matches.append(line.body) })
+		} else {
+			Ok(step.state)
+		}
 	}
 
-	## Propagate a previous failure or consume one line with checked counters.
-	## The result keeps failure separate from malformed JSONL classification.
-	consume_checked : Try(StreamState, [ResourceFailure]), Jsonl.Line -> Try(StreamState, [ResourceFailure])
-	consume_checked = |current, line| {
-		state = current?
-		if state.summary.records == U64.highest or state.summary.valid == U64.highest or state.summary.invalid == U64.highest {
-			return Err(ResourceFailure)
-		}
-		Ok(consume_line(state, line))
-	}
+	## Transfer this read's matching bodies to the writer and clear retention.
+	## Previously written matches are never accumulated in the next stream state.
+	drain_matches : StreamState -> { bodies : List(List(U8)), state : StreamState }
+	drain_matches = |state| { bodies: state.matches, state: { ..state, matches: [] } }
 
 	## Resolve EOF versus a reported read failure. Failure drops the deferred
 	## summary/tail state; the caller may render results only for a successful EOF.
@@ -192,6 +201,30 @@ Operations :: {}.{
 		ReadError(reason) => Err(ReadError(reason))
 	}
 
+}
+
+## Check totals before classifying a physical line, then return its updated state
+## and validity decision. Failure remains separate from malformed-record reasons.
+checked_line : Operations.StreamResult, Jsonl.Line -> Try({ state : Operations.StreamState, valid : Bool }, Operations.StreamFailure)
+checked_line = |current, line| {
+	state = current?
+	if state.summary.records == U64.highest or state.summary.valid == U64.highest or state.summary.invalid == U64.highest {
+		return Err(ResourceFailure)
+	}
+	classification = Jsonl.classify(line)
+	Ok({ state: record_validated(state, line, classification), valid: classification == Valid })
+}
+
+## Apply one existing classification to shared totals and optional tail storage.
+## Retain pending filter bodies unchanged until their separate drain step.
+record_validated : Operations.StreamState, Jsonl.Line, [Valid, Invalid(Jsonl.Reason)] -> Operations.StreamState
+record_validated = |state, line, classification| {
+	summary = record_classification(state.summary, line.number, classification)
+	tail = match classification {
+		Valid => Operations.tail_push(state.tail, line.body)
+		Invalid(_) => state.tail
+	}
+	{ ..state, summary, tail }
 }
 
 ## Update validation totals and bounded details from one already-classified
@@ -382,7 +415,6 @@ expect Operations.exit_code(Failed(UsageFailure)) == 2
 expect Operations.exit_code(Failed(IoFailure)) == 3
 expect Operations.exit_code(Failed(ResourceFailure)) == 1
 expect Operations.exit_code(Failed(InternalFailure)) == 1
-expect Operations.exit_code(Failed(UnimplementedFailure)) == 1
 
 # M2-09: a reported read failure discards all deferred results after a prefix.
 expect {
@@ -398,6 +430,43 @@ expect {
 	prefix = Operations.consume_line(invalid, { number: 2, body: "null".to_utf8() })
 	Operations.exit_code(Completed(prefix.summary)) == 4 and Operations.complete_stream(prefix, ReadError("mid-read")) == Err(ReadError("mid-read")) and Operations.exit_code(Failed(IoFailure)) == 3
 }
+
+# M3-07: filtering shares validation, drains bounded matches, and preserves failure.
+expect {
+	filter = { key: "status", text: "failed" }
+	consume = |value, line| Operations.filter_checked(value, line, filter)
+	partial = Jsonl.feed(Jsonl.start, "bad\n{\"status\":\"failed\"}\nnull\n".to_utf8(), Ok(Operations.stream_start(0)), consume)
+	match partial.value {
+		Ok(state) => state.summary == { records: 3, valid: 2, invalid: 1, errors: [{ number: 1, reason: InvalidJson }] } and state.matches == ["{\"status\":\"failed\"}".to_utf8()] and state.tail.bodies.is_empty()
+		Err(_) => False
+	}
+}
+expect {
+	body = " {\"status\":\"failed\"} ".to_utf8()
+	match Operations.filter_checked(Ok(Operations.stream_start(0)), { number: 1, body }, { key: "status", text: "failed" }) {
+		Ok(prefix) => {
+			written = Operations.drain_matches(prefix)
+			next = Operations.drain_matches(written.state)
+			written.bodies == [body] and written.state.matches.is_empty() and next.bodies.is_empty() and Operations.complete_stream(written.state, ReadError("mid-read")) == Err(ReadError("mid-read")) and Operations.exit_code(Failed(IoFailure)) == 3
+		}
+		Err(_) => False
+	}
+}
+expect {
+	filter = { key: "status", text: "failed" }
+	consume = |value, line| Operations.filter_checked(value, line, filter)
+	partial = Jsonl.feed(Jsonl.start, "bad\n{\"status\":\"failed\"}\n".to_utf8(), Ok(Operations.stream_start(0)), consume)
+	match partial.value {
+		Ok(prefix) => {
+			written = Operations.drain_matches(prefix)
+			written.bodies.len() == 1 and Operations.exit_code(Completed(written.state.summary)) == 4 and Operations.complete_stream(written.state, ReadError("mid-read")) == Err(ReadError("mid-read")) and Operations.exit_code(Failed(IoFailure)) == 3
+		}
+		Err(_) => False
+	}
+}
+expect Operations.filter_checked(Err(LookupFailure(42)), { number: 43, body: [] }, { key: "", text: "" }) == Err(LookupFailure(42))
+expect Operations.filter_checked(Err(ResourceFailure), { number: 43, body: [] }, { key: "", text: "" }) == Err(ResourceFailure)
+expect Operations.filter_checked(Ok({ ..Operations.stream_start(0), summary: { records: 18446744073709551615, valid: 18446744073709551615, invalid: 0, errors: [] } }), { number: 1, body: "{}".to_utf8() }, { key: "", text: "" }) == Err(ResourceFailure)
 
 # Progress scheduling and rendering are independent of a real clock or stream.
 expect Operations.progress_start(123) == { last_update_ns: 123, records: 0 }

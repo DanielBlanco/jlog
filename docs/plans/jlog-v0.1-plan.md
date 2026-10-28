@@ -3,8 +3,10 @@
 **Final status:** M1 through M4 implementation and release preparation are
 complete. The [final audit](m4-06-release-audit.md) records passing native CI,
 offline archives, support policy, MIT/notices and the exact release manifest.
-Milestone execution notes retain their historical checkpoints. Publication,
-tagging and merging remain separate actions.
+Milestone execution notes retain their historical checkpoints.
+[v0.1.0](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0) is now published;
+the [publication record](../verification/jlog-0.1.0-publication.json) closes the
+subsequently authorized merge/tag/publication actions.
 
 ## Scope and starting point
 

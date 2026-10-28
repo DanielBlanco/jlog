@@ -1,0 +1,706 @@
+{
+  "version": "0.1.0",
+  "tag": "v0.1.0",
+  "tag_commit": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5",
+  "annotated_tag_object": "9fad1bd46e6b9f5ad3e97818a0b7a435be543fb5",
+  "release_id": 426906490,
+  "release_url": "https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0",
+  "published_at": "2026-10-28T16:34:52Z",
+  "draft": false,
+  "prerelease": false,
+  "latest_public_release_verified": true,
+  "native_ci_run": "https://github.com/DanielBlanco/jlog/actions/runs/40619313436",
+  "native_ci_conclusion": "success",
+  "source_clone_command_verified": "git clone --branch master https://github.com/DanielBlanco/jlog.git",
+  "source_clone_commit": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5",
+  "release_notes_sha256": "9d1f687cff646166da2c64445db4fb2705ae92923737079f902b9db23e3c79e9",
+  "public_manifest_sha256": "b497c487529a627ca918cf2ba1045c46c34d412d50e738793b04ae7a414a061b",
+  "six_asset_roundtrip_before_publication_verified": true,
+  "all_published_asset_sizes_and_digests_verified": true,
+  "assets": [
+    {
+      "id": 685585060,
+      "name": "jlog-0.1.0-linux-x86_64.tar.gz",
+      "size": 1623268,
+      "digest": "sha256:639185cab8ff2432b6fa9535887efd230ea67938b2f5e23b9f00111b7a535a49",
+      "browser_download_url": "https://github.com/DanielBlanco/jlog/releases/download/v0.1.0/jlog-0.1.0-linux-x86_64.tar.gz",
+      "state": "uploaded"
+    },
+    {
+      "id": 685585071,
+      "name": "jlog-0.1.0-linux-x86_64.tar.gz.sha256",
+      "size": 97,
+      "digest": "sha256:c91eeca13d5182ae31c34d19604d9d06ff7000d0dd68e12bc21ae129b3ab450f",
+      "browser_download_url": "https://github.com/DanielBlanco/jlog/releases/download/v0.1.0/jlog-0.1.0-linux-x86_64.tar.gz.sha256",
+      "state": "uploaded"
+    },
+    {
+      "id": 685585059,
+      "name": "jlog-0.1.0-macos-arm64.tar.gz",
+      "size": 350119,
+      "digest": "sha256:8814a1e145f83e0700ebc3d5cb1879bda7d2a7902ae8575c708aef16cec1b775",
+      "browser_download_url": "https://github.com/DanielBlanco/jlog/releases/download/v0.1.0/jlog-0.1.0-macos-arm64.tar.gz",
+      "state": "uploaded"
+    },
+    {
+      "id": 685585067,
+      "name": "jlog-0.1.0-macos-arm64.tar.gz.sha256",
+      "size": 96,
+      "digest": "sha256:bec144e1aa85d73f41afdcd0eeda93b7087dc97889ad6bea9e029dd3af01a0d6",
+      "browser_download_url": "https://github.com/DanielBlanco/jlog/releases/download/v0.1.0/jlog-0.1.0-macos-arm64.tar.gz.sha256",
+      "state": "uploaded"
+    },
+    {
+      "id": 685585073,
+      "name": "manifest.json",
+      "size": 6664,
+      "digest": "sha256:b497c487529a627ca918cf2ba1045c46c34d412d50e738793b04ae7a414a061b",
+      "browser_download_url": "https://github.com/DanielBlanco/jlog/releases/download/v0.1.0/manifest.json",
+      "state": "uploaded"
+    },
+    {
+      "id": 685585112,
+      "name": "SHA256SUMS",
+      "size": 273,
+      "digest": "sha256:37731452dea76b0e7288600ac4e296dd34a48045f32bf915c2b89a2d5994d64e",
+      "browser_download_url": "https://github.com/DanielBlanco/jlog/releases/download/v0.1.0/SHA256SUMS",
+      "state": "uploaded"
+    }
+  ],
+  "native_artifacts": [
+    {
+      "id": 12787400706,
+      "name": "native-linux-x86_64",
+      "size_in_bytes": 5131900,
+      "url": "https://api.github.com/repos/DanielBlanco/jlog/actions/artifacts/12787400706",
+      "archive_download_url": "https://api.github.com/repos/DanielBlanco/jlog/actions/artifacts/12787400706/zip",
+      "expired": false,
+      "created_at": "2026-10-28T02:20:10Z",
+      "expires_at": "2026-11-11T02:20:08Z",
+      "updated_at": "2026-10-28T02:20:10Z",
+      "digest": "sha256:17d27449e0c0376173f6647413bae8c4c07c86042bff039abaedec9f3f896055",
+      "workflow_run": {
+        "id": 40619313436,
+        "repository_id": 1424979218,
+        "head_repository_id": 1424979218,
+        "head_branch": "master",
+        "head_sha": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5"
+      }
+    },
+    {
+      "id": 12786807326,
+      "name": "native-macos-arm64",
+      "size_in_bytes": 1005392,
+      "url": "https://api.github.com/repos/DanielBlanco/jlog/actions/artifacts/12786807326",
+      "archive_download_url": "https://api.github.com/repos/DanielBlanco/jlog/actions/artifacts/12786807326/zip",
+      "expired": false,
+      "created_at": "2026-10-28T02:16:34Z",
+      "expires_at": "2026-11-11T02:16:32Z",
+      "updated_at": "2026-10-28T02:16:34Z",
+      "digest": "sha256:e7af6112d21f6988f3772704ac2288619b1ca02c85ae3115338fab9fe055ce69",
+      "workflow_run": {
+        "id": 40619313436,
+        "repository_id": 1424979218,
+        "head_repository_id": 1424979218,
+        "head_branch": "master",
+        "head_sha": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5"
+      }
+    }
+  ],
+  "targets": [
+    {
+      "target": "arm64mac",
+      "native_checks": [
+        {
+          "name": "check",
+          "command": [
+            "roc",
+            "check",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "format",
+          "command": [
+            "roc",
+            "fmt",
+            "--check",
+            "src/main.roc",
+            "src/Cli.roc",
+            "src/Jsonl.roc",
+            "src/Operations.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "measurement-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_measure_resources.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "platform-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_build_platform.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "release-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_package_release.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "release-set-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_finalize_release.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "pure-dev",
+          "command": [
+            "roc",
+            "test",
+            "--opt=dev",
+            "--no-cache",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "build-dev",
+          "command": [
+            "roc",
+            "build",
+            "--no-cache",
+            "--opt=dev",
+            "--target=arm64mac",
+            "--output=/Users/runner/work/_temp/evidence/jlog-dev",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "file-dev",
+          "command": [
+            "file",
+            "/Users/runner/work/_temp/evidence/jlog-dev"
+          ],
+          "status": 0
+        },
+        {
+          "name": "cli-dev",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_cli.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "io-contract-dev",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_io_contract.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "pure-speed",
+          "command": [
+            "roc",
+            "test",
+            "--opt=speed",
+            "--no-cache",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "build-speed",
+          "command": [
+            "roc",
+            "build",
+            "--no-cache",
+            "--opt=speed",
+            "--target=arm64mac",
+            "--output=/Users/runner/work/_temp/evidence/jlog-speed",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "file-speed",
+          "command": [
+            "file",
+            "/Users/runner/work/_temp/evidence/jlog-speed"
+          ],
+          "status": 0
+        },
+        {
+          "name": "cli-speed",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_cli.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "io-contract-speed",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_io_contract.py",
+            "-v"
+          ],
+          "status": 0
+        }
+      ],
+      "offline_cases": [
+        {
+          "name": "version",
+          "args": [
+            "--version"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "8ba490307028098f0eae719a6e2b2f9da6037c7176d77ef3105a1dc4e02784bb",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "help",
+          "args": [
+            "--help"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "inspect-read-only-file",
+          "args": [
+            "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-tfjy8sne/events.jsonl"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "a275d2724f36a4f461b584d142a14a7103c99d4ffedb9ba6a80564e92f3216fd",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "count",
+          "args": [
+            "--count",
+            "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-tfjy8sne/events.jsonl"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "tail-original-bytes",
+          "args": [
+            "--tail",
+            "1",
+            "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-tfjy8sne/events.jsonl"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "5a05350ec82b4df1b8680b0c62da9abdcca1aac76150aaeb6df69e52300c2af0",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "filter-original-bytes",
+          "args": [
+            "--where",
+            "status=failed",
+            "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-tfjy8sne/events.jsonl"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "7ce8eff12277310f98d059937246673a31a8763107cebe668c8a6526bbcfc7cb",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "filter-to-count-pipeline",
+          "producer_exit_status": 0,
+          "consumer_exit_status": 0,
+          "verified": true
+        },
+        {
+          "name": "empty-stdin",
+          "args": [
+            "--count"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "stderr": "",
+          "verified": true
+        }
+      ],
+      "archive_sha256": "8814a1e145f83e0700ebc3d5cb1879bda7d2a7902ae8575c708aef16cec1b775",
+      "binary_sha256": "c43bbc634256da04ef0123a1f1defd5df6580c54f72299760a5a7a51dfe240c1",
+      "source_commit": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5"
+    },
+    {
+      "target": "x64musl",
+      "native_checks": [
+        {
+          "name": "check",
+          "command": [
+            "roc",
+            "check",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "format",
+          "command": [
+            "roc",
+            "fmt",
+            "--check",
+            "src/main.roc",
+            "src/Cli.roc",
+            "src/Jsonl.roc",
+            "src/Operations.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "measurement-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_measure_resources.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "platform-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_build_platform.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "release-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_package_release.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "release-set-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_finalize_release.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "pure-dev",
+          "command": [
+            "roc",
+            "test",
+            "--opt=dev",
+            "--no-cache",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "build-dev",
+          "command": [
+            "roc",
+            "build",
+            "--no-cache",
+            "--opt=dev",
+            "--target=x64musl",
+            "--output=/home/runner/work/_temp/evidence/jlog-dev",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "file-dev",
+          "command": [
+            "file",
+            "/home/runner/work/_temp/evidence/jlog-dev"
+          ],
+          "status": 0
+        },
+        {
+          "name": "cli-dev",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_cli.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "io-contract-dev",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_io_contract.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "pure-speed",
+          "command": [
+            "roc",
+            "test",
+            "--opt=speed",
+            "--no-cache",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "build-speed",
+          "command": [
+            "roc",
+            "build",
+            "--no-cache",
+            "--opt=speed",
+            "--target=x64musl",
+            "--output=/home/runner/work/_temp/evidence/jlog-speed",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "file-speed",
+          "command": [
+            "file",
+            "/home/runner/work/_temp/evidence/jlog-speed"
+          ],
+          "status": 0
+        },
+        {
+          "name": "cli-speed",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_cli.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "io-contract-speed",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_io_contract.py",
+            "-v"
+          ],
+          "status": 0
+        }
+      ],
+      "offline_cases": [
+        {
+          "name": "version",
+          "args": [
+            "--version"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "8ba490307028098f0eae719a6e2b2f9da6037c7176d77ef3105a1dc4e02784bb",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "help",
+          "args": [
+            "--help"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "inspect-read-only-file",
+          "args": [
+            "/events.jsonl"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "b28f9a4bac6a50dcf97f5211d9dbdabb1b5ebd8faced4b1c14853e8f29148d1c",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "count",
+          "args": [
+            "--count",
+            "/events.jsonl"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "tail-original-bytes",
+          "args": [
+            "--tail",
+            "1",
+            "/events.jsonl"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "5a05350ec82b4df1b8680b0c62da9abdcca1aac76150aaeb6df69e52300c2af0",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "filter-original-bytes",
+          "args": [
+            "--where",
+            "status=failed",
+            "/events.jsonl"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "7ce8eff12277310f98d059937246673a31a8763107cebe668c8a6526bbcfc7cb",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "filter-to-count-pipeline",
+          "producer_exit_status": 0,
+          "consumer_exit_status": 0,
+          "verified": true
+        },
+        {
+          "name": "empty-stdin",
+          "args": [
+            "--count"
+          ],
+          "exit_status": 0,
+          "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "stderr": "",
+          "verified": true
+        }
+      ],
+      "archive_sha256": "639185cab8ff2432b6fa9535887efd230ea67938b2f5e23b9f00111b7a535a49",
+      "binary_sha256": "9b8271f8771b3686311504e172f96ef66bbc60a0b0dc57350efc969608a2ac14",
+      "source_commit": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "license": "MIT",
+  "published": true,
+  "release_url": "https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0",
+  "schema_version": 1,
+  "status": "verified release",
+  "support_policy": "# jlog 0.1.0 platform support\n\nRelease verification covers these native configurations:\n\n| Release archive | Verified baseline | Runtime |\n| --- | --- | --- |\n| `macos-arm64` | macOS 15.7.9 ARM64; also tested locally on macOS 27.0.1 ARM64 | macOS system library; no Roc or Rust installation required. |\n| `linux-x86_64` | Ubuntu 24.04.5 x86-64 on the native GitHub runner; its kernel is recorded in the verification report | Static musl executable; no separate language runtime required. |\n\nSupport is limited to these tested configurations for v0.1. Earlier macOS\nversions and other Linux distributions/kernel combinations are unverified.\nmacOS 15.7.9 is the oldest tested macOS version; Ubuntu 24.04.5 is the Linux\ndistribution baseline. We make no broader minimum-kernel or libc compatibility\nclaim from static linking. The Mach-O deployment target is build metadata,\nnot evidence of testing on older macOS versions.\n\nLinux ARM64 Debian 12 Docker results are supplemental. There is no Linux ARM64,\nmacOS x86-64 or Windows release archive. Native execution is required for each\nrelease target; emulation and cross-builds do not substitute for that evidence.\n\nEach archive's `BUILD.json` records the native build/test environment, pinned\ntoolchain, corrected basic-cli platform and executable/file hashes. The final\nrelease manifest links those artifacts to their offline smoke checks. Runtime\nverification denies network access and makes Roc/Rust unavailable to the process.\nInstallation uses local checksum, tar and install tools.\n",
+  "tag": "v0.1.0",
+  "tag_commit": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5",
+  "targets": [
+    {
+      "archive": "jlog-0.1.0-macos-arm64.tar.gz",
+      "archive_bytes": 350119,
+      "archive_sha256": "8814a1e145f83e0700ebc3d5cb1879bda7d2a7902ae8575c708aef16cec1b775",
+      "binary_sha256": "c43bbc634256da04ef0123a1f1defd5df6580c54f72299760a5a7a51dfe240c1",
+      "evidence_sha256": {
+        "environment.json": "e0d66cdeaffb98cba35b9ad47c006e8713e9b0b8dcb77b022616b83690f18009",
+        "readme.json": "6cacf1fed62601adbc855d47c81e9b1722bf6f942f5c47109d64527e0bf4c8c8",
+        "release.json": "952a5a36dfc8705eacbb59bc6c77d53d98d77392e76c6be0b71029a73641402f",
+        "verification.json": "60f0c111bb34e0cab55b19de16df66b5da523e0b7c638e11695a2579cf77a69c"
+      },
+      "isolation": {
+        "method": "macOS sandbox-exec",
+        "network": "deny network*",
+        "profile": "(version 1)(allow default)(deny network*)(deny process-exec (regex #\"/(roc|rustc|cargo)$\"))(deny file-read* (subpath \"/Users/runner/work/jlog/jlog\"))(deny file-read* (subpath \"/Users/runner/.rustup\") (subpath \"/Users/runner/.cargo\"))",
+        "toolchains": "absent from PATH; executable names denied, including absolute paths"
+      },
+      "license_sha256": "70d60baa983130995b8187c18255841ce4435ea0fb9f119cf4765834cd121779",
+      "native_run_url": "https://github.com/DanielBlanco/jlog/actions/runs/40619313436",
+      "notices_sha256": "799fddfb0cc86a0e30ea8a9735d35776d72dd824e1e5792839cb75f871243702",
+      "offline_cases": 8,
+      "platform_identity": "18006035e878a978b433d8b24d1bf80506800df7b0eb7088ce92b461430762f2",
+      "readme_cases": 19,
+      "resource_cases": 70,
+      "runtime_architecture": "arm64",
+      "runtime_host": "macOS-15.7.9-arm64-arm-64bit-Mach-O",
+      "source_blocks": 5,
+      "source_commit": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5",
+      "source_sha256": {
+        "src/Cli.roc": "24d694aca897d8d0530483a519328276b4ec8fba4cefbb6786928fc8d6a17ed4",
+        "src/Jsonl.roc": "2c52ffa06254c3eeab04ec7a1d77c772fcdc0a8d08d089f59a500db69786bf39",
+        "src/Operations.roc": "56ad5f6d19654de0a3d4616a79e509c7f68ab62d2c0f4d1a2d1d5bc3a27275f4",
+        "src/help.txt": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+        "src/main.roc": "c3c4ab1daee92533cf2b8b364354de2b4208c2d62933b823e594ce60ffe62b30"
+      },
+      "support_sha256": "5a153e49045619996f96f9d7de943007f5603648794238d780b926865230eaed",
+      "target": "arm64mac",
+      "verified": true,
+      "version": "0.1.0"
+    },
+    {
+      "archive": "jlog-0.1.0-linux-x86_64.tar.gz",
+      "archive_bytes": 1623268,
+      "archive_sha256": "639185cab8ff2432b6fa9535887efd230ea67938b2f5e23b9f00111b7a535a49",
+      "binary_sha256": "9b8271f8771b3686311504e172f96ef66bbc60a0b0dc57350efc969608a2ac14",
+      "evidence_sha256": {
+        "environment.json": "f46645d074bc738ca92fca8c882f61d397b2ebee06e78ed9add07e8e6e95bc8a",
+        "readme.json": "28a9a1c2e4a812d3f5534367330478d61a987870091786b052a4378f41bc4186",
+        "release.json": "6156d61d077e1baf2a99fe7c99b074db99bf2d3390cd53a11fa9809db39e338a",
+        "verification.json": "82e3b28f904b54f3f46d4d94b749a78d4890b4d6da1db27fabb97a8a1592341f"
+      },
+      "isolation": {
+        "method": "Docker FROM scratch",
+        "network": "none",
+        "read_only": true,
+        "root_files": [
+          "jlog",
+          "events.jsonl"
+        ],
+        "toolchains": "No compiler, shell or language runtime exists in the image",
+        "user": "65534:65534"
+      },
+      "license_sha256": "70d60baa983130995b8187c18255841ce4435ea0fb9f119cf4765834cd121779",
+      "native_run_url": "https://github.com/DanielBlanco/jlog/actions/runs/40619313436",
+      "notices_sha256": "799fddfb0cc86a0e30ea8a9735d35776d72dd824e1e5792839cb75f871243702",
+      "offline_cases": 8,
+      "platform_identity": "18006035e878a978b433d8b24d1bf80506800df7b0eb7088ce92b461430762f2",
+      "readme_cases": 16,
+      "resource_cases": 70,
+      "runtime_architecture": "x86_64",
+      "runtime_host": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+      "source_blocks": 5,
+      "source_commit": "96ebc1d0d96a4403db9ec40bd393367d5a2f89f5",
+      "source_sha256": {
+        "src/Cli.roc": "24d694aca897d8d0530483a519328276b4ec8fba4cefbb6786928fc8d6a17ed4",
+        "src/Jsonl.roc": "2c52ffa06254c3eeab04ec7a1d77c772fcdc0a8d08d089f59a500db69786bf39",
+        "src/Operations.roc": "56ad5f6d19654de0a3d4616a79e509c7f68ab62d2c0f4d1a2d1d5bc3a27275f4",
+        "src/help.txt": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+        "src/main.roc": "c3c4ab1daee92533cf2b8b364354de2b4208c2d62933b823e594ce60ffe62b30"
+      },
+      "support_sha256": "5a153e49045619996f96f9d7de943007f5603648794238d780b926865230eaed",
+      "target": "x64musl",
+      "verified": true,
+      "version": "0.1.0"
+    }
+  ],
+  "version": "0.1.0"
+}

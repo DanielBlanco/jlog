@@ -3,7 +3,8 @@
 The user's wrap-up request authorizes finishing M4-05/06 release preparation.
 **M4-06 is complete.** Application behavior and final native archive verification
 pass on both release targets; the exact release set is finalized and checksummed.
-This audit does not merge the existing PR, create a tag or publish a release.
+This audit records the preparation checkpoint. The subsequently authorized
+[v0.1.0 publication](../verification/jlog-0.1.0-publication.json) is complete.
 
 ## Scope and implementation
 
@@ -97,6 +98,9 @@ Combined checksums pass for both archives and the manifest. The durable
 [manifest](../verification/jlog-0.1.0-release-manifest.json) and
 [checksum file](../verification/jlog-0.1.0-SHA256SUMS) exactly match that release set.
 
-All v0.1 implementation and verification tasks are closed. Publication, tagging
-and merging remain separate actions for the repository owner. This is an
-unpublished verified release candidate.
+All v0.1 implementation and verification tasks are closed. The checkpoint above
+was an unpublished verified candidate. PR #1 subsequently merged, and the user
+authorized the checkout fix, commit, push and `v0.1.0` publication. Tagged commit
+`96ebc1d` passes native run `40619313436`; its new archive wording and all six
+release uploads are verified. The release is published as latest, with exact
+identities in the [publication record](../verification/jlog-0.1.0-publication.json).

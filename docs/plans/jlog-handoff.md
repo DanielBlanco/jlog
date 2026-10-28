@@ -1,9 +1,18 @@
 # jlog development handoff
 
 Historical snapshot: 2026-10-18, native macOS ARM64. Later updates below record
-the user-authorized development through M4-06 closeout on 2026-10-27.
+the user-authorized development through publication on 2026-10-28.
 
-Latest verified checkpoint: **M1 through M4 implementation and release
+Latest release: **[jlog v0.1.0](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0)
+is published** at native-tested commit `96ebc1d`. Master CI run `40619313436`
+passes both targets, including the fresh archives containing the corrected
+publication/install wording. All six uploaded assets were downloaded and
+hash-checked before publication; public release metadata and a public asset
+download are verified afterward. See the
+[publication record](../verification/jlog-0.1.0-publication.json) and
+[published manifest](../verification/jlog-0.1.0-published-manifest.json).
+
+Earlier preparation checkpoint: **M1 through M4 implementation and release
 preparation are complete.** Code commit `7f92f8c` passes native Linux x86-64 and
 macOS ARM64 [CI run 40608149721](https://github.com/DanielBlanco/jlog/actions/runs/40608149721),
 using merge checkout `26081f3`. Both builds pass 486 inline checks, 64 ordinary
@@ -21,9 +30,9 @@ rejects failed/mixed/missing evidence without rebuilding. Native artifact ZIP
 digests match GitHub metadata; all input/source/platform/binary hashes pass.
 
 There is no remaining v0.1 implementation task. PR #1 is merged into `master`
-at `f387bff`; its native CI run `40615855991` passes. The user now authorizes
-correcting source checkout instructions, committing, pushing and publishing
-`v0.1.0`. Source clone instructions select `master`. `--field` stays in v0.2. Historical
+at `f387bff`; its native CI run `40615855991` passes. The subsequent request to
+correct checkout instructions, commit, push and publish is complete. Source clone
+instructions select `master`. `--field` stays in v0.2. Historical
 failures and scoped resume prompts below remain snapshots, not current blockers
 or instructions to restart completed tasks.
 

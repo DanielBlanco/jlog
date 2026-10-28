@@ -1066,3 +1066,46 @@ The bundled wording change requires fresh native archive verification before
 publishing; application/platform/compiler inputs remain unchanged. The user has
 authorized tagging, uploading the exact verified assets and publishing the release.
 The final publication result is recorded after those actions succeed.
+
+### v0.1.0 published — 2026-10-28
+
+Commit `96ebc1d0d96a4403db9ec40bd393367d5a2f89f5` fixes source checkout
+instructions to use `master`, removes unpublished wording from the bundled
+installation guide and adds versioned release notes. It is committed/pushed to
+master. All 19 local README/install checks pass, and the exact documented clone
+command succeeds in a fresh temporary directory at that commit.
+
+Native master [run 40619313436](https://github.com/DanielBlanco/jlog/actions/runs/40619313436)
+finishes **success** on Linux x86-64 and macOS ARM64, including full dev/speed
+regressions, strict descriptors, README/source/install blocks, 70 resource cases
+and eight offline archive cases per target. Native artifact ZIP checksums match
+GitHub metadata, and the finalizer revalidates the exact new archives against
+the tested binaries and current release documents. No application/platform or
+compiler input changes.
+
+Annotated tag `v0.1.0` is pushed with tag object
+`9fad1bd46e6b9f5ad3e97818a0b7a435be543fb5`, resolving to verified commit
+`96ebc1d`. The release is created as a draft with both platform archives, their
+two checksum sidecars, `manifest.json` and `SHA256SUMS`. All six uploads are
+downloaded and compared byte-for-byte by SHA-256 before publication. The combined
+checksum check passes. Publication adds release URL/tag/state metadata and
+regenerates the manifest checksum; native-tested archive bytes are unchanged.
+
+**[jlog v0.1.0](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0) is
+published as latest**, not a draft or prerelease, at `2026-10-28T16:34:52Z`.
+The unauthenticated public latest-release endpoint confirms the state, all six
+asset sizes/server digests match, release notes match the committed file and a
+public manifest download matches the verified bytes.
+
+Published archive SHA-256 values:
+
+- Linux x86-64: `639185cab8ff2432b6fa9535887efd230ea67938b2f5e23b9f00111b7a535a49`.
+- macOS ARM64: `8814a1e145f83e0700ebc3d5cb1879bda7d2a7902ae8575c708aef16cec1b775`.
+
+The [publication record](../verification/jlog-0.1.0-publication.json),
+[published manifest](../verification/jlog-0.1.0-published-manifest.json) and
+[published checksums](../verification/jlog-0.1.0-published-SHA256SUMS) preserve
+the tagged source, native evidence and exact asset identities. The local
+published set is under ignored `dist/jlog-0.1.0-publish/`; earlier candidate
+snapshots remain historical. Repository guidance, README and handoff record
+the completed publication. No requested v0.1.0 work remains.

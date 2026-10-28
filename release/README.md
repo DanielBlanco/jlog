@@ -102,4 +102,12 @@ pins; and the bundled license, notices, support and installation documents.
 It rejects missing/duplicate targets, failed smoke checks and differing shared
 release inputs. It copies the exact tested archives/checksum sidecars and writes
 `manifest.json` plus `SHA256SUMS` (archives and manifest). No rebuild occurs.
-Publication, tagging and merging remain separate actions.
+The finalizer itself does not tag or publish. Publication adds the tagged commit,
+release URL and publication state to the manifest copy, then regenerates
+`SHA256SUMS`; the verified archive bytes remain unchanged.
+
+[v0.1.0](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0) is published.
+Its [publication record](../docs/verification/jlog-0.1.0-publication.json),
+[published manifest](../docs/verification/jlog-0.1.0-published-manifest.json) and
+[checksums](../docs/verification/jlog-0.1.0-published-SHA256SUMS) preserve the
+tagged commit, new native CI evidence and exact public asset identities.

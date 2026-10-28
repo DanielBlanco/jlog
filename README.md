@@ -483,6 +483,8 @@ the [durable manifest](docs/verification/jlog-0.1.0-release-manifest.json)
 identifies the pre-publication candidate artifacts. The
 [v0.1.0 release](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0)
 contains the published archives, manifest and checksums.
+The [publication record](docs/verification/jlog-0.1.0-publication.json) identifies
+the tagged commit and verified public asset digests.
 
 ### Measure resources
 

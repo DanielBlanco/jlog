@@ -6,6 +6,7 @@ M1 through M4 implementation and release preparation are complete. The approved
 basic-cli host correction closes the descriptor gap; native macOS ARM64/Linux
 x86-64 CI passes full regressions, README/source/install checks, all 70 resource
 cases and all eight offline archive cases per target. MIT is applied in `LICENSE`.
+[`v0.1.0`](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0) is published.
 Read the latest
 [progress record](docs/plans/jlog-v0.1-progress.md) and the
 [development handoff](docs/plans/jlog-handoff.md) before resuming for current state,
@@ -15,12 +16,14 @@ The user's wrap-up request authorizes finishing M4-05/06. The finalizer collects
 the exact tested archives, checksums and manifest under ignored
 `dist/jlog-0.1.0-release/`. Durable records are in `docs/verification/`; see the
 [archive report](docs/plans/m4-05-archive-verification.md) and
-[final audit](docs/plans/m4-06-release-audit.md). Native verification uses code
-commit `7f92f8c`, PR run `40608149721`. No implementation task remains for v0.1.
+[final audit](docs/plans/m4-06-release-audit.md). The published tag points to
+`96ebc1d`, verified by native master run `40619313436`; its release assets are
+also retained in ignored `dist/jlog-0.1.0-publish/`. See the
+[publication record](docs/verification/jlog-0.1.0-publication.json). No implementation task remains for v0.1.
 New features require a new request; `--field` remains deferred to v0.2.
-PR #1 is merged into `master`. The user explicitly authorized fixing checkout
-documentation, committing, pushing and publishing `v0.1.0`. See the latest
-progress entry for the publication result; future releases need their own request.
+PR #1 is merged into `master`; source instructions clone `master`. The user's
+request to fix, commit, push and publish `v0.1.0` is complete. Future releases
+need their own request.
 
 The separately authorized `--progress` extension adds opt-in, rate-limited stderr
 counts to inspection. See its [specification](docs/specs/inspection-progress.md).
@@ -30,7 +33,7 @@ the contract/coverage audit. See the progress record for its results and open
 release gates. The user subsequently authorized the next task, M4-02 resource
 measurements, while retaining the unresolved M4-01 release gates. The later
 request authorizes M4-03 native CI alongside Linux x86-64 measurements. Release
-publishing remains a separate action.
+publication was subsequently authorized separately after PR #1 merged.
 
 The user subsequently approved adopting the tested basic-cli 0.25 descriptor
 patch in local/CI builds. This supersedes the original official-archive-only

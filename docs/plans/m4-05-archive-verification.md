@@ -5,7 +5,9 @@ Authorized 2026-10-27 by the user's request to start the next task after M4-04.
 [40608149721](https://github.com/DanielBlanco/jlog/actions/runs/40608149721)
 passes both release targets, including offline archive verification. MIT is
 applied in root `LICENSE`. The preparation history below precedes the final
-completion record at the end. No public release is published.
+completion record at the end. Subsequent publication is recorded in the
+[v0.1.0 publication record](../verification/jlog-0.1.0-publication.json);
+archive identities below retain the pre-publication checkpoint.
 
 ## Packaging and regression gates
 

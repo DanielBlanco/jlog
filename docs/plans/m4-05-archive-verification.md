@@ -1,9 +1,11 @@
 # M4-05 archive preparation and offline verification
 
 Authorized 2026-10-27 by the user's request to start the next task after M4-04.
-Implementation is prepared; **M4-05 is not yet complete**. The user subsequently
-approved the proposed MIT license, now applied in root `LICENSE`. Actual native
-release-candidate CI execution remains pending. No public release is published.
+**M4-05 is complete.** Final native run
+[40608149721](https://github.com/DanielBlanco/jlog/actions/runs/40608149721)
+passes both release targets, including offline archive verification. MIT is
+applied in root `LICENSE`. The preparation history below precedes the final
+completion record at the end. No public release is published.
 
 ## Packaging and regression gates
 
@@ -13,8 +15,8 @@ modes, including strict descriptor suites, and matches application sources,
 compiler/platform identities, binary hash and architecture. It verifies the
 notice inventory and Cargo.lock identity. It never rebuilds the executable.
 
-Archives contain 11 regular files: the executable (0755), project license,
-installation instructions, third-party notice index, six full notice documents
+Final archives contain 12 regular files: the executable (0755), project license,
+installation instructions, support policy, third-party notice index, six full notice documents
 and per-archive build manifest. Packaging writes a SHA-256 sidecar and uses
 deterministic entry metadata/gzip headers. Before MIT was approved, creating
 distributable candidates stopped at the missing root `LICENSE`, as intended.
@@ -22,8 +24,9 @@ That prerequisite is now resolved.
 
 Five release tooling methods verify that failed/missing strict results, changed
 sources/binaries/architecture, a corrupted archive, lost executable permissions
-or a missing license are rejected. Full Python discovery passes **77 methods**
-against the existing corrected local binary, including all descriptor subcases.
+or a missing license are rejected. Initial full Python discovery passes **77 methods**
+against the corrected local binary, including all descriptor subcases. The final
+release-set tool adds three methods, for **80** in the completed sequence.
 Roc check/format, Python 3.9 syntax/docstrings, notice integrity and actionlint
 pass. Application code, platform patch/bootstrap and compiler pin are unchanged.
 
@@ -68,9 +71,10 @@ passes. This was a harness issue, not application RED.
 
 The [durable summary](../verification/m4-05-preparation-macos-arm64.json) records
 these private-fixture results. Raw reports/fixtures remain under
-`/private/tmp/jlog-m405-*`. No Linux native archive smoke result is claimed.
+`/private/tmp/jlog-m405-*`. At that fixture checkpoint, no Linux native archive
+smoke result was claimed; the final native result follows below.
 
-## Pending completion
+## Initial MIT candidate checkpoint
 
 After MIT approval, both actual candidates package successfully from the tested
 M4-04 binaries. The macOS MIT archive passes installation and all eight local
@@ -96,12 +100,56 @@ then execute within those isolation boundaries. See the
 
 The user approved the proposed [MIT license](../../LICENSE), including
 `Copyright (c) 2026 Daniel Blanco`, while requesting a clean commit checkpoint.
-Remaining archive work:
+The checkpoint's remaining archive work, completed below:
 
 1. Execute the complete native CI/archive sequence on both release targets.
 2. Download/check those CI archives and retain their final checksums, native smoke results
    and provenance; record M4-05 completion.
 
-The workflow changes have not been pushed as part of the requested local commit
-checkpoint. M4-06 ownership/notices/final audit and release publication remain
-separate tasks.
+The workflow changes were not pushed as part of that requested local commit
+checkpoint. The subsequent wrap-up request authorizes finishing M4-05/06.
+
+## Final native completion
+
+Code commit `7f92f8c079ff3ccfed13fd2d977e2eda252420af` passes both
+[PR run 40608149721](https://github.com/DanielBlanco/jlog/actions/runs/40608149721)
+and [push run 40608143058](https://github.com/DanielBlanco/jlog/actions/runs/40608143058).
+The final artifacts use PR merge checkout
+`26081f3f4d9926fe8e3b519d16e1a766264c921a`; current application hashes match.
+
+| Final native verification | macOS ARM64 | Linux x86-64 |
+| --- | --- | --- |
+| Pure tests, dev/speed | 486 per build pass | 486 per build pass |
+| Ordinary executable tests, dev/speed | 64 per build pass | 64 per build pass |
+| Strict descriptors, dev/speed | All 15 subcases per build pass | All 15 subcases per build pass |
+| Tooling unit methods | All 13 pass | All 13 pass |
+| README usage/install and source blocks | 19 cases and five blocks pass | 16 cases and five blocks pass |
+| Resource matrix | 70/70 pass | 70/70 pass |
+| Offline archive cases | 8/8 pass | 8/8 pass |
+
+Linux executes the installed static binary in a `FROM scratch` image with no
+compiler, shell or language runtime, UID 65534, a read-only filesystem and
+`--network=none`. macOS denies network and compiler execution through the runtime
+sandbox; its socket-denial probe passes. Installation and raw-record pipelines
+pass; fixture, executable and archive hashes remain unchanged.
+
+Downloaded native ZIP hashes match GitHub metadata. The finalizer revalidates
+both real artifacts, every archive entry/hash/mode, all required evidence and
+matching shared release inputs. Additional checks on a copied real artifact
+reject failed smoke status, an incorrect archive hash and a missing smoke case.
+No second executable build is used. Both binary hashes match earlier corrected
+CI builds exactly.
+
+The exact finalized release set lives in ignored `dist/jlog-0.1.0-release/`:
+
+| Archive | SHA-256 |
+| --- | --- |
+| `jlog-0.1.0-macos-arm64.tar.gz` | `8c2ad5de5aaa4b31e418536252d8dde2f6dd07738cbef781e68d53d8ae18de35` |
+| `jlog-0.1.0-linux-x86_64.tar.gz` | `0e88e9fda6fb585157910c167d3ff4ce487edfa2fddbccd6cd078f89b7822f6a` |
+
+`SHA256SUMS` verifies both archives and `manifest.json`. Durable
+[native evidence](../verification/m4-05-native-archives.json),
+[manifest](../verification/jlog-0.1.0-release-manifest.json) and
+[checksums](../verification/jlog-0.1.0-SHA256SUMS) preserve the final identities.
+Raw ZIPs/extracted results remain under `/private/tmp/jlog-closeout-*`;
+GitHub artifacts expire 2026-11-11. See the [final audit](m4-06-release-audit.md).

@@ -1,0 +1,2846 @@
+{
+  "head_commit": "7f92f8c079ff3ccfed13fd2d977e2eda252420af",
+  "pr_run_url": "https://github.com/DanielBlanco/jlog/actions/runs/40608149721",
+  "push_run_url": "https://github.com/DanielBlanco/jlog/actions/runs/40608143058",
+  "native_run_conclusions": {
+    "push": "success",
+    "pull_request": "success"
+  },
+  "artifacts": [
+    {
+      "id": 12781953991,
+      "name": "native-linux-x86_64",
+      "size_in_bytes": 5131970,
+      "url": "https://api.github.com/repos/DanielBlanco/jlog/actions/artifacts/12781953991",
+      "archive_download_url": "https://api.github.com/repos/DanielBlanco/jlog/actions/artifacts/12781953991/zip",
+      "expired": false,
+      "created_at": "2026-10-28T00:31:58Z",
+      "expires_at": "2026-11-11T00:31:57Z",
+      "updated_at": "2026-10-28T00:31:58Z",
+      "digest": "sha256:ebcbba65b22c3e25fcc5eb5e10545d27e60174a79e6ab914a35dd094082f14a5",
+      "workflow_run": {
+        "id": 40608149721,
+        "repository_id": 1424979218,
+        "head_repository_id": 1424979218,
+        "head_branch": "ci/native-m4",
+        "head_sha": "7f92f8c079ff3ccfed13fd2d977e2eda252420af"
+      }
+    },
+    {
+      "id": 12781848730,
+      "name": "native-macos-arm64",
+      "size_in_bytes": 1005435,
+      "url": "https://api.github.com/repos/DanielBlanco/jlog/actions/artifacts/12781848730",
+      "archive_download_url": "https://api.github.com/repos/DanielBlanco/jlog/actions/artifacts/12781848730/zip",
+      "expired": false,
+      "created_at": "2026-10-28T00:29:30Z",
+      "expires_at": "2026-11-11T00:29:28Z",
+      "updated_at": "2026-10-28T00:29:30Z",
+      "digest": "sha256:1619ee328812e95d0aca75205de4e68c1047c0b17220ea3785fdc379e100dd87",
+      "workflow_run": {
+        "id": 40608149721,
+        "repository_id": 1424979218,
+        "head_repository_id": 1424979218,
+        "head_branch": "ci/native-m4",
+        "head_sha": "7f92f8c079ff3ccfed13fd2d977e2eda252420af"
+      }
+    }
+  ],
+  "targets": {
+    "x64musl": {
+      "summary": {
+        "target": "x64musl",
+        "version": "0.1.0",
+        "verified": true,
+        "archive": "jlog-0.1.0-linux-x86_64.tar.gz",
+        "archive_sha256": "0e88e9fda6fb585157910c167d3ff4ce487edfa2fddbccd6cd078f89b7822f6a",
+        "archive_bytes": 1623283,
+        "binary_sha256": "9b8271f8771b3686311504e172f96ef66bbc60a0b0dc57350efc969608a2ac14",
+        "source_commit": "26081f3f4d9926fe8e3b519d16e1a766264c921a",
+        "source_sha256": {
+          "src/Cli.roc": "24d694aca897d8d0530483a519328276b4ec8fba4cefbb6786928fc8d6a17ed4",
+          "src/Jsonl.roc": "2c52ffa06254c3eeab04ec7a1d77c772fcdc0a8d08d089f59a500db69786bf39",
+          "src/Operations.roc": "56ad5f6d19654de0a3d4616a79e509c7f68ab62d2c0f4d1a2d1d5bc3a27275f4",
+          "src/help.txt": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+          "src/main.roc": "c3c4ab1daee92533cf2b8b364354de2b4208c2d62933b823e594ce60ffe62b30"
+        },
+        "platform_identity": "18006035e878a978b433d8b24d1bf80506800df7b0eb7088ce92b461430762f2",
+        "license_sha256": "70d60baa983130995b8187c18255841ce4435ea0fb9f119cf4765834cd121779",
+        "notices_sha256": "799fddfb0cc86a0e30ea8a9735d35776d72dd824e1e5792839cb75f871243702",
+        "support_sha256": "5a153e49045619996f96f9d7de943007f5603648794238d780b926865230eaed",
+        "runtime_host": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+        "runtime_architecture": "x86_64",
+        "isolation": {
+          "method": "Docker FROM scratch",
+          "network": "none",
+          "root_files": [
+            "jlog",
+            "events.jsonl"
+          ],
+          "user": "65534:65534",
+          "read_only": true,
+          "toolchains": "No compiler, shell or language runtime exists in the image"
+        },
+        "offline_cases": 8,
+        "readme_cases": 16,
+        "source_blocks": 5,
+        "resource_cases": 70,
+        "native_run_url": "https://github.com/DanielBlanco/jlog/actions/runs/40608149721",
+        "evidence_sha256": {
+          "environment.json": "8b6ec6dc93bbf5501375f8997af5dec1f9a085b61cf8612c9c207a2895825433",
+          "verification.json": "82e3b28f904b54f3f46d4d94b749a78d4890b4d6da1db27fabb97a8a1592341f",
+          "readme.json": "798052d8f9dac9f57b29dc42272253fdb145254696e544c178a46b612f5811c2",
+          "release.json": "1b4aa90392051011d4dc400a30ed573ef9fb68d1bbb60c4826e10ad8bc22c5d9"
+        }
+      },
+      "native_environment": {
+        "execution": "native",
+        "target": "x64musl",
+        "uid": 1001,
+        "uname": [
+          "Linux",
+          "runnervm48cm3",
+          "7.0.0-1017-azure",
+          "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+          "x86_64",
+          "x86_64"
+        ],
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "roc": "Roc compiler version nightly-2026-10-09-258ab27",
+        "commit": "26081f3f4d9926fe8e3b519d16e1a766264c921a",
+        "source_sha256": {
+          "src/Cli.roc": "24d694aca897d8d0530483a519328276b4ec8fba4cefbb6786928fc8d6a17ed4",
+          "src/Jsonl.roc": "2c52ffa06254c3eeab04ec7a1d77c772fcdc0a8d08d089f59a500db69786bf39",
+          "src/Operations.roc": "56ad5f6d19654de0a3d4616a79e509c7f68ab62d2c0f4d1a2d1d5bc3a27275f4",
+          "src/help.txt": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+          "src/main.roc": "c3c4ab1daee92533cf2b8b364354de2b4208c2d62933b823e594ce60ffe62b30"
+        },
+        "platform_build": {
+          "identity": "18006035e878a978b433d8b24d1bf80506800df7b0eb7088ce92b461430762f2",
+          "target": "x64musl",
+          "rust_target": "x86_64-unknown-linux-musl",
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+          "version": "0.25.0",
+          "source_commit": "6e787d231017e9888027330de5d651f388e807fd",
+          "source_archive_sha256": "c9d77f74ebac97b2f52c56b92fa9fbd6e82bf1c88f614c884579354298d17044",
+          "bundle_sha256": "9c06b27e671ad8d307ed118de62d6bae4eef4131b9eda4414adf643a604ad545",
+          "patch_sha256": "2be177af0a580e2748763b8ad99e3a4315c6cb1d89327971acd94f5e12bc662e",
+          "cargo_lock_sha256": "a889c5f910e840b5016b14d2c7440955d9d47f2725c294d04591cf575c161355",
+          "files_sha256": {
+            "Cmd.roc": "654d4cf60666dabeafb807a8e5268f256f325b22f54e80784e11087eed3ee73c",
+            "Env.roc": "94e6c634f9998f14a0bc97be617a4c25cc9962c7637d40e25d1020fabe032526",
+            "File.roc": "374e37400d93de219e04303904763f9dbef6dba42549c7f01ca8a935e8114e59",
+            "Host.roc": "d9d0023324f429b478d99f71011ee1d637236c91aa146b5108fd92ac43ff0e4a",
+            "Http.roc": "0322139c8dcad90e42ac7ea1682287014428fe24b0f7542f29e7fb3200b938c2",
+            "IOErr.roc": "16610d9734a96429df2f3d8d5c0b68a416f81b4de8981f0734392dd2943630c4",
+            "InternalDateTime.roc": "ed6986a3fa0f472ffcd9c082328b3ef18e158fe92cefc605bc62055b228fefc9",
+            "InternalHttp.roc": "bd5511ebca3c0cc501c9a3d80676a43760ec151aea7caaa67e2e8838e132389d",
+            "InternalSqlite.roc": "12983c44146b05b98c7f623b98b2dbeb769164e87e6df4a23997278eeda8b87a",
+            "LICENSE": "26285f30ae3d8c53a4dc1db652a8a7b8c7a4a0283946ae3d35774b1c8e543178",
+            "Locale.roc": "161e74e27747349e6170cc6adb95743feb1d36859756cd7804d12e73b76af547",
+            "Monotonic.roc": "ca54f19c4fbd0bae072dcfde58c4366e309892e21d413c3195ca01a082437f8b",
+            "OsStr.roc": "29f0db1256f007b63e75fb2968d79fd3985522947eb2644164c9765f9858b10c",
+            "Path.roc": "89591a0ce55f868508f4475c8585c453c1534efb460aef540ac9ff1ecb4f5af3",
+            "Random.roc": "1bf3fc9aa3e1babe6133829a296d8b0db23d1b6a6385d49d082594d44d9a7db7",
+            "Sleep.roc": "76dd733f49cbc4406677a2e6d30aa9469d46c0f5e2ee2df7e8d860267ca3e0d7",
+            "Sqlite.roc": "5879510fb7f3235d04c9903a895702073063a633a56b5b2ea643d2e5767b2624",
+            "Stderr.roc": "d8730cd057390df35a1e02d8651682cef3a94bba2f5c3b53638f8abed60fa418",
+            "Stdin.roc": "273b0eb6ccc8a8dc019fbe6e461401eb7e4c17faf3357e8f02d0909ff497985e",
+            "Stdout.roc": "ae56db7944ab1ce1903cd24932c7c713fe284a6b1b3b5cc0e7ca3d5a6cced360",
+            "THIRD_PARTY_LICENSES.md": "0a046d3535c8e10fac000062dbd2b3e57c96ffdb835de48cfa93445ac6436c2f",
+            "Tcp.roc": "b9e5e5c3a6b8ac4ea5374b9e6bd4e02718a9fcb806fe6928c33f848485d4c775",
+            "Tty.roc": "091ac0dcbf85be536c86b4ba31ad5e6f807aad983f77a2dab329165a9695997e",
+            "Url.roc": "794f65605dbfbee533a7ffa3139aacbef31b5e1ff3a63583ca0c26a06c29a1c8",
+            "Utc.roc": "6ad3729bd8022e3420e27cf3b12af8775205bb877ed0de140550a9b9cb5bbe97",
+            "main.roc": "20bdaabb885770c3755eb1a03171a864e086fd979edf68bfdd57a75fa5022c29",
+            "targets/x64musl/crt1.o": "ffb51a69191a69fc34acaec1003fabe245d8841da7036d124d3445718415f9ea",
+            "targets/x64musl/libc.a": "85f5eb2316bc6f86be7bd66008488c7d2eca290942b01ad2e86f02f8b5e8c90f",
+            "targets/x64musl/libhost.a": "e62042c6609d677b913dcdb4d2c143ae819ec9b2f6e28180890b01ee44cd3b96",
+            "targets/x64musl/libunwind.a": "e59505f4e8e9bb8e19833e40a56555fc68805ec0cecf4084957e8865520ef7f4"
+          }
+        },
+        "github": {
+          "GITHUB_REPOSITORY": "DanielBlanco/jlog",
+          "GITHUB_SHA": "26081f3f4d9926fe8e3b519d16e1a766264c921a",
+          "GITHUB_REF": "refs/pull/1/merge",
+          "GITHUB_RUN_ID": "40608149721",
+          "GITHUB_RUN_ATTEMPT": "1",
+          "RUNNER_OS": "Linux",
+          "RUNNER_ARCH": "X64",
+          "ImageOS": "ubuntu24",
+          "ImageVersion": "20261026.354.1"
+        },
+        "binary_dev_sha256": "f3929a726f453c21eb4d1ab90c31db2693336bfb144e5ae91b48bd4901ac7cfa",
+        "binary_speed_sha256": "9b8271f8771b3686311504e172f96ef66bbc60a0b0dc57350efc969608a2ac14",
+        "source_hashes_unchanged": true,
+        "platform_hashes_unchanged": true
+      },
+      "native_verification": [
+        {
+          "name": "check",
+          "command": [
+            "roc",
+            "check",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "format",
+          "command": [
+            "roc",
+            "fmt",
+            "--check",
+            "src/main.roc",
+            "src/Cli.roc",
+            "src/Jsonl.roc",
+            "src/Operations.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "measurement-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_measure_resources.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "platform-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_build_platform.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "release-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_package_release.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "release-set-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_finalize_release.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "pure-dev",
+          "command": [
+            "roc",
+            "test",
+            "--opt=dev",
+            "--no-cache",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "build-dev",
+          "command": [
+            "roc",
+            "build",
+            "--no-cache",
+            "--opt=dev",
+            "--target=x64musl",
+            "--output=/home/runner/work/_temp/evidence/jlog-dev",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "file-dev",
+          "command": [
+            "file",
+            "/home/runner/work/_temp/evidence/jlog-dev"
+          ],
+          "status": 0
+        },
+        {
+          "name": "cli-dev",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_cli.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "io-contract-dev",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_io_contract.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "pure-speed",
+          "command": [
+            "roc",
+            "test",
+            "--opt=speed",
+            "--no-cache",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "build-speed",
+          "command": [
+            "roc",
+            "build",
+            "--no-cache",
+            "--opt=speed",
+            "--target=x64musl",
+            "--output=/home/runner/work/_temp/evidence/jlog-speed",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "file-speed",
+          "command": [
+            "file",
+            "/home/runner/work/_temp/evidence/jlog-speed"
+          ],
+          "status": 0
+        },
+        {
+          "name": "cli-speed",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_cli.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "io-contract-speed",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_io_contract.py",
+            "-v"
+          ],
+          "status": 0
+        }
+      ],
+      "readme_cases": [
+        {
+          "name": "quick-start",
+          "shell": "/bin/bash",
+          "script": "cat > events.jsonl <<'JSONL'\n{\"level\":\"info\",\"message\":\"Started\"}\n{\"level\":\"error\",\"message\":\"Connection failed\",\"retry\":1}\nJSONL\n\n./dist/jlog events.jsonl\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 50,
+          "stdout_sha256": "ed7c4d642ff9890369eb7f0a57a438c3f4a81203e0e0a7cead5eeda632f89b8f",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "inspect-help-version",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog events.jsonl\n./dist/jlog --help\n./dist/jlog --version\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 1065,
+          "stdout_sha256": "606c32a3c4b5d5f9973c97a8b5f680dda8c56fc9a053ee49d9f6f0b0869f238b",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "literal-filenames",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog -- -events.jsonl\n./dist/jlog ./-\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 92,
+          "stdout_sha256": "96a5fc266b1e16e80ed7bec0b60e68df11f221b8dd10e4b38b7f8a17d3ce5ade",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "stdin-forms",
+          "shell": "/bin/bash",
+          "script": "cat events.jsonl | ./dist/jlog\n./dist/jlog - < events.jsonl\nprintf '%s\\n' '{\"level\":\"info\"}' 'null' | ./dist/jlog\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 135,
+          "stdout_sha256": "8aa3e1a8ae08c5cad88f2e21a2db4695cfd62f53c68625a87bedcc690d06b19e",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "redirect-report",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog events.jsonl > report.txt\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "inspection-progress",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --progress tests/sample.jsonl\ncat events.jsonl | ./dist/jlog --progress\n./dist/jlog --progress events.jsonl > report.txt\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 101,
+          "stdout_sha256": "5bb6845ceea3a25e17a72ebd03326ba95e91bc831850edd5f8baa494c79f506f",
+          "stderr": "jlog: 6 lines inspected, 0 invalid (complete)\njlog: 2 lines inspected, 0 invalid (complete)\njlog: 2 lines inspected, 0 invalid (complete)\n",
+          "verified": true
+        },
+        {
+          "name": "malformed-report",
+          "shell": "/bin/bash",
+          "script": "printf '{}\\n\\nnot-json\\nnull' > mixed.jsonl\n./dist/jlog mixed.jsonl\n",
+          "exit_status": 4,
+          "expected_status": 4,
+          "stdout_bytes": 113,
+          "stdout_sha256": "3303587c4b265c0e7bfc2b9662d55c63e0c3c6e1a085dc48512bf60f6273ca79",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "count",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --count tests/sample.jsonl\ncat events.jsonl | ./dist/jlog --count\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 4,
+          "stdout_sha256": "5c718e408554226d3e0935827e5aaf3ab6fd7a974e7f20e8b6eae14a2db6710e",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "tail",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --tail 2 tests/sample.jsonl\n./dist/jlog tests/sample.jsonl --tail=0002\ncat events.jsonl | ./dist/jlog --tail 10 > recent.jsonl\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 678,
+          "stdout_sha256": "8f610544bf4b01fb8df3ddc645cf10feaa077ad1df71606bc535b8315e8ad28e",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "filter-pipeline",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --where status=failed tests/sample-big.jsonl\n./dist/jlog tests/sample-big.jsonl --where=status=failed > failed.jsonl\nset -o pipefail\n./dist/jlog --where status=failed tests/sample-big.jsonl | ./dist/jlog --count\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 334827,
+          "stdout_sha256": "b1a413aa26b9bee65b2751d36d42b2b61c6caef2fffd8f1fc990bec572f18d23",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "capture-valid-status",
+          "shell": "/bin/bash",
+          "script": "jlog_status=0\n./dist/jlog events.jsonl > report.txt || jlog_status=$?\ncase \"$jlog_status\" in\n  0) echo 'All records are valid.' ;;\n  4) echo 'Malformed records found; see report.txt.' ;;\n  *) echo \"jlog failed with exit $jlog_status\" >&2 ;;\nesac\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 23,
+          "stdout_sha256": "61e2d63bad0f903e8569297330ba331cfbc16a77e1899bbfa798e2370e2f8546",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "capture-malformed-status",
+          "shell": "/bin/bash",
+          "script": "jlog_status=0\n./dist/jlog events.jsonl > report.txt || jlog_status=$?\ncase \"$jlog_status\" in\n  0) echo 'All records are valid.' ;;\n  4) echo 'Malformed records found; see report.txt.' ;;\n  *) echo \"jlog failed with exit $jlog_status\" >&2 ;;\nesac\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 41,
+          "stdout_sha256": "ae25b8f25d5c66e180b7757f01b048a85359f8db174f2d0e72886bdf20a26491",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "pipeline-malformed-status",
+          "shell": "/bin/bash",
+          "script": "set -o pipefail\n./dist/jlog --where status=failed mixed.jsonl | ./dist/jlog --count\n",
+          "exit_status": 4,
+          "expected_status": 4,
+          "stdout_bytes": 2,
+          "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "stderr": "jlog: mixed.jsonl: line 2: blank line\njlog: mixed.jsonl: line 3: invalid JSON\n",
+          "verified": true
+        },
+        {
+          "name": "pipeline-without-pipefail",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --where status=failed mixed.jsonl | ./dist/jlog --count\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 2,
+          "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "stderr": "jlog: mixed.jsonl: line 2: blank line\njlog: mixed.jsonl: line 3: invalid JSON\n",
+          "verified": true
+        },
+        {
+          "name": "user-install",
+          "shell": "/bin/bash",
+          "script": "JLOG_INSTALL_PREFIX=\"${JLOG_INSTALL_PREFIX:-$HOME/.local}\"\nmkdir -p \"$JLOG_INSTALL_PREFIX/bin\"\ninstall -m 755 dist/jlog \"$JLOG_INSTALL_PREFIX/bin/jlog\"\nexport PATH=\"$JLOG_INSTALL_PREFIX/bin:$PATH\"\njlog --version\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 11,
+          "stdout_sha256": "8ba490307028098f0eae719a6e2b2f9da6037c7176d77ef3105a1dc4e02784bb",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "installed-without-toolchain-on-path",
+          "shell": "/bin/bash",
+          "script": "if command -v roc >/dev/null || command -v rustc >/dev/null; then exit 99; fi\njlog --version\njlog --help\nprintf '%s\\n' '{\"status\":\"failed\"}' '{\"status\":\"ok\"}' | jlog --where status=failed | jlog --count\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 1017,
+          "stdout_sha256": "314ad6d9ec576f3a940fa0fa37bfcd37441ef2989c85c25573f1339d19820f16",
+          "stderr": "",
+          "verified": true
+        }
+      ],
+      "readme_source_checks": [
+        {
+          "name": "build",
+          "script": "roc version\n# Expected: Roc compiler version nightly-2026-10-09-258ab27\n\npython3 scripts/build_platform.py\n\nmkdir -p dist\nroc build --opt=speed --no-cache --output=dist/jlog src/main.roc\n./dist/jlog --version\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 200,
+          "stderr_bytes": 0,
+          "stdout_sha256": "5932cd0c56b34d6aeacd23ea6a6b8bbd87fdf34acb8ca1e0f038e98582b9eb9f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "run-check-format",
+          "script": "python3 scripts/build_platform.py\nroc run src/main.roc -- --help\nroc check src/main.roc\nroc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 1141,
+          "stderr_bytes": 0,
+          "stdout_sha256": "e7388dced669c422cb36fcdebd81f8dd293ec65414f107944049f3cc65b057e6",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "development-progress",
+          "script": "roc run --opt=dev src/main.roc -- --progress tests/sample-big.jsonl\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 68,
+          "stderr_bytes": 127,
+          "stdout_sha256": "28fae8830c0fc7992f7d5b1fa897c7116216bbb2ad786e9087786445497ca468",
+          "stderr_sha256": "4765e84b48bb9b069acfd741289152476e96efdb16538dacfa41ee944a756764"
+        },
+        {
+          "name": "dev-and-speed-regressions",
+          "script": "python3 scripts/build_platform.py\nmkdir -p dist\n\n# Development mode\nroc test --opt=dev --no-cache src/main.roc\nroc build --opt=dev --no-cache --output=dist/jlog src/main.roc\nJLOG_BIN=\"$PWD/dist/jlog\" python3 -m unittest discover -s tests -v\n\n# Optimized mode: repeat executable tests against this new build\nroc test --opt=speed --no-cache src/main.roc\nroc build --opt=speed --no-cache --output=dist/jlog src/main.roc\nJLOG_BIN=\"$PWD/dist/jlog\" python3 -m unittest discover -s tests -v\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 298,
+          "stderr_bytes": 28264,
+          "stdout_sha256": "b408c86e247a08f382416829cf1d2d7c500cbe0bf6e8192dbff7a61c44a6d1e8",
+          "stderr_sha256": "ae7cfb8f4a4c6f01379bc6a417bc5c3eca67f2afba0ca3b7a49f8754059e7537"
+        },
+        {
+          "name": "strict-descriptors",
+          "script": "JLOG_BIN=\"$PWD/dist/jlog\" python3 -m unittest discover -s tests -p 'test_io_contract.py' -v\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 601,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "81efc77e7d2b476b0b6452fec9ae3da258311b5a5688a0add558c6ac9ab5ec4a"
+        }
+      ],
+      "offline_smoke": {
+        "schema_version": 1,
+        "host": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+        "architecture": "x86_64",
+        "execution": "native",
+        "archive": "jlog-0.1.0-linux-x86_64.tar.gz",
+        "archive_sha256": "0e88e9fda6fb585157910c167d3ff4ce487edfa2fddbccd6cd078f89b7822f6a",
+        "binary_sha256": "9b8271f8771b3686311504e172f96ef66bbc60a0b0dc57350efc969608a2ac14",
+        "install_script": "if command -v sha256sum >/dev/null; then\n  sha256sum -c \"$JLOG_ARCHIVE.sha256\"\nelse\n  shasum -a 256 -c \"$JLOG_ARCHIVE.sha256\"\nfi\ntar -xzf \"$JLOG_ARCHIVE\"\nJLOG_DIRECTORY=\"${JLOG_ARCHIVE%.tar.gz}\"\nJLOG_INSTALL_PREFIX=\"${JLOG_INSTALL_PREFIX:-$HOME/.local}\"\nmkdir -p \"$JLOG_INSTALL_PREFIX/bin\"\ninstall -m 755 \"$JLOG_DIRECTORY/bin/jlog\" \"$JLOG_INSTALL_PREFIX/bin/jlog\"\nexport PATH=\"$JLOG_INSTALL_PREFIX/bin:$PATH\"\njlog --version\n",
+        "install_exit_status": 0,
+        "install_stdout": "jlog-0.1.0-linux-x86_64.tar.gz: OK\njlog 0.1.0\n",
+        "work_dir": "/tmp/jlog-release-cuxm1jj4",
+        "cases": [
+          {
+            "name": "version",
+            "args": [
+              "--version"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "8ba490307028098f0eae719a6e2b2f9da6037c7176d77ef3105a1dc4e02784bb",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "help",
+            "args": [
+              "--help"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "inspect-read-only-file",
+            "args": [
+              "/events.jsonl"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "b28f9a4bac6a50dcf97f5211d9dbdabb1b5ebd8faced4b1c14853e8f29148d1c",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "count",
+            "args": [
+              "--count",
+              "/events.jsonl"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "tail-original-bytes",
+            "args": [
+              "--tail",
+              "1",
+              "/events.jsonl"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "5a05350ec82b4df1b8680b0c62da9abdcca1aac76150aaeb6df69e52300c2af0",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "filter-original-bytes",
+            "args": [
+              "--where",
+              "status=failed",
+              "/events.jsonl"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "7ce8eff12277310f98d059937246673a31a8763107cebe668c8a6526bbcfc7cb",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "filter-to-count-pipeline",
+            "producer_exit_status": 0,
+            "consumer_exit_status": 0,
+            "verified": true
+          },
+          {
+            "name": "empty-stdin",
+            "args": [
+              "--count"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr": "",
+            "verified": true
+          }
+        ],
+        "isolation": {
+          "method": "Docker FROM scratch",
+          "network": "none",
+          "root_files": [
+            "jlog",
+            "events.jsonl"
+          ],
+          "user": "65534:65534",
+          "read_only": true,
+          "toolchains": "No compiler, shell or language runtime exists in the image"
+        },
+        "input_binary_archive_hashes_unchanged": true,
+        "verified": true
+      },
+      "archive_members": [
+        {
+          "name": "jlog-0.1.0-linux-x86_64/BUILD.json",
+          "bytes": 56468,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/INSTALL.md",
+          "bytes": 1925,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/LICENSE",
+          "bytes": 1070,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/SUPPORT.md",
+          "bytes": 1534,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/THIRD_PARTY_NOTICES.md",
+          "bytes": 2050,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/bin/jlog",
+          "bytes": 5280264,
+          "mode": "0o755"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/licenses/basic-cli-LICENSE.txt",
+          "bytes": 1915,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/licenses/basic-cli-THIRD-PARTY.md",
+          "bytes": 25760,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/licenses/host-crates.txt",
+          "bytes": 777560,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/licenses/roc-LICENSE.txt",
+          "bytes": 1880,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/licenses/roc-legal-details.txt",
+          "bytes": 18736,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-linux-x86_64/licenses/rust-COPYRIGHT-library.html",
+          "bytes": 1499465,
+          "mode": "0o644"
+        }
+      ],
+      "resources": {
+        "sha256": "f36f865b3c0cc8e51fa4e2e71f0c2d6b9acd00b84318a1f14ed3fb391d4ecd82",
+        "host": {
+          "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+          "architecture": "x86_64",
+          "page_size_bytes": 4096,
+          "logical_cpus": 4,
+          "stack_soft_limit_bytes": 16777216,
+          "roc": "Roc compiler version nightly-2026-10-09-258ab27",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "memory_bytes": 16760340480,
+          "cgroup_limits": {},
+          "linux_os_release": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo",
+          "timing_tool": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon."
+        },
+        "input_and_binary_hashes_verified": true,
+        "runs": [
+          {
+            "name": "valid-100000-file-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.066103,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "8e3846094071242b699223dc00e5538891e5686e07ba35b33d094dc72ed1ffe1",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.066615,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.56721,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "7f3e989a5821a3d69e0e950ae05b90cb1759b9ec84d42b7bee67b349039906e7",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-0",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.066172,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.066245,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e4810275cfac33596b7f3829f999cb5d00d537748d8e1eb7bb7cbad115ff7601",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-64",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.818316,
+            "max_rss_bytes": 675840,
+            "stdout_sha256": "490dfd55cf4fd3bb066b477541ef50ccc90dc35c251fad06238b31e4603c719e",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-4096",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.06583,
+            "max_rss_bytes": 5525504,
+            "stdout_sha256": "18731f43d4d62f6c51a565355a9aaa4d5815e7014eb65302b8d708c2c9e2db30",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-16384",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.166332,
+            "max_rss_bytes": 20598784,
+            "stdout_sha256": "e65458a3113e57c0bfd925eab7098123febdb400c4836cd3604460095d75c720",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 2.068689,
+            "max_rss_bytes": 606208,
+            "stdout_sha256": "7498c718011505ec58dfd76371fcc3bbcafde3c9f6d9098d0d8055c83f3a0330",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.015962,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.817137,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "7f3e989a5821a3d69e0e950ae05b90cb1759b9ec84d42b7bee67b349039906e7",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-0",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.917254,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.917975,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e4810275cfac33596b7f3829f999cb5d00d537748d8e1eb7bb7cbad115ff7601",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-64",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.016434,
+            "max_rss_bytes": 675840,
+            "stdout_sha256": "490dfd55cf4fd3bb066b477541ef50ccc90dc35c251fad06238b31e4603c719e",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-4096",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.817795,
+            "max_rss_bytes": 5656576,
+            "stdout_sha256": "18731f43d4d62f6c51a565355a9aaa4d5815e7014eb65302b8d708c2c9e2db30",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-16384",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.917534,
+            "max_rss_bytes": 20598784,
+            "stdout_sha256": "e65458a3113e57c0bfd925eab7098123febdb400c4836cd3604460095d75c720",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-100000-file-inspect",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.116214,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "af0994d33bff2ed9356e8618bb08109c911dccd5ad9f6119e3e4c8fbb59a27a2",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-100000-file-count",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.11599,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr_sha256": "70632dd72b13ee57b47866ca78215c7839b8ce868603ede33ef6ef036ad782ab"
+          },
+          {
+            "name": "invalid-100000-file-filter",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.116728,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "70632dd72b13ee57b47866ca78215c7839b8ce868603ede33ef6ef036ad782ab"
+          },
+          {
+            "name": "invalid-100000-file-tail-0",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.116285,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "70632dd72b13ee57b47866ca78215c7839b8ce868603ede33ef6ef036ad782ab"
+          },
+          {
+            "name": "invalid-100000-file-tail-16384",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.116641,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "70632dd72b13ee57b47866ca78215c7839b8ce868603ede33ef6ef036ad782ab"
+          },
+          {
+            "name": "invalid-100000-stdin-inspect",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.967949,
+            "max_rss_bytes": 606208,
+            "stdout_sha256": "ae18ac8b616a7769f85c04d9423216952ba29d42c647cd2126cbef1ae255a888",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-100000-stdin-count",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.066003,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr_sha256": "6cf96dfecc0fad6d0ba587558644a01654480f2132c6e079f00c8a2fba8c72a0"
+          },
+          {
+            "name": "invalid-100000-stdin-filter",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.065963,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "6cf96dfecc0fad6d0ba587558644a01654480f2132c6e079f00c8a2fba8c72a0"
+          },
+          {
+            "name": "invalid-100000-stdin-tail-0",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 2.017435,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "6cf96dfecc0fad6d0ba587558644a01654480f2132c6e079f00c8a2fba8c72a0"
+          },
+          {
+            "name": "invalid-100000-stdin-tail-16384",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 2.118835,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "6cf96dfecc0fad6d0ba587558644a01654480f2132c6e079f00c8a2fba8c72a0"
+          },
+          {
+            "name": "valid-1000000-file-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 10.434161,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "86655cd4f851026a6ea65474751444d4e5fc474f97adbc9af6809b986acd6cc0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 10.333649,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "085c348f64a3b543e973a33749e90ba20847b99016a87e5228847597d61ce582",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 15.544979,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "12fc6d87eb16243224c0a69bb5cd6b9e6616338b948b7712267590d0a4a0c78d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-0",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 10.337064,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 10.233358,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "dd5c9babafd619946bdce0fa56bcf5d4cb8a48d665dd7332cde4e8d336ee9def",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-64",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 18.050842,
+            "max_rss_bytes": 675840,
+            "stdout_sha256": "56c4ec76bc14643df2f415d28dcb855f8ae6f6b29e7b80689442c530f935d732",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-4096",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 10.485148,
+            "max_rss_bytes": 5525504,
+            "stdout_sha256": "ff251bc86b094c3c453661b945feb438a0ae517aac47be5306aa4ffddcdcbaba",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-16384",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 10.582757,
+            "max_rss_bytes": 20598784,
+            "stdout_sha256": "d42433679ab2bba5fd7176f579ad97b81c935b9fc828b74854db353779fa38e7",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 20.349291,
+            "max_rss_bytes": 606208,
+            "stdout_sha256": "2a1d4f7a1ab58b8e0bf32d3e44278a398490f6cfc822ebea7d74ca119d4a8355",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 9.680544,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "085c348f64a3b543e973a33749e90ba20847b99016a87e5228847597d61ce582",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 17.801559,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "12fc6d87eb16243224c0a69bb5cd6b9e6616338b948b7712267590d0a4a0c78d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-0",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 18.752698,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 19.698584,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "dd5c9babafd619946bdce0fa56bcf5d4cb8a48d665dd7332cde4e8d336ee9def",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-64",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 9.631593,
+            "max_rss_bytes": 675840,
+            "stdout_sha256": "56c4ec76bc14643df2f415d28dcb855f8ae6f6b29e7b80689442c530f935d732",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-4096",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 18.952927,
+            "max_rss_bytes": 5525504,
+            "stdout_sha256": "ff251bc86b094c3c453661b945feb438a0ae517aac47be5306aa4ffddcdcbaba",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-16384",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 19.302564,
+            "max_rss_bytes": 20467712,
+            "stdout_sha256": "d42433679ab2bba5fd7176f579ad97b81c935b9fc828b74854db353779fa38e7",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-1000000-file-inspect",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.98503,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "2a50ce0ff4db94e877e781e9ea1140bd898e8891e251233c2ace40a5ff696ae0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-1000000-file-count",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.834494,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr_sha256": "bffd2e1d2a99007bea3d049f85baa40835918834e541921010ee4d7ad2a15179"
+          },
+          {
+            "name": "invalid-1000000-file-filter",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.835539,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bffd2e1d2a99007bea3d049f85baa40835918834e541921010ee4d7ad2a15179"
+          },
+          {
+            "name": "invalid-1000000-file-tail-0",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.833689,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bffd2e1d2a99007bea3d049f85baa40835918834e541921010ee4d7ad2a15179"
+          },
+          {
+            "name": "invalid-1000000-file-tail-16384",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.8346,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bffd2e1d2a99007bea3d049f85baa40835918834e541921010ee4d7ad2a15179"
+          },
+          {
+            "name": "invalid-1000000-stdin-inspect",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 19.349409,
+            "max_rss_bytes": 606208,
+            "stdout_sha256": "9055fc2a3015b67cf8fd770f2ef2a45f7fb67510fd2cee4a743eefe9a2af5a8b",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-1000000-stdin-count",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.183847,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr_sha256": "bf9f66ff026b196f8a5ef5939e059c1d6f7364074a6f169c9eac85622fb42c90"
+          },
+          {
+            "name": "invalid-1000000-stdin-filter",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.234867,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bf9f66ff026b196f8a5ef5939e059c1d6f7364074a6f169c9eac85622fb42c90"
+          },
+          {
+            "name": "invalid-1000000-stdin-tail-0",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 20.700194,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bf9f66ff026b196f8a5ef5939e059c1d6f7364074a6f169c9eac85622fb42c90"
+          },
+          {
+            "name": "invalid-1000000-stdin-tail-16384",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 19.298551,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bf9f66ff026b196f8a5ef5939e059c1d6f7364074a6f169c9eac85622fb42c90"
+          },
+          {
+            "name": "long-1048576-file-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.016099,
+            "max_rss_bytes": 2719744,
+            "stdout_sha256": "52215dbf2699a4b44d35899e52b8dfb950ec50106e5b8aaa0ca1cab1e190e2c2",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-file-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.015943,
+            "max_rss_bytes": 2723840,
+            "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-file-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.015934,
+            "max_rss_bytes": 2719744,
+            "stdout_sha256": "db9d98f8b6ef16ac58604cd51288b3d5beb44467d6ccaeb629813a3c62b84dd0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-file-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.015836,
+            "max_rss_bytes": 2723840,
+            "stdout_sha256": "db9d98f8b6ef16ac58604cd51288b3d5beb44467d6ccaeb629813a3c62b84dd0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-stdin-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.015934,
+            "max_rss_bytes": 1654784,
+            "stdout_sha256": "025b6c3668bc66508fb747ebeca31f019f13760d76ea129e27ba4b84a64c014f",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-stdin-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.015892,
+            "max_rss_bytes": 1593344,
+            "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-stdin-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.015959,
+            "max_rss_bytes": 1593344,
+            "stdout_sha256": "db9d98f8b6ef16ac58604cd51288b3d5beb44467d6ccaeb629813a3c62b84dd0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-stdin-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.01587,
+            "max_rss_bytes": 1593344,
+            "stdout_sha256": "db9d98f8b6ef16ac58604cd51288b3d5beb44467d6ccaeb629813a3c62b84dd0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-file-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.114314,
+            "max_rss_bytes": 17399808,
+            "stdout_sha256": "d9df14e7ac1604900148c9c661d6bfa5c131abc9112389e3dac1994396ab3c0d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-file-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.114352,
+            "max_rss_bytes": 17395712,
+            "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-file-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.114462,
+            "max_rss_bytes": 17395712,
+            "stdout_sha256": "8a3e2d6aece4ca5cd782cedcd7ccd1799a4dbfb38997e5542b776a2382918665",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-file-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.114424,
+            "max_rss_bytes": 17399808,
+            "stdout_sha256": "8a3e2d6aece4ca5cd782cedcd7ccd1799a4dbfb38997e5542b776a2382918665",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-stdin-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.114338,
+            "max_rss_bytes": 8994816,
+            "stdout_sha256": "025b6c3668bc66508fb747ebeca31f019f13760d76ea129e27ba4b84a64c014f",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-stdin-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.114319,
+            "max_rss_bytes": 8933376,
+            "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-stdin-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.114324,
+            "max_rss_bytes": 8933376,
+            "stdout_sha256": "8a3e2d6aece4ca5cd782cedcd7ccd1799a4dbfb38997e5542b776a2382918665",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-stdin-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.114407,
+            "max_rss_bytes": 8933376,
+            "stdout_sha256": "8a3e2d6aece4ca5cd782cedcd7ccd1799a4dbfb38997e5542b776a2382918665",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "tiny-max-n-file-tail-4294967295",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.003936,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "b740bc36387c12c0a3bc5f7322cc5f5f60ae9923794c6e4ae75284047ee5438d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "tiny-max-n-stdin-tail-4294967295",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.001673,
+            "max_rss_bytes": 544768,
+            "stdout_sha256": "b740bc36387c12c0a3bc5f7322cc5f5f60ae9923794c6e4ae75284047ee5438d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      }
+    },
+    "arm64mac": {
+      "summary": {
+        "target": "arm64mac",
+        "version": "0.1.0",
+        "verified": true,
+        "archive": "jlog-0.1.0-macos-arm64.tar.gz",
+        "archive_sha256": "8c2ad5de5aaa4b31e418536252d8dde2f6dd07738cbef781e68d53d8ae18de35",
+        "archive_bytes": 350133,
+        "binary_sha256": "c43bbc634256da04ef0123a1f1defd5df6580c54f72299760a5a7a51dfe240c1",
+        "source_commit": "26081f3f4d9926fe8e3b519d16e1a766264c921a",
+        "source_sha256": {
+          "src/Cli.roc": "24d694aca897d8d0530483a519328276b4ec8fba4cefbb6786928fc8d6a17ed4",
+          "src/Jsonl.roc": "2c52ffa06254c3eeab04ec7a1d77c772fcdc0a8d08d089f59a500db69786bf39",
+          "src/Operations.roc": "56ad5f6d19654de0a3d4616a79e509c7f68ab62d2c0f4d1a2d1d5bc3a27275f4",
+          "src/help.txt": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+          "src/main.roc": "c3c4ab1daee92533cf2b8b364354de2b4208c2d62933b823e594ce60ffe62b30"
+        },
+        "platform_identity": "18006035e878a978b433d8b24d1bf80506800df7b0eb7088ce92b461430762f2",
+        "license_sha256": "70d60baa983130995b8187c18255841ce4435ea0fb9f119cf4765834cd121779",
+        "notices_sha256": "799fddfb0cc86a0e30ea8a9735d35776d72dd824e1e5792839cb75f871243702",
+        "support_sha256": "5a153e49045619996f96f9d7de943007f5603648794238d780b926865230eaed",
+        "runtime_host": "macOS-15.7.9-arm64-arm-64bit-Mach-O",
+        "runtime_architecture": "arm64",
+        "isolation": {
+          "method": "macOS sandbox-exec",
+          "network": "deny network*",
+          "toolchains": "absent from PATH; executable names denied, including absolute paths",
+          "profile": "(version 1)(allow default)(deny network*)(deny process-exec (regex #\"/(roc|rustc|cargo)$\"))(deny file-read* (subpath \"/Users/runner/work/jlog/jlog\"))(deny file-read* (subpath \"/Users/runner/.rustup\") (subpath \"/Users/runner/.cargo\"))"
+        },
+        "offline_cases": 8,
+        "readme_cases": 19,
+        "source_blocks": 5,
+        "resource_cases": 70,
+        "native_run_url": "https://github.com/DanielBlanco/jlog/actions/runs/40608149721",
+        "evidence_sha256": {
+          "environment.json": "61bb314cbd61459ef31b724d8187da2adc7d07e0b1ba8081633b9731ea5628e4",
+          "verification.json": "60f0c111bb34e0cab55b19de16df66b5da523e0b7c638e11695a2579cf77a69c",
+          "readme.json": "3e78700203ca29d31236b73c1934345a56220985cea2c5452aba4ebb7b573e70",
+          "release.json": "ab9023cdb7747e253d521802ead59f5b4dfa1c97473325b963d6e189146b80d3"
+        }
+      },
+      "native_environment": {
+        "execution": "native",
+        "target": "arm64mac",
+        "uid": 501,
+        "uname": [
+          "Darwin",
+          "sat12-dp147-fcecf6c4-0ef4-4721-809e-b24d854d7a42-666B89447B97.local",
+          "24.6.0",
+          "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+          "arm64",
+          "arm"
+        ],
+        "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 17.0.0 (clang-1700.6.4.2)]",
+        "roc": "Roc compiler version nightly-2026-10-09-258ab27",
+        "commit": "26081f3f4d9926fe8e3b519d16e1a766264c921a",
+        "source_sha256": {
+          "src/Cli.roc": "24d694aca897d8d0530483a519328276b4ec8fba4cefbb6786928fc8d6a17ed4",
+          "src/Jsonl.roc": "2c52ffa06254c3eeab04ec7a1d77c772fcdc0a8d08d089f59a500db69786bf39",
+          "src/Operations.roc": "56ad5f6d19654de0a3d4616a79e509c7f68ab62d2c0f4d1a2d1d5bc3a27275f4",
+          "src/help.txt": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+          "src/main.roc": "c3c4ab1daee92533cf2b8b364354de2b4208c2d62933b823e594ce60ffe62b30"
+        },
+        "platform_build": {
+          "identity": "18006035e878a978b433d8b24d1bf80506800df7b0eb7088ce92b461430762f2",
+          "target": "arm64mac",
+          "rust_target": "aarch64-apple-darwin",
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+          "version": "0.25.0",
+          "source_commit": "6e787d231017e9888027330de5d651f388e807fd",
+          "source_archive_sha256": "c9d77f74ebac97b2f52c56b92fa9fbd6e82bf1c88f614c884579354298d17044",
+          "bundle_sha256": "9c06b27e671ad8d307ed118de62d6bae4eef4131b9eda4414adf643a604ad545",
+          "patch_sha256": "2be177af0a580e2748763b8ad99e3a4315c6cb1d89327971acd94f5e12bc662e",
+          "cargo_lock_sha256": "a889c5f910e840b5016b14d2c7440955d9d47f2725c294d04591cf575c161355",
+          "files_sha256": {
+            "Cmd.roc": "654d4cf60666dabeafb807a8e5268f256f325b22f54e80784e11087eed3ee73c",
+            "Env.roc": "94e6c634f9998f14a0bc97be617a4c25cc9962c7637d40e25d1020fabe032526",
+            "File.roc": "374e37400d93de219e04303904763f9dbef6dba42549c7f01ca8a935e8114e59",
+            "Host.roc": "d9d0023324f429b478d99f71011ee1d637236c91aa146b5108fd92ac43ff0e4a",
+            "Http.roc": "0322139c8dcad90e42ac7ea1682287014428fe24b0f7542f29e7fb3200b938c2",
+            "IOErr.roc": "16610d9734a96429df2f3d8d5c0b68a416f81b4de8981f0734392dd2943630c4",
+            "InternalDateTime.roc": "ed6986a3fa0f472ffcd9c082328b3ef18e158fe92cefc605bc62055b228fefc9",
+            "InternalHttp.roc": "bd5511ebca3c0cc501c9a3d80676a43760ec151aea7caaa67e2e8838e132389d",
+            "InternalSqlite.roc": "12983c44146b05b98c7f623b98b2dbeb769164e87e6df4a23997278eeda8b87a",
+            "LICENSE": "26285f30ae3d8c53a4dc1db652a8a7b8c7a4a0283946ae3d35774b1c8e543178",
+            "Locale.roc": "161e74e27747349e6170cc6adb95743feb1d36859756cd7804d12e73b76af547",
+            "Monotonic.roc": "ca54f19c4fbd0bae072dcfde58c4366e309892e21d413c3195ca01a082437f8b",
+            "OsStr.roc": "29f0db1256f007b63e75fb2968d79fd3985522947eb2644164c9765f9858b10c",
+            "Path.roc": "89591a0ce55f868508f4475c8585c453c1534efb460aef540ac9ff1ecb4f5af3",
+            "Random.roc": "1bf3fc9aa3e1babe6133829a296d8b0db23d1b6a6385d49d082594d44d9a7db7",
+            "Sleep.roc": "76dd733f49cbc4406677a2e6d30aa9469d46c0f5e2ee2df7e8d860267ca3e0d7",
+            "Sqlite.roc": "5879510fb7f3235d04c9903a895702073063a633a56b5b2ea643d2e5767b2624",
+            "Stderr.roc": "d8730cd057390df35a1e02d8651682cef3a94bba2f5c3b53638f8abed60fa418",
+            "Stdin.roc": "273b0eb6ccc8a8dc019fbe6e461401eb7e4c17faf3357e8f02d0909ff497985e",
+            "Stdout.roc": "ae56db7944ab1ce1903cd24932c7c713fe284a6b1b3b5cc0e7ca3d5a6cced360",
+            "THIRD_PARTY_LICENSES.md": "0a046d3535c8e10fac000062dbd2b3e57c96ffdb835de48cfa93445ac6436c2f",
+            "Tcp.roc": "b9e5e5c3a6b8ac4ea5374b9e6bd4e02718a9fcb806fe6928c33f848485d4c775",
+            "Tty.roc": "091ac0dcbf85be536c86b4ba31ad5e6f807aad983f77a2dab329165a9695997e",
+            "Url.roc": "794f65605dbfbee533a7ffa3139aacbef31b5e1ff3a63583ca0c26a06c29a1c8",
+            "Utc.roc": "6ad3729bd8022e3420e27cf3b12af8775205bb877ed0de140550a9b9cb5bbe97",
+            "main.roc": "20bdaabb885770c3755eb1a03171a864e086fd979edf68bfdd57a75fa5022c29",
+            "targets/arm64mac/libhost.a": "3442977761f677214ae3bc14b77172295a1a74f962f7f0dbf0e2af1ee79742aa"
+          }
+        },
+        "github": {
+          "GITHUB_REPOSITORY": "DanielBlanco/jlog",
+          "GITHUB_SHA": "26081f3f4d9926fe8e3b519d16e1a766264c921a",
+          "GITHUB_REF": "refs/pull/1/merge",
+          "GITHUB_RUN_ID": "40608149721",
+          "GITHUB_RUN_ATTEMPT": "1",
+          "RUNNER_OS": "macOS",
+          "RUNNER_ARCH": "ARM64",
+          "ImageOS": "macos15",
+          "ImageVersion": "20260907.0337.1"
+        },
+        "binary_dev_sha256": "b3bb4ab6cf1530a0e40a2e9e783aa6b0b2b94a5b80c2e6e1c679f6044ba98982",
+        "binary_speed_sha256": "c43bbc634256da04ef0123a1f1defd5df6580c54f72299760a5a7a51dfe240c1",
+        "source_hashes_unchanged": true,
+        "platform_hashes_unchanged": true
+      },
+      "native_verification": [
+        {
+          "name": "check",
+          "command": [
+            "roc",
+            "check",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "format",
+          "command": [
+            "roc",
+            "fmt",
+            "--check",
+            "src/main.roc",
+            "src/Cli.roc",
+            "src/Jsonl.roc",
+            "src/Operations.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "measurement-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_measure_resources.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "platform-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_build_platform.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "release-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_package_release.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "release-set-units",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_finalize_release.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "pure-dev",
+          "command": [
+            "roc",
+            "test",
+            "--opt=dev",
+            "--no-cache",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "build-dev",
+          "command": [
+            "roc",
+            "build",
+            "--no-cache",
+            "--opt=dev",
+            "--target=arm64mac",
+            "--output=/Users/runner/work/_temp/evidence/jlog-dev",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "file-dev",
+          "command": [
+            "file",
+            "/Users/runner/work/_temp/evidence/jlog-dev"
+          ],
+          "status": 0
+        },
+        {
+          "name": "cli-dev",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_cli.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "io-contract-dev",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_io_contract.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "pure-speed",
+          "command": [
+            "roc",
+            "test",
+            "--opt=speed",
+            "--no-cache",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "build-speed",
+          "command": [
+            "roc",
+            "build",
+            "--no-cache",
+            "--opt=speed",
+            "--target=arm64mac",
+            "--output=/Users/runner/work/_temp/evidence/jlog-speed",
+            "src/main.roc"
+          ],
+          "status": 0
+        },
+        {
+          "name": "file-speed",
+          "command": [
+            "file",
+            "/Users/runner/work/_temp/evidence/jlog-speed"
+          ],
+          "status": 0
+        },
+        {
+          "name": "cli-speed",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_cli.py",
+            "-v"
+          ],
+          "status": 0
+        },
+        {
+          "name": "io-contract-speed",
+          "command": [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_io_contract.py",
+            "-v"
+          ],
+          "status": 0
+        }
+      ],
+      "readme_cases": [
+        {
+          "name": "quick-start",
+          "shell": "/bin/bash",
+          "script": "cat > events.jsonl <<'JSONL'\n{\"level\":\"info\",\"message\":\"Started\"}\n{\"level\":\"error\",\"message\":\"Connection failed\",\"retry\":1}\nJSONL\n\n./dist/jlog events.jsonl\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 50,
+          "stdout_sha256": "ed7c4d642ff9890369eb7f0a57a438c3f4a81203e0e0a7cead5eeda632f89b8f",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "inspect-help-version",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog events.jsonl\n./dist/jlog --help\n./dist/jlog --version\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 1065,
+          "stdout_sha256": "606c32a3c4b5d5f9973c97a8b5f680dda8c56fc9a053ee49d9f6f0b0869f238b",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "literal-filenames",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog -- -events.jsonl\n./dist/jlog ./-\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 92,
+          "stdout_sha256": "96a5fc266b1e16e80ed7bec0b60e68df11f221b8dd10e4b38b7f8a17d3ce5ade",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "stdin-forms",
+          "shell": "/bin/bash",
+          "script": "cat events.jsonl | ./dist/jlog\n./dist/jlog - < events.jsonl\nprintf '%s\\n' '{\"level\":\"info\"}' 'null' | ./dist/jlog\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 135,
+          "stdout_sha256": "8aa3e1a8ae08c5cad88f2e21a2db4695cfd62f53c68625a87bedcc690d06b19e",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "redirect-report",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog events.jsonl > report.txt\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 0,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "inspection-progress",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --progress tests/sample.jsonl\ncat events.jsonl | ./dist/jlog --progress\n./dist/jlog --progress events.jsonl > report.txt\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 101,
+          "stdout_sha256": "5bb6845ceea3a25e17a72ebd03326ba95e91bc831850edd5f8baa494c79f506f",
+          "stderr": "jlog: 6 lines inspected, 0 invalid (complete)\njlog: 2 lines inspected, 0 invalid (complete)\njlog: 2 lines inspected, 0 invalid (complete)\n",
+          "verified": true
+        },
+        {
+          "name": "malformed-report",
+          "shell": "/bin/bash",
+          "script": "printf '{}\\n\\nnot-json\\nnull' > mixed.jsonl\n./dist/jlog mixed.jsonl\n",
+          "exit_status": 4,
+          "expected_status": 4,
+          "stdout_bytes": 113,
+          "stdout_sha256": "3303587c4b265c0e7bfc2b9662d55c63e0c3c6e1a085dc48512bf60f6273ca79",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "count",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --count tests/sample.jsonl\ncat events.jsonl | ./dist/jlog --count\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 4,
+          "stdout_sha256": "5c718e408554226d3e0935827e5aaf3ab6fd7a974e7f20e8b6eae14a2db6710e",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "tail",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --tail 2 tests/sample.jsonl\n./dist/jlog tests/sample.jsonl --tail=0002\ncat events.jsonl | ./dist/jlog --tail 10 > recent.jsonl\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 678,
+          "stdout_sha256": "8f610544bf4b01fb8df3ddc645cf10feaa077ad1df71606bc535b8315e8ad28e",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "filter-pipeline",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --where status=failed tests/sample-big.jsonl\n./dist/jlog tests/sample-big.jsonl --where=status=failed > failed.jsonl\nset -o pipefail\n./dist/jlog --where status=failed tests/sample-big.jsonl | ./dist/jlog --count\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 334827,
+          "stdout_sha256": "b1a413aa26b9bee65b2751d36d42b2b61c6caef2fffd8f1fc990bec572f18d23",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "capture-valid-status",
+          "shell": "/bin/bash",
+          "script": "jlog_status=0\n./dist/jlog events.jsonl > report.txt || jlog_status=$?\ncase \"$jlog_status\" in\n  0) echo 'All records are valid.' ;;\n  4) echo 'Malformed records found; see report.txt.' ;;\n  *) echo \"jlog failed with exit $jlog_status\" >&2 ;;\nesac\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 23,
+          "stdout_sha256": "61e2d63bad0f903e8569297330ba331cfbc16a77e1899bbfa798e2370e2f8546",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "capture-malformed-status",
+          "shell": "/bin/bash",
+          "script": "jlog_status=0\n./dist/jlog events.jsonl > report.txt || jlog_status=$?\ncase \"$jlog_status\" in\n  0) echo 'All records are valid.' ;;\n  4) echo 'Malformed records found; see report.txt.' ;;\n  *) echo \"jlog failed with exit $jlog_status\" >&2 ;;\nesac\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 41,
+          "stdout_sha256": "ae25b8f25d5c66e180b7757f01b048a85359f8db174f2d0e72886bdf20a26491",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "pipeline-malformed-status",
+          "shell": "/bin/bash",
+          "script": "set -o pipefail\n./dist/jlog --where status=failed mixed.jsonl | ./dist/jlog --count\n",
+          "exit_status": 4,
+          "expected_status": 4,
+          "stdout_bytes": 2,
+          "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "stderr": "jlog: mixed.jsonl: line 2: blank line\njlog: mixed.jsonl: line 3: invalid JSON\n",
+          "verified": true
+        },
+        {
+          "name": "pipeline-without-pipefail",
+          "shell": "/bin/bash",
+          "script": "./dist/jlog --where status=failed mixed.jsonl | ./dist/jlog --count\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 2,
+          "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "stderr": "jlog: mixed.jsonl: line 2: blank line\njlog: mixed.jsonl: line 3: invalid JSON\n",
+          "verified": true
+        },
+        {
+          "name": "zsh-capture-valid-status",
+          "shell": "/bin/zsh",
+          "script": "jlog_status=0\n./dist/jlog events.jsonl > report.txt || jlog_status=$?\ncase \"$jlog_status\" in\n  0) echo 'All records are valid.' ;;\n  4) echo 'Malformed records found; see report.txt.' ;;\n  *) echo \"jlog failed with exit $jlog_status\" >&2 ;;\nesac\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 23,
+          "stdout_sha256": "61e2d63bad0f903e8569297330ba331cfbc16a77e1899bbfa798e2370e2f8546",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "zsh-capture-malformed-status",
+          "shell": "/bin/zsh",
+          "script": "jlog_status=0\n./dist/jlog events.jsonl > report.txt || jlog_status=$?\ncase \"$jlog_status\" in\n  0) echo 'All records are valid.' ;;\n  4) echo 'Malformed records found; see report.txt.' ;;\n  *) echo \"jlog failed with exit $jlog_status\" >&2 ;;\nesac\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 41,
+          "stdout_sha256": "ae25b8f25d5c66e180b7757f01b048a85359f8db174f2d0e72886bdf20a26491",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "zsh-pipeline-malformed-status",
+          "shell": "/bin/zsh",
+          "script": "set -o pipefail\n./dist/jlog --where status=failed mixed.jsonl | ./dist/jlog --count\n",
+          "exit_status": 4,
+          "expected_status": 4,
+          "stdout_bytes": 2,
+          "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "stderr": "jlog: mixed.jsonl: line 2: blank line\njlog: mixed.jsonl: line 3: invalid JSON\n",
+          "verified": true
+        },
+        {
+          "name": "user-install",
+          "shell": "/bin/bash",
+          "script": "JLOG_INSTALL_PREFIX=\"${JLOG_INSTALL_PREFIX:-$HOME/.local}\"\nmkdir -p \"$JLOG_INSTALL_PREFIX/bin\"\ninstall -m 755 dist/jlog \"$JLOG_INSTALL_PREFIX/bin/jlog\"\nexport PATH=\"$JLOG_INSTALL_PREFIX/bin:$PATH\"\njlog --version\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 11,
+          "stdout_sha256": "8ba490307028098f0eae719a6e2b2f9da6037c7176d77ef3105a1dc4e02784bb",
+          "stderr": "",
+          "verified": true
+        },
+        {
+          "name": "installed-without-toolchain-on-path",
+          "shell": "/bin/bash",
+          "script": "if command -v roc >/dev/null || command -v rustc >/dev/null; then exit 99; fi\njlog --version\njlog --help\nprintf '%s\\n' '{\"status\":\"failed\"}' '{\"status\":\"ok\"}' | jlog --where status=failed | jlog --count\n",
+          "exit_status": 0,
+          "expected_status": 0,
+          "stdout_bytes": 1017,
+          "stdout_sha256": "314ad6d9ec576f3a940fa0fa37bfcd37441ef2989c85c25573f1339d19820f16",
+          "stderr": "",
+          "verified": true
+        }
+      ],
+      "readme_source_checks": [
+        {
+          "name": "build",
+          "script": "roc version\n# Expected: Roc compiler version nightly-2026-10-09-258ab27\n\npython3 scripts/build_platform.py\n\nmkdir -p dist\nroc build --opt=speed --no-cache --output=dist/jlog src/main.roc\n./dist/jlog --version\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 201,
+          "stderr_bytes": 0,
+          "stdout_sha256": "5a1920ae2c700974f72c4b6625933545bfb5b3e5e1e124d5a170bf726812a763",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "run-check-format",
+          "script": "python3 scripts/build_platform.py\nroc run src/main.roc -- --help\nroc check src/main.roc\nroc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 1142,
+          "stderr_bytes": 0,
+          "stdout_sha256": "375d9f3420801a24e4de4ebf8957f4ca939a0b03dc305c92c9d7040c114d350b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "development-progress",
+          "script": "roc run --opt=dev src/main.roc -- --progress tests/sample-big.jsonl\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 68,
+          "stderr_bytes": 88,
+          "stdout_sha256": "28fae8830c0fc7992f7d5b1fa897c7116216bbb2ad786e9087786445497ca468",
+          "stderr_sha256": "161c34347b562094534cd8b2e4a2e3de0d262a0b3c2af433b183c14ca3a60eca"
+        },
+        {
+          "name": "dev-and-speed-regressions",
+          "script": "python3 scripts/build_platform.py\nmkdir -p dist\n\n# Development mode\nroc test --opt=dev --no-cache src/main.roc\nroc build --opt=dev --no-cache --output=dist/jlog src/main.roc\nJLOG_BIN=\"$PWD/dist/jlog\" python3 -m unittest discover -s tests -v\n\n# Optimized mode: repeat executable tests against this new build\nroc test --opt=speed --no-cache src/main.roc\nroc build --opt=speed --no-cache --output=dist/jlog src/main.roc\nJLOG_BIN=\"$PWD/dist/jlog\" python3 -m unittest discover -s tests -v\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 299,
+          "stderr_bytes": 28264,
+          "stdout_sha256": "a89582001a1f6d23a96d0e7ace288907821280ee7ed2970554c2fee34cb3bc86",
+          "stderr_sha256": "38e61a22176e88583ee9915d132e6b22f76831bc75b00304e3d6756d14526f5d"
+        },
+        {
+          "name": "strict-descriptors",
+          "script": "JLOG_BIN=\"$PWD/dist/jlog\" python3 -m unittest discover -s tests -p 'test_io_contract.py' -v\n",
+          "exit_status": 0,
+          "verified": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 601,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_sha256": "fc10a8fa9a97df87617c58090ae470df30d98510627ad8fad4535d0ff1d619d6"
+        }
+      ],
+      "offline_smoke": {
+        "schema_version": 1,
+        "host": "macOS-15.7.9-arm64-arm-64bit-Mach-O",
+        "architecture": "arm64",
+        "execution": "native",
+        "archive": "jlog-0.1.0-macos-arm64.tar.gz",
+        "archive_sha256": "8c2ad5de5aaa4b31e418536252d8dde2f6dd07738cbef781e68d53d8ae18de35",
+        "binary_sha256": "c43bbc634256da04ef0123a1f1defd5df6580c54f72299760a5a7a51dfe240c1",
+        "install_script": "if command -v sha256sum >/dev/null; then\n  sha256sum -c \"$JLOG_ARCHIVE.sha256\"\nelse\n  shasum -a 256 -c \"$JLOG_ARCHIVE.sha256\"\nfi\ntar -xzf \"$JLOG_ARCHIVE\"\nJLOG_DIRECTORY=\"${JLOG_ARCHIVE%.tar.gz}\"\nJLOG_INSTALL_PREFIX=\"${JLOG_INSTALL_PREFIX:-$HOME/.local}\"\nmkdir -p \"$JLOG_INSTALL_PREFIX/bin\"\ninstall -m 755 \"$JLOG_DIRECTORY/bin/jlog\" \"$JLOG_INSTALL_PREFIX/bin/jlog\"\nexport PATH=\"$JLOG_INSTALL_PREFIX/bin:$PATH\"\njlog --version\n",
+        "install_exit_status": 0,
+        "install_stdout": "jlog-0.1.0-macos-arm64.tar.gz: OK\njlog 0.1.0\n",
+        "work_dir": "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-93bzzxbk",
+        "cases": [
+          {
+            "name": "version",
+            "args": [
+              "--version"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "8ba490307028098f0eae719a6e2b2f9da6037c7176d77ef3105a1dc4e02784bb",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "help",
+            "args": [
+              "--help"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "inspect-read-only-file",
+            "args": [
+              "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-93bzzxbk/events.jsonl"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "16e1b64e812e4b2c14de3806120028b6df9bf552a5a657fba4af48199e11fca7",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "count",
+            "args": [
+              "--count",
+              "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-93bzzxbk/events.jsonl"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "tail-original-bytes",
+            "args": [
+              "--tail",
+              "1",
+              "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-93bzzxbk/events.jsonl"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "5a05350ec82b4df1b8680b0c62da9abdcca1aac76150aaeb6df69e52300c2af0",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "filter-original-bytes",
+            "args": [
+              "--where",
+              "status=failed",
+              "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/jlog-release-93bzzxbk/events.jsonl"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "7ce8eff12277310f98d059937246673a31a8763107cebe668c8a6526bbcfc7cb",
+            "stderr": "",
+            "verified": true
+          },
+          {
+            "name": "filter-to-count-pipeline",
+            "producer_exit_status": 0,
+            "consumer_exit_status": 0,
+            "verified": true
+          },
+          {
+            "name": "empty-stdin",
+            "args": [
+              "--count"
+            ],
+            "exit_status": 0,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr": "",
+            "verified": true
+          }
+        ],
+        "isolation": {
+          "method": "macOS sandbox-exec",
+          "network": "deny network*",
+          "toolchains": "absent from PATH; executable names denied, including absolute paths",
+          "profile": "(version 1)(allow default)(deny network*)(deny process-exec (regex #\"/(roc|rustc|cargo)$\"))(deny file-read* (subpath \"/Users/runner/work/jlog/jlog\"))(deny file-read* (subpath \"/Users/runner/.rustup\") (subpath \"/Users/runner/.cargo\"))"
+        },
+        "network_denial_probe_verified": true,
+        "input_binary_archive_hashes_unchanged": true,
+        "verified": true
+      },
+      "archive_members": [
+        {
+          "name": "jlog-0.1.0-macos-arm64/BUILD.json",
+          "bytes": 56272,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/INSTALL.md",
+          "bytes": 1925,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/LICENSE",
+          "bytes": 1070,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/SUPPORT.md",
+          "bytes": 1534,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/THIRD_PARTY_NOTICES.md",
+          "bytes": 2050,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/bin/jlog",
+          "bytes": 596752,
+          "mode": "0o755"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/licenses/basic-cli-LICENSE.txt",
+          "bytes": 1915,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/licenses/basic-cli-THIRD-PARTY.md",
+          "bytes": 25760,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/licenses/host-crates.txt",
+          "bytes": 777560,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/licenses/roc-LICENSE.txt",
+          "bytes": 1880,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/licenses/roc-legal-details.txt",
+          "bytes": 18736,
+          "mode": "0o644"
+        },
+        {
+          "name": "jlog-0.1.0-macos-arm64/licenses/rust-COPYRIGHT-library.html",
+          "bytes": 1499465,
+          "mode": "0o644"
+        }
+      ],
+      "resources": {
+        "sha256": "d4eb3231c78f6e3d0f6f86e45a0cdf28d7cff8a8de7fe915dc713328b3570e83",
+        "host": {
+          "platform": "macOS-15.7.9-arm64-arm-64bit-Mach-O",
+          "architecture": "arm64",
+          "page_size_bytes": 16384,
+          "logical_cpus": 3,
+          "stack_soft_limit_bytes": 8372224,
+          "roc": "Roc compiler version nightly-2026-10-09-258ab27",
+          "hardware_model": "VirtualMac2,1",
+          "memory_bytes": 7516192768,
+          "cpu": "Apple M1 (Virtual)",
+          "macos": "ProductName:\t\tmacOS\nProductVersion:\t\t15.7.9\nBuildVersion:\t\t24G830"
+        },
+        "input_and_binary_hashes_verified": true,
+        "runs": [
+          {
+            "name": "valid-100000-file-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.029258,
+            "max_rss_bytes": 1720320,
+            "stdout_sha256": "698942b0c8d890d0f975cf28396a8f201f58fcbada2326c0cd534f7158502c44",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.096438,
+            "max_rss_bytes": 1736704,
+            "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.826299,
+            "max_rss_bytes": 1851392,
+            "stdout_sha256": "7f3e989a5821a3d69e0e950ae05b90cb1759b9ec84d42b7bee67b349039906e7",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-0",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.070688,
+            "max_rss_bytes": 1753088,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.176277,
+            "max_rss_bytes": 1916928,
+            "stdout_sha256": "e4810275cfac33596b7f3829f999cb5d00d537748d8e1eb7bb7cbad115ff7601",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-64",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.142692,
+            "max_rss_bytes": 2113536,
+            "stdout_sha256": "490dfd55cf4fd3bb066b477541ef50ccc90dc35c251fad06238b31e4603c719e",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-4096",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.103193,
+            "max_rss_bytes": 21118976,
+            "stdout_sha256": "18731f43d4d62f6c51a565355a9aaa4d5815e7014eb65302b8d708c2c9e2db30",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-file-tail-16384",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.393848,
+            "max_rss_bytes": 52838400,
+            "stdout_sha256": "e65458a3113e57c0bfd925eab7098123febdb400c4836cd3604460095d75c720",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.184601,
+            "max_rss_bytes": 1785856,
+            "stdout_sha256": "7498c718011505ec58dfd76371fcc3bbcafde3c9f6d9098d0d8055c83f3a0330",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.053886,
+            "max_rss_bytes": 1802240,
+            "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.602796,
+            "max_rss_bytes": 1949696,
+            "stdout_sha256": "7f3e989a5821a3d69e0e950ae05b90cb1759b9ec84d42b7bee67b349039906e7",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-0",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.067447,
+            "max_rss_bytes": 1802240,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.943393,
+            "max_rss_bytes": 1802240,
+            "stdout_sha256": "e4810275cfac33596b7f3829f999cb5d00d537748d8e1eb7bb7cbad115ff7601",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-64",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.977569,
+            "max_rss_bytes": 2162688,
+            "stdout_sha256": "490dfd55cf4fd3bb066b477541ef50ccc90dc35c251fad06238b31e4603c719e",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-4096",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.232201,
+            "max_rss_bytes": 21053440,
+            "stdout_sha256": "18731f43d4d62f6c51a565355a9aaa4d5815e7014eb65302b8d708c2c9e2db30",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-100000-stdin-tail-16384",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 1.15626,
+            "max_rss_bytes": 52887552,
+            "stdout_sha256": "e65458a3113e57c0bfd925eab7098123febdb400c4836cd3604460095d75c720",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-100000-file-inspect",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.075663,
+            "max_rss_bytes": 1785856,
+            "stdout_sha256": "f9754a3639ce746f0921d247fe0de1a98e3452f0d00035c6b37eb7f555c09aa5",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-100000-file-count",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.165393,
+            "max_rss_bytes": 1802240,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr_sha256": "ff3f4c08519e09b719250442c484777aa710f34615d181cced137467955346b9"
+          },
+          {
+            "name": "invalid-100000-file-filter",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.070501,
+            "max_rss_bytes": 1769472,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "ff3f4c08519e09b719250442c484777aa710f34615d181cced137467955346b9"
+          },
+          {
+            "name": "invalid-100000-file-tail-0",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.044008,
+            "max_rss_bytes": 1818624,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "ff3f4c08519e09b719250442c484777aa710f34615d181cced137467955346b9"
+          },
+          {
+            "name": "invalid-100000-file-tail-16384",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.025592,
+            "max_rss_bytes": 1818624,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "ff3f4c08519e09b719250442c484777aa710f34615d181cced137467955346b9"
+          },
+          {
+            "name": "invalid-100000-stdin-inspect",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.158761,
+            "max_rss_bytes": 1802240,
+            "stdout_sha256": "ae18ac8b616a7769f85c04d9423216952ba29d42c647cd2126cbef1ae255a888",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-100000-stdin-count",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 0.995192,
+            "max_rss_bytes": 1802240,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr_sha256": "6cf96dfecc0fad6d0ba587558644a01654480f2132c6e079f00c8a2fba8c72a0"
+          },
+          {
+            "name": "invalid-100000-stdin-filter",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 1.053556,
+            "max_rss_bytes": 1818624,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "6cf96dfecc0fad6d0ba587558644a01654480f2132c6e079f00c8a2fba8c72a0"
+          },
+          {
+            "name": "invalid-100000-stdin-tail-0",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 0.932879,
+            "max_rss_bytes": 1818624,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "6cf96dfecc0fad6d0ba587558644a01654480f2132c6e079f00c8a2fba8c72a0"
+          },
+          {
+            "name": "invalid-100000-stdin-tail-16384",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 0.979618,
+            "max_rss_bytes": 1802240,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "6cf96dfecc0fad6d0ba587558644a01654480f2132c6e079f00c8a2fba8c72a0"
+          },
+          {
+            "name": "valid-1000000-file-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 9.831745,
+            "max_rss_bytes": 1785856,
+            "stdout_sha256": "40eec00bd780aa84fe725f8f14b0ac7efd21f792c40ac50f99f2d8292fe46737",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 9.784306,
+            "max_rss_bytes": 1785856,
+            "stdout_sha256": "085c348f64a3b543e973a33749e90ba20847b99016a87e5228847597d61ce582",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 14.367938,
+            "max_rss_bytes": 1884160,
+            "stdout_sha256": "12fc6d87eb16243224c0a69bb5cd6b9e6616338b948b7712267590d0a4a0c78d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-0",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 8.994049,
+            "max_rss_bytes": 1753088,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 7.855472,
+            "max_rss_bytes": 1818624,
+            "stdout_sha256": "dd5c9babafd619946bdce0fa56bcf5d4cb8a48d665dd7332cde4e8d336ee9def",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-64",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 7.816674,
+            "max_rss_bytes": 2113536,
+            "stdout_sha256": "56c4ec76bc14643df2f415d28dcb855f8ae6f6b29e7b80689442c530f935d732",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-4096",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 8.285973,
+            "max_rss_bytes": 21004288,
+            "stdout_sha256": "ff251bc86b094c3c453661b945feb438a0ae517aac47be5306aa4ffddcdcbaba",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-file-tail-16384",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 8.291845,
+            "max_rss_bytes": 52920320,
+            "stdout_sha256": "d42433679ab2bba5fd7176f579ad97b81c935b9fc828b74854db353779fa38e7",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 8.366903,
+            "max_rss_bytes": 1785856,
+            "stdout_sha256": "2a1d4f7a1ab58b8e0bf32d3e44278a398490f6cfc822ebea7d74ca119d4a8355",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 8.257512,
+            "max_rss_bytes": 1802240,
+            "stdout_sha256": "085c348f64a3b543e973a33749e90ba20847b99016a87e5228847597d61ce582",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 14.113481,
+            "max_rss_bytes": 1949696,
+            "stdout_sha256": "12fc6d87eb16243224c0a69bb5cd6b9e6616338b948b7712267590d0a4a0c78d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-0",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 8.578404,
+            "max_rss_bytes": 1769472,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 7.697517,
+            "max_rss_bytes": 1769472,
+            "stdout_sha256": "dd5c9babafd619946bdce0fa56bcf5d4cb8a48d665dd7332cde4e8d336ee9def",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-64",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 7.782585,
+            "max_rss_bytes": 2162688,
+            "stdout_sha256": "56c4ec76bc14643df2f415d28dcb855f8ae6f6b29e7b80689442c530f935d732",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-4096",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 8.257212,
+            "max_rss_bytes": 21037056,
+            "stdout_sha256": "ff251bc86b094c3c453661b945feb438a0ae517aac47be5306aa4ffddcdcbaba",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "valid-1000000-stdin-tail-16384",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 8.041228,
+            "max_rss_bytes": 52887552,
+            "stdout_sha256": "d42433679ab2bba5fd7176f579ad97b81c935b9fc828b74854db353779fa38e7",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-1000000-file-inspect",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 9.76685,
+            "max_rss_bytes": 1687552,
+            "stdout_sha256": "d85b9202ec9815320f5692f671ac739c1d13af70834fbd49350dcdfa726dfa8c",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-1000000-file-count",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 8.777773,
+            "max_rss_bytes": 1753088,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr_sha256": "7daf323a84dd30eb2ecf2d36b8146ee0434ee6c0a5204620bde8c9ad95a0e151"
+          },
+          {
+            "name": "invalid-1000000-file-filter",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 7.938518,
+            "max_rss_bytes": 1769472,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "7daf323a84dd30eb2ecf2d36b8146ee0434ee6c0a5204620bde8c9ad95a0e151"
+          },
+          {
+            "name": "invalid-1000000-file-tail-0",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 8.455509,
+            "max_rss_bytes": 1769472,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "7daf323a84dd30eb2ecf2d36b8146ee0434ee6c0a5204620bde8c9ad95a0e151"
+          },
+          {
+            "name": "invalid-1000000-file-tail-16384",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 9.897554,
+            "max_rss_bytes": 1851392,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "7daf323a84dd30eb2ecf2d36b8146ee0434ee6c0a5204620bde8c9ad95a0e151"
+          },
+          {
+            "name": "invalid-1000000-stdin-inspect",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.542581,
+            "max_rss_bytes": 1785856,
+            "stdout_sha256": "9055fc2a3015b67cf8fd770f2ef2a45f7fb67510fd2cee4a743eefe9a2af5a8b",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "invalid-1000000-stdin-count",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.347647,
+            "max_rss_bytes": 1835008,
+            "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "stderr_sha256": "bf9f66ff026b196f8a5ef5939e059c1d6f7364074a6f169c9eac85622fb42c90"
+          },
+          {
+            "name": "invalid-1000000-stdin-filter",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 10.342584,
+            "max_rss_bytes": 1818624,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bf9f66ff026b196f8a5ef5939e059c1d6f7364074a6f169c9eac85622fb42c90"
+          },
+          {
+            "name": "invalid-1000000-stdin-tail-0",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 9.400529,
+            "max_rss_bytes": 1818624,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bf9f66ff026b196f8a5ef5939e059c1d6f7364074a6f169c9eac85622fb42c90"
+          },
+          {
+            "name": "invalid-1000000-stdin-tail-16384",
+            "exit_status": 4,
+            "verified": true,
+            "elapsed_seconds": 8.552904,
+            "max_rss_bytes": 1818624,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr_sha256": "bf9f66ff026b196f8a5ef5939e059c1d6f7364074a6f169c9eac85622fb42c90"
+          },
+          {
+            "name": "long-1048576-file-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.030035,
+            "max_rss_bytes": 4980736,
+            "stdout_sha256": "fe8e53f1735b8532c471261be37e8b5207915e03ddba0e475eb8547f28c96d76",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-file-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.03615,
+            "max_rss_bytes": 4833280,
+            "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-file-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.034237,
+            "max_rss_bytes": 4849664,
+            "stdout_sha256": "db9d98f8b6ef16ac58604cd51288b3d5beb44467d6ccaeb629813a3c62b84dd0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-file-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.023535,
+            "max_rss_bytes": 4947968,
+            "stdout_sha256": "db9d98f8b6ef16ac58604cd51288b3d5beb44467d6ccaeb629813a3c62b84dd0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-stdin-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.034422,
+            "max_rss_bytes": 2654208,
+            "stdout_sha256": "025b6c3668bc66508fb747ebeca31f019f13760d76ea129e27ba4b84a64c014f",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-stdin-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.034097,
+            "max_rss_bytes": 2670592,
+            "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-stdin-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.025113,
+            "max_rss_bytes": 2686976,
+            "stdout_sha256": "db9d98f8b6ef16ac58604cd51288b3d5beb44467d6ccaeb629813a3c62b84dd0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-1048576-stdin-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.02946,
+            "max_rss_bytes": 2670592,
+            "stdout_sha256": "db9d98f8b6ef16ac58604cd51288b3d5beb44467d6ccaeb629813a3c62b84dd0",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-file-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.154857,
+            "max_rss_bytes": 32079872,
+            "stdout_sha256": "e9380cf5244da729edbd72fff481c6b6a1b97e67f9437b303eb497e64e3ed9f6",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-file-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.10638,
+            "max_rss_bytes": 31997952,
+            "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-file-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.173768,
+            "max_rss_bytes": 31916032,
+            "stdout_sha256": "8a3e2d6aece4ca5cd782cedcd7ccd1799a4dbfb38997e5542b776a2382918665",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-file-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.121038,
+            "max_rss_bytes": 32030720,
+            "stdout_sha256": "8a3e2d6aece4ca5cd782cedcd7ccd1799a4dbfb38997e5542b776a2382918665",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-stdin-inspect",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.133023,
+            "max_rss_bytes": 15056896,
+            "stdout_sha256": "025b6c3668bc66508fb747ebeca31f019f13760d76ea129e27ba4b84a64c014f",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-stdin-count",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.105645,
+            "max_rss_bytes": 15073280,
+            "stdout_sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-stdin-filter",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.213638,
+            "max_rss_bytes": 15220736,
+            "stdout_sha256": "8a3e2d6aece4ca5cd782cedcd7ccd1799a4dbfb38997e5542b776a2382918665",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "long-8388608-stdin-tail-1",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.104456,
+            "max_rss_bytes": 15138816,
+            "stdout_sha256": "8a3e2d6aece4ca5cd782cedcd7ccd1799a4dbfb38997e5542b776a2382918665",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "tiny-max-n-file-tail-4294967295",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.014524,
+            "max_rss_bytes": 1687552,
+            "stdout_sha256": "b740bc36387c12c0a3bc5f7322cc5f5f60ae9923794c6e4ae75284047ee5438d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "name": "tiny-max-n-stdin-tail-4294967295",
+            "exit_status": 0,
+            "verified": true,
+            "elapsed_seconds": 0.014238,
+            "max_rss_bytes": 1540096,
+            "stdout_sha256": "b740bc36387c12c0a3bc5f7322cc5f5f60ae9923794c6e4ae75284047ee5438d",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      }
+    }
+  },
+  "verified": true
+}

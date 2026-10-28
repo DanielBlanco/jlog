@@ -77,5 +77,8 @@ and resulting behavior, link the task, list actual validation results and call
 out remaining limitations. Include screenshots only for visible interface changes.
 Document any toolchain/platform change and its native verification explicitly.
 
-Release archives, license/notices, minimum OS support and publication have their
-own M4 tasks. Passing source tests is not a published release or archive smoke test.
+For archive or dependency changes, follow the [release workflow](release/README.md),
+preserve the upstream notices and verify the exact optimized archives on both
+native targets. The [support policy](release/SUPPORT.md) records tested baselines.
+The finalizer creates a manifest and combined checksums from passing CI artifacts;
+publishing, tagging and merging remain separate actions.

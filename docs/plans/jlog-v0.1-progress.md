@@ -994,3 +994,60 @@ and verification records are included in the requested commit. No push is part
 of this local checkpoint. M4-05's actual native archive CI results and M4-06 final
 audit/publication work remain pending; the license-selection prerequisite is
 resolved.
+
+## Wrap-up — M4-05/06 complete, 2026-10-27
+
+The user asked to wrap up the project and implement the remaining part where
+possible. This authorizes finishing archive verification and the final release
+audit; merging, tagging and public release remain separate actions.
+
+`scripts/finalize_release.py` now validates the two downloaded native artifacts,
+full verification/README/resource/offline results, exact archive contents/modes,
+current source/platform pins and approved license/notice/support documents.
+It rejects failed/missing/duplicate targets and differing shared release inputs,
+copies the exact tested archives and writes `manifest.json` plus `SHA256SUMS`.
+No second untested application build is used. Three new unit methods initially
+fail because the finalizer is absent, then pass with the implementation.
+All **80** Python methods pass locally; check/format and 486 inline checks per
+optimization mode pass. Source/platform/compiler inputs remain unchanged.
+
+`release/SUPPORT.md` records macOS 15.7.9 ARM64 (also locally tested on 27.0.1)
+and Ubuntu 24.04.5 x86-64 on the recorded native CI kernel. Support is limited to
+tested configurations; no older-macOS, wider Linux kernel/libc or supplemental
+ARM64 release promise is inferred. Each final archive includes this policy.
+The license review independently rechecks 87 crate archives against Cargo.lock,
+165 original notice files and all six bundled documents. Original license bytes,
+copyrights and dependency terms remain intact. MIT is the approved project license.
+
+Commit `7f92f8c079ff3ccfed13fd2d977e2eda252420af` is pushed to `ci/native-m4`.
+Both [PR run 40608149721](https://github.com/DanielBlanco/jlog/actions/runs/40608149721)
+and [push run 40608143058](https://github.com/DanielBlanco/jlog/actions/runs/40608143058)
+finish **success**. The selected PR artifacts identify merge checkout
+`26081f3f4d9926fe8e3b519d16e1a766264c921a`, with matching current application
+hashes. Each native target passes 486 pure checks per mode, 64 ordinary methods
+and all 15 strict descriptor subcases per mode, all 13 tooling methods, every
+README/source/install check, all 70 resource cases and all eight offline archive
+cases. Documented broad discovery runs all 80 Python methods per build.
+Earlier `022fe6f` CI runs were superseded/cancelled before this final execution.
+
+Native macOS 15.7.9 runs the installed binary under a network/toolchain-denying
+sandbox; the socket-denial probe passes. Native Linux runs the installed static
+binary in a compiler/shell/runtime-free `FROM scratch` image with network disabled,
+UID 65534 and a read-only root. Both verify original bytes and a real filter→count
+pipeline. Input, platform, executable and archive hashes remain unchanged.
+
+Downloaded ZIP digests match GitHub metadata. The finalizer successfully checks
+both real native artifacts and creates ignored `dist/jlog-0.1.0-release/`.
+Checksums pass for both archives and the manifest. A copied real artifact is
+rejected after failed smoke status, an incorrect archive hash or a missing
+smoke case. The final binary hashes equal the earlier corrected CI artifacts.
+The release set contains exact tested archives/sidecars, `manifest.json` and
+`SHA256SUMS`; durable copies of the manifest/checksums and native/license evidence
+are in `docs/verification/`. Raw downloads are under
+`/private/tmp/jlog-closeout-*`; GitHub artifacts expire 2026-11-11.
+
+[M4-05](m4-05-archive-verification.md) and [M4-06](m4-06-release-audit.md) are
+complete. The plan checklist, README, contribution guide, repository instructions
+and handoff now record the finished v0.1 state. No implementation or verification
+task remains. The verified release candidate is unpublished; new features,
+merging, tagging and publication require their own subsequent request.

@@ -266,7 +266,8 @@ status outside the application's 0–4 exit-code table.
 
 ## Build and install
 
-Release archives are being prepared for macOS ARM64 and Linux x86-64. See the
+Verified release candidates are prepared for macOS ARM64 and Linux x86-64.
+Native CI artifacts contain the tested archives and checksums. See the
 [archive preparation and offline checks](release/README.md) and bundled
 [installation instructions](release/INSTALL.md). No public binary release is
 available yet; the source build below remains the current installation path.
@@ -362,7 +363,7 @@ paths recorded in earlier development sessions.
 ## For developers
 
 Start with [AGENTS.md](AGENTS.md) and the [development handoff](docs/plans/jlog-handoff.md).
-M1 through M3 behavior is implemented; M4 release verification continues. Work on
+M1 through M4 implementation and release preparation are complete. Work on
 one agreed TDD task at a time, preserving existing behavior and tests. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution and verification workflow.
 
@@ -378,7 +379,7 @@ one agreed TDD task at a time, preserving existing behavior and tests. See
 | `tests/test_cli.py` | Python stdlib tests against the actual executable. |
 | `tests/test_io_contract.py` | Strict descriptor regressions, including errors hidden by the original platform. |
 | `tests/verify_readme.py` | Executed README examples and temporary user-install verification. |
-| `scripts/package_release.py`, `tests/verify_release.py`, `release/` | Tested-binary archives, checksums, license inventory and native offline smoke tests. |
+| `scripts/package_release.py`, `scripts/finalize_release.py`, `tests/verify_release.py`, `release/` | Tested-binary archives, release manifest/checksums, license inventory and native offline smoke tests. |
 | `platform/`, `scripts/build_platform.py` | Checksums, host patch and bootstrap for the ignored local platform. |
 | `tests/measure_resources.py` | macOS/Linux resource measurements, with normalized RSS units and environment provenance. |
 | `tests/test_measure_resources.py`, `tests/docker/` | Timing-unit checks and a pinned unprivileged Linux Docker workflow. |
@@ -474,6 +475,12 @@ blocks. M4-04's [verification report](docs/plans/m4-04-docs-verification.md)
 records clean source builds, Bash/zsh status handling and user-prefix installs
 on the native targets.
 
+The [final native run](https://github.com/DanielBlanco/jlog/actions/runs/40608149721)
+also passes all offline archive checks on both targets. The
+[release audit](docs/plans/m4-06-release-audit.md) records final completion;
+the [durable manifest](docs/verification/jlog-0.1.0-release-manifest.json)
+identifies the exact tested artifacts. Publication remains a separate action.
+
 ### Measure resources
 
 Build the optimized binary first, then run the standard-library measurement driver:
@@ -525,8 +532,8 @@ in the [progress log](docs/plans/jlog-v0.1-progress.md).
 | --- | --- |
 | M1: CLI, framing, file/stdin inspection and validation | ✅ Implemented. |
 | M2: `--count`, `--tail N`, and expanded error handling | Implemented; the approved host patch closes the known descriptor gap on both native targets. |
-| M3: `--where KEY=TEXT`, string-only top-level equality | Implemented and tested on native macOS ARM64, including streaming and pipelines. |
-| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | M4-01 through M4-04 verified on native macOS ARM64/Linux x86-64; [M4-05 archive preparation](docs/plans/m4-05-archive-verification.md) is in progress. MIT is approved; native archive CI checks remain. M4-06 final audit follows. |
+| M3: `--where KEY=TEXT`, string-only top-level equality | Implemented and tested on both native targets, including streaming and pipelines. |
+| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Complete through M4-06: native regressions, offline archives and [final release audit](docs/plans/m4-06-release-audit.md) pass. MIT is applied; publication remains separate. |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |
 
 The [implementation plan](docs/plans/jlog-v0.1-plan.md) contains the ordered tasks.

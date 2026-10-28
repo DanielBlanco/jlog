@@ -1,40 +1,30 @@
 # jlog development handoff
 
 Historical snapshot: 2026-10-18, native macOS ARM64. Later updates below record
-the user-authorized development through M4-03 and its descriptor correction on 2026-10-27.
+the user-authorized development through M4-06 closeout on 2026-10-27.
 
-Latest verified checkpoint: the approved corrected platform passes native
-macOS ARM64 and Linux x86-64 CI, including all 15 descriptor subcases per build
-and all 70 resource cases per target. See the
-[correction report](m4-03-stdio-correction.md). M4-01/02/03 are verified;
-M4-04 documentation/source-build/install verification is now complete; next is
-M4-05 packaging and offline archive verification (now started). Historical failures and scoped resume prompts below
-remain snapshots, not current instructions to preserve the unpatched defect.
+Latest verified checkpoint: **M1 through M4 implementation and release
+preparation are complete.** Code commit `7f92f8c` passes native Linux x86-64 and
+macOS ARM64 [CI run 40608149721](https://github.com/DanielBlanco/jlog/actions/runs/40608149721),
+using merge checkout `26081f3`. Both builds pass 486 inline checks, 64 ordinary
+methods and all 15 strict descriptor subcases; all 13 tooling methods pass.
+README checks execute all five source blocks, 16 Linux/19 macOS usage cases and
+full discovery (80 Python methods). Each target passes 70 resource cases and
+eight offline archive cases. See the [archive report](m4-05-archive-verification.md)
+and [final audit](m4-06-release-audit.md).
 
-M4-05 preparation: tested-binary packaging, checksum/inventory gates, collected
-notices and native offline smoke tooling are implemented. Private fixture
-archives package deterministically, and all eight macOS runtime cases pass with
-network/toolchain access denied. All 77 Python methods pass. The user subsequently
-approved MIT, now applied in root `LICENSE`. Both native candidates are packaged;
-the MIT macOS archive passes all eight local offline cases. Actual native CI
-release-candidate archive evidence remains pending.
-The user requested committing everything and leaving a clean working tree. See the
-[preparation report](m4-05-archive-verification.md); do not mark M4-05 complete
-from the fixture smoke check or publish its private test-only archives.
+MIT is approved and applied. The final release set is in ignored
+`dist/jlog-0.1.0-release/`, with exact native-tested archives, checksum sidecars,
+`SHA256SUMS` and `manifest.json`. Its durable manifest, checksums and evidence
+are under `docs/verification/`. The finalizer validates real artifacts and
+rejects failed/mixed/missing evidence without rebuilding. Native artifact ZIP
+digests match GitHub metadata; all input/source/platform/binary hashes pass.
 
-M4-04 preparation: documented clone instructions must select `ci/native-m4`
-until the current work reaches `master`. The original default-branch clone
-could not find the bootstrap, and zsh rejected the README's `status` variable.
-Both documentation gaps are corrected; clean macOS source build and documented
-usage/install/source checks pass. Native CI also runs the new README verifier.
-See the latest progress entry for final verification and remaining release tasks.
-
-M4-04 completion: [native run 40571638408](m4-04-docs-verification.md) passes on
-both release targets. Linux verifies 16 usage/install cases; macOS verifies 19
-with zsh coverage. Both execute five documented source blocks, full regressions
-and all existing resource cases. Source, platform and runtime hashes are checked.
-`CONTRIBUTING.md` and the README verifier are in place. Do not start license,
-archive publication or minimum-OS decisions as part of this finished docs task.
+There is no remaining v0.1 implementation task. Merging the existing PR, tagging
+and publication remain separate actions. `--field` stays in v0.2. Source clone
+instructions select `ci/native-m4` until this work reaches `master`. Historical
+failures and scoped resume prompts below remain snapshots, not current blockers
+or instructions to restart completed tasks.
 
 Layout update (2026-10-26): application modules and their inline checks now live
 in `src/`; the entry point is `src/main.roc`. Plans and the specification live

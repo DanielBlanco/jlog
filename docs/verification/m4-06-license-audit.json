@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "project_license": {
+    "spdx": "MIT",
+    "copyright": "Copyright (c) 2026 Daniel Blanco",
+    "approval": "User approved proposed MIT license on 2026-10-27",
+    "sha256": "70d60baa983130995b8187c18255841ce4435ea0fb9f119cf4765834cd121779"
+  },
+  "cargo_lock_sha256": "a889c5f910e840b5016b14d2c7440955d9d47f2725c294d04591cf575c161355",
+  "notice_inventory_sha256": "799fddfb0cc86a0e30ea8a9735d35776d72dd824e1e5792839cb75f871243702",
+  "pinned_host_crates_verified": 87,
+  "original_notice_files_verified": 165,
+  "original_file_verification": "All crate archives match Cargo.lock; all original notice bytes/hashes and inclusion in the combined bundle were verified against those archives.",
+  "bundled_documents_sha256": {
+    "release/licenses/basic-cli-LICENSE.txt": "26285f30ae3d8c53a4dc1db652a8a7b8c7a4a0283946ae3d35774b1c8e543178",
+    "release/licenses/basic-cli-THIRD-PARTY.md": "0a046d3535c8e10fac000062dbd2b3e57c96ffdb835de48cfa93445ac6436c2f",
+    "release/licenses/host-crates.txt": "cef7ad6c7fc99c69fe278f0800582988e49cdd61f75ff8791a09af6948488d32",
+    "release/licenses/roc-LICENSE.txt": "a71f5f17762cc8ac7a5435fe9810e029dc937d379d216fa7630a2775d42eb833",
+    "release/licenses/roc-legal-details.txt": "08efe17481843c98b16a140434a680199ea275a3db4f3baf209cf59857d3bfe3",
+    "release/licenses/rust-COPYRIGHT-library.html": "5647be074c8edf7339fd863055923a8fc80bc5610a8d4661ec3b767b9d392c27"
+  },
+  "roc_archive_sha256": "aa6339579730fcea4753940bec21f5d8cf8be8e25659ec001abccbc3463a60b2",
+  "platform_lock_sha256": "ca45a5c64b1b97f35dbce3367ee86f0962e8cd0282c65440faaf9dce476f6258",
+  "support_policy_sha256": "5a153e49045619996f96f9d7de943007f5603648794238d780b926865230eaed",
+  "inventory_scope": "Conservative native macOS ARM64/Linux x86-64 dependency union, including build-only and linker-discarded code; dependency terms preserved.",
+  "verified": true
+}

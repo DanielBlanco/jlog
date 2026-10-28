@@ -80,8 +80,9 @@ inventory. No runtime license retrieval or packaging dependency is introduced.
 
 When a compiler/platform/dependency pin changes, recollect notices from those
 verified sources and review the inventory before replacing its hashes. The
-packager refuses a mismatched Cargo.lock or changed notice file. The final
-M4-06 records the final audit separately from this mechanical collection.
+packager refuses a mismatched Cargo.lock or changed notice file. The
+[M4-06 audit](../docs/plans/m4-06-release-audit.md) records the final review
+separately from this mechanical collection.
 
 ## Finalize both verified native archives
 

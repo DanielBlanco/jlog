@@ -1,5 +1,11 @@
 # jlog v0.1 Implementation Plan — TDD
 
+**Final status:** M1 through M4 implementation and release preparation are
+complete. The [final audit](m4-06-release-audit.md) records passing native CI,
+offline archives, support policy, MIT/notices and the exact release manifest.
+Milestone execution notes retain their historical checkpoints. Publication,
+tagging and merging remain separate actions.
+
 ## Scope and starting point
 
 Implement the approved [reduced specification](../specs/jlog-v0.1.md): inspection,
@@ -21,11 +27,10 @@ constraint while preserving the Roc compiler pin and all exit-3 assertions.
 probes; [the JSONL introduction](../jsonl.md) supplies format background.
 Those probes are not application acceptance tests.
 
-The existing `src/main.roc` is a file-size example, not a jlog implementation.
-There are no application tests or build wrappers. `AGENTS.md` describes an older
-checkout layout: discover the actual compiler with `command -v roc`; do not use
-the nonexistent compiler directory blindly. Its Roc formatting/testing guidance
-still applies. This planning task creates no code, fixtures, harness, or CI files.
+At planning time the entry point was a file-size example and no application
+tests or build wrappers existed. Those are historical starting-point notes.
+Current layout, pinned toolchain and build/test commands are in
+[`AGENTS.md`](../../AGENTS.md) and the [README](../../README.md#for-developers).
 
 ## Small architecture and test ownership
 
@@ -339,7 +344,14 @@ contribution guidance is added. The remaining implementation tasks are M4-05/06.
 M4-05 preparation is now authorized and implemented; see the
 [archive report](m4-05-archive-verification.md). Tooling and private macOS fixture
 smokes pass. The user subsequently approved MIT; actual native release-candidate
-CI archive runs remain pending. M4-05 is not complete.
+CI archive runs were still pending at that checkpoint.
+
+Final follow-up: [M4-05](m4-05-archive-verification.md) and
+[M4-06](m4-06-release-audit.md) now pass. Code commit `7f92f8c` has passing native
+CI on both targets, including full regressions, documented source/install checks,
+70 resource cases and eight offline archive cases per architecture. The finalizer
+collects the exact tested archives, manifest and combined checksums; no v0.1
+implementation task remains.
 
 **Objective:** evidence-backed public release on native macOS ARM64 and Linux
 x86-64. **Complexity: medium to high**, depending on native CI availability.
@@ -370,25 +382,25 @@ Set no invented throughput promise or absolute RSS threshold after seeing result
 
 **Definition of Done / final release checklist:**
 
-- [ ] Mandatory coverage in every v0.1 traceability row executes and passes on
+- [x] Mandatory coverage in every v0.1 traceability row executes and passes on
   both native targets, including normal file/permission errors, output failures,
   and pure read-error transitions; no silent skips or probe-only success claims.
-- [ ] Advanced mid-stream read-failure injection is attempted best effort;
+- [x] Advanced mid-stream read-failure injection is attempted best effort;
   unverified scenarios are documented and are not unconditional release blockers.
   Known production error-handling defects remain blockers.
-- [ ] Every production task has RED, GREEN, regression, refactor, and verification
+- [x] Every production task has RED, GREEN, regression, refactor, and verification
   evidence; preexisting failures and actual blockers are accounted for.
-- [ ] `roc check`, `roc test`, optimized tests, formatting, and executable suites
+- [x] `roc check`, `roc test`, optimized tests, formatting, and executable suites
   pass with the pinned compiler/platform; help/version and scope are consistent.
-- [ ] Incremental operation, bounded diagnostics/tail, record order, numeric byte
+- [x] Incremental operation, bounded diagnostics/tail, record order, numeric byte
   fidelity, and measured memory/stack/scaling behavior satisfy the specification.
-- [ ] Native architecture and supported OS versions are recorded; no unsupported
+- [x] Native architecture and supported OS versions are recorded; no unsupported
   platform, generic speed claim, or unverified dependency is advertised.
-- [ ] README, source-build/install/contribution guidance, license/notices,
+- [x] README, source-build/install/contribution guidance, license/notices,
   checksums, and CI describe the tested artifacts and reduced scope accurately.
-- [ ] Clean offline archive smoke tests pass without Roc; source inputs are
+- [x] Clean offline archive smoke tests pass without Roc; source inputs are
   unchanged; no compiler caches, huge fixtures, or unintended build artifacts ship.
-- [ ] All deferred field-extraction requirements remain in v0.2, outside v0.1
+- [x] All deferred field-extraction requirements remain in v0.2, outside v0.1
   implementation and release tests. Publishing is a separate authorized action.
 
 ## Requirement and acceptance traceability

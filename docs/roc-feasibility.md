@@ -1,7 +1,7 @@
 # Roc Feasibility for jlog v0.1
 
 Research date: 2026-10-18. The proposed behavior is defined in
-[the v0.1 specification](../specs/jlog-v0.1.md). This report distinguishes local
+[the v0.1 specification](specs/jlog-v0.1.md). This report distinguishes local
 execution, inspected source, and recommendations. Only documentation was added
 to the repository; capability probes were created outside it in temporary storage.
 
@@ -527,13 +527,15 @@ Keep effects at the boundary and transformations pure:
 arguments → input bytes/lines → JSONL validation → operation → output
 ```
 
-Suggested layout for implementation; these files are not created by this task:
+Application sources now live in `src/` (layout updated 2026-10-26). The module
+responsibilities below include planned behavior; earlier probe results and
+initial-checkout observations remain historical:
 
 ```text
-main.roc                   # app declaration, I/O loop, error/exit mapping
-Cli.roc                    # pure arguments → operation/source or usage error
-Jsonl.roc                  # framing, validity, top-level string lookup
-Operations.roc             # counts, matching, bounded tail state
+src/main.roc               # app declaration, I/O loop, error/exit mapping
+src/Cli.roc                # pure arguments → operation/source or usage error
+src/Jsonl.roc              # framing, validity, top-level string lookup
+src/Operations.roc         # counts, matching, bounded tail state
 README.md                  # installation, commands, status/partial-output contract
 LICENSE                    # recommend MIT for jlog-owned code
 CONTRIBUTING.md             # concise toolchain setup and validation checklist
@@ -565,12 +567,12 @@ After implementation, document these commands from the repository root:
 
 ```sh
 roc version
-roc check main.roc
-roc test main.roc
-roc fmt --check main.roc Cli.roc Jsonl.roc Operations.roc
+roc check src/main.roc
+roc test src/main.roc
+roc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc
 mkdir -p dist
-roc build --opt=speed --output=dist/jlog main.roc
-python3 tests/integration.py dist/jlog
+roc build --opt=speed --output=dist/jlog src/main.roc
+JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
 
 The source filenames and integration script are proposed, not existing wrappers.

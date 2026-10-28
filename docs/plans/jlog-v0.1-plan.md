@@ -1,5 +1,11 @@
 # jlog v0.1 Implementation Plan — TDD
 
+**Final status:** M1 through M4 implementation and release preparation are
+complete. The [final audit](m4-06-release-audit.md) records passing native CI,
+offline archives, support policy, MIT/notices and the exact release manifest.
+Milestone execution notes retain their historical checkpoints. Publication,
+tagging and merging remain separate actions.
+
 ## Scope and starting point
 
 Implement the approved [reduced specification](../specs/jlog-v0.1.md): inspection,
@@ -13,31 +19,35 @@ Do not decode these numbers into finite numeric types. Retain depth 128, strict
 blank-line handling, full-input validation, and original record bytes in tail and
 filter output, normalizing only line terminators to LF.
 
-Use Roc `nightly-2026-10-09-258ab27` with the existing `basic-cli` 0.25.0 URL.
-[Feasibility research](../docs/roc-feasibility.md) supplies executed compatibility
-probes; [the JSONL introduction](../docs/jsonl.md) supplies format background.
+Use Roc `nightly-2026-10-09-258ab27` with the checksum-pinned basic-cli 0.25.0
+descriptor correction in [the platform lock](../../platform/basic-cli.lock.json).
+The user's later approval explicitly supersedes the original official-archive
+constraint while preserving the Roc compiler pin and all exit-3 assertions.
+[Feasibility research](../roc-feasibility.md) supplies executed compatibility
+probes; [the JSONL introduction](../jsonl.md) supplies format background.
 Those probes are not application acceptance tests.
 
-The existing `main.roc` is a file-size example, not a jlog implementation.
-There are no application tests or build wrappers. `AGENTS.md` describes an older
-checkout layout: discover the actual compiler with `command -v roc`; do not use
-the nonexistent compiler directory blindly. Its Roc formatting/testing guidance
-still applies. This planning task creates no code, fixtures, harness, or CI files.
+At planning time the entry point was a file-size example and no application
+tests or build wrappers existed. Those are historical starting-point notes.
+Current layout, pinned toolchain and build/test commands are in
+[`AGENTS.md`](../../AGENTS.md) and the [README](../../README.md#for-developers).
 
 ## Small architecture and test ownership
 
-Keep this initial layout; add a module only when an actual responsibility warrants it:
+Application sources now live in `src/`; commands below use the current paths.
+Initial-checkout observations describe the historical planning baseline. Add a
+module only when an actual responsibility warrants it:
 
 | Proposed file | Responsibility and tests |
 | --- | --- |
-| `main.roc` | Pinned platform declaration; native arguments/paths; buffered file/stdin effects; operation loop; stdout/stderr; final error/exit mapping. Tested through the compiled executable. |
-| `Cli.roc` | Pure argument interpretation, operation/source selection, usage errors. Native `OsStr` conversion may use pure platform helpers; no filesystem or stream effects. Owns CLI `expect`s. |
-| `Jsonl.roc` | Pure byte framing, UTF-8/BOM/blank classification, depth resource precheck, builtin JSON validation, string-or-other top-level lookup adapter. Owns framing/validation/lookup `expect`s. |
-| `Operations.roc` | Pure counters, capped error locations, report/diagnostic rendering, matching, and bounded tail state. Owns transformation `expect`s. |
+| `src/main.roc` | Pinned platform declaration; native arguments/paths; buffered file/stdin effects; operation loop; stdout/stderr; final error/exit mapping. Tested through the compiled executable. |
+| `src/Cli.roc` | Pure argument interpretation, operation/source selection, usage errors. Native `OsStr` conversion may use pure platform helpers; no filesystem or stream effects. Owns CLI `expect`s. |
+| `src/Jsonl.roc` | Pure byte framing, UTF-8/BOM/blank classification, depth resource precheck, builtin JSON validation, string-or-other top-level lookup adapter. Owns framing/validation/lookup `expect`s. |
+| `src/Operations.roc` | Pure counters, capped error locations, report/diagnostic rendering, matching, and bounded tail state. Owns transformation `expect`s. |
 | `tests/test_cli.py` | Python stdlib `unittest`, `subprocess`, `tempfile`, and OS descriptor helpers. Exercises the actual binary; owns byte/exit/transport acceptance tests. |
 
 Use headerless Roc type modules consistent with filenames. Import each tested
-pure module from the application so `roc test main.roc` reaches its checks.
+pure module from the application so `roc test src/main.roc` reaches its checks.
 Use records, tagged errors/operations, pattern matching, and explicit `Try` results.
 Choose integer types deliberately for counts and N.
 
@@ -75,7 +85,7 @@ add parameterized cases within a row one at a time, repeating the cycle.
    shared classification over duplicate readers or parsers. Execute the tests
    again, plus `roc check` and formatting checks.
 4. **VERIFY:** Keep one concise entry per task in a proposed
-   `plans/jlog-v0.1-progress.md`: task ID; failing assertion and command with a
+   `docs/plans/jlog-v0.1-progress.md`: task ID; failing assertion and command with a
    brief mismatch/status; passing focused/regression tests and commands; and
    refactor/compiler/format verification status with outstanding limitations.
    Record the toolchain once and update it only if it changes. Full logs and
@@ -94,7 +104,7 @@ Preserve existing tests. On unsupported APIs, compiler crashes, or mandatory-tes
 reproducibility failures, stop the dependent task, retain the reproducer, and
 report the blocker. The best-effort read-fault investigation follows S-IO instead.
 Do not change the pin or contract as an implementation shortcut. The existing
-`main.roc` fails `roc fmt --check main.roc`; record this inherited failure before
+`src/main.roc` fails `roc fmt --check src/main.roc`; record this inherited failure before
 editing, separately from new regressions and meaningful RED evidence. Format
 touched project sources during refactoring; resolve their inherited failures
 before closing the checkpoint. Record any untouched inherited failure explicitly
@@ -109,11 +119,11 @@ task. Their Roc flags were checked against the installed compiler's help.
 per-`expect` selector has been established. Identify the failing check by file/line.
 
 ```sh
-roc test --main=main.roc --verbose Cli.roc
-roc test --verbose main.roc
+roc test --main=src/main.roc --verbose src/Cli.roc
+roc test --verbose src/main.roc
 ```
 
-Substitute `Jsonl.roc` or `Operations.roc` for the focused module as appropriate.
+Substitute `src/Jsonl.roc` or `src/Operations.roc` for the focused module as appropriate.
 
 **I — build and execute focused/all integration checks:** test names contain the
 task ID using underscores, such as `test_m1_01_version`. `JLOG_BIN` is read by the
@@ -121,7 +131,7 @@ future harness; it must not silently build or substitute a different executable.
 
 ```sh
 mkdir -p dist
-roc build --opt=dev --output=dist/jlog main.roc
+roc build --opt=dev --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -k m1_01 -v
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
@@ -129,23 +139,23 @@ JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py'
 **V — refactoring and milestone verification:** run P and I regressions, then:
 
 ```sh
-roc check main.roc
-roc fmt --check main.roc Cli.roc Jsonl.roc Operations.roc
+roc check src/main.roc
+roc fmt --check src/main.roc src/Cli.roc src/Jsonl.roc src/Operations.roc
 ```
 
 Include only project source paths that exist at that checkpoint: start with
-`main.roc`, then append the named modules as introduced. Do not check `.` or
+`src/main.roc`, then append the named modules as introduced. Do not check `.` or
 compiler/cache directories. The pinned compiler's `roc fmt --help` confirms
 `--check` and file-path arguments; formatting and checking two explicit temporary
 copies succeeded during this revision. Use `roc fmt` with the same explicit paths
-to fix touched sources, then rerun the check. The inherited `main.roc` check failed
+to fix touched sources, then rerun the check. The inherited `src/main.roc` check failed
 with status 1; no repository source was formatted during this planning revision.
 
 At each milestone boundary also run the completed tests against optimized code:
 
 ```sh
-roc test --opt=speed --no-cache --verbose main.roc
-roc build --opt=speed --output=dist/jlog main.roc
+roc test --opt=speed --no-cache --verbose src/main.roc
+roc build --opt=speed --output=dist/jlog src/main.roc
 JLOG_BIN="$PWD/dist/jlog" python3 -m unittest discover -s tests -p 'test_cli.py' -v
 ```
 
@@ -220,6 +230,11 @@ claims count/tail/filter acceptance before their milestones pass.
 
 ## M2 — Count, tail, and errors
 
+Implementation update (2026-10-26): count/tail and the ordinary/closed-pipe error
+paths are implemented. The [progress record](jlog-v0.1-progress.md) contains
+task-by-task evidence. Strict handling of unusable standard descriptors remains
+a platform compatibility gate; the contract below is unchanged.
+
 **Objective:** scriptable count/tail and complete error contracts with bounded
 storage. **Complexity: medium to high**, primarily tail ownership and I/O tests.
 
@@ -293,6 +308,51 @@ paths share the approved contracts. `--field` remains rejected with exit 2.
 
 ## M4 — Release readiness
 
+Execution update (2026-10-27): the user authorized starting M4-01. The
+[native macOS coverage audit](m4-01-audit.md) links executed coverage to the
+requirements below. Strict descriptor conformance and native Linux execution
+remain open; historical planning statements do not imply those gates passed.
+The subsequent next-task instruction authorized M4-02; its
+[native macOS measurements](../measurements/m4-02-macos-arm64.md) are recorded
+without closing those earlier gates. Native Linux x86-64 measurements remain pending.
+Subsequent Docker measurements are recorded for
+[Linux ARM64](../measurements/m4-02-linux-arm64-docker.md). The available engine
+and physical host are ARM64; the required native Linux x86-64 gate remains open.
+The user subsequently authorized M4-03 native CI alongside those measurements.
+The [workflow](../../.github/workflows/native-ci.yml) and
+[driver documentation](../../tests/ci/README.md) cover both required native
+targets. Workflow preparation is not evidence of execution; strict descriptor
+failures remain fatal and prevent full conformance completion.
+The [first native execution](m4-03-native-ci.md) now passes both 70-case matrices,
+including the [required x86-64 measurements](../measurements/m4-02-linux-x86_64-ci.md).
+M4-02 has native evidence on both required architectures. Both native CI jobs
+pass ordinary checks but remain red for the known descriptor tests; M4-01 and
+full M4-03 conformance remain open.
+
+Latest execution: the user approved the basic-cli 0.25.0 descriptor correction.
+Both [corrected native jobs](m4-03-stdio-correction.md) now pass check/format,
+486 inline checks, 64 ordinary methods, every strict descriptor assertion and
+all 70 resource cases per architecture. The known M2 compatibility gap and
+M4-01/M4-03 native blockers are closed. M4-02 has refreshed corrected-host data;
+M4-04/05/06 remain the next release tasks.
+
+M4-04 follow-up: [documentation/build/install verification](m4-04-docs-verification.md)
+now passes on a clean local source checkout and both native CI targets. README
+usage/install cases and five actual source-command blocks are automated, and
+contribution guidance is added. The remaining implementation tasks are M4-05/06.
+
+M4-05 preparation is now authorized and implemented; see the
+[archive report](m4-05-archive-verification.md). Tooling and private macOS fixture
+smokes pass. The user subsequently approved MIT; actual native release-candidate
+CI archive runs were still pending at that checkpoint.
+
+Final follow-up: [M4-05](m4-05-archive-verification.md) and
+[M4-06](m4-06-release-audit.md) now pass. Code commit `7f92f8c` has passing native
+CI on both targets, including full regressions, documented source/install checks,
+70 resource cases and eight offline archive cases per architecture. The finalizer
+collects the exact tested archives, manifest and combined checksums; no v0.1
+implementation task remains.
+
 **Objective:** evidence-backed public release on native macOS ARM64 and Linux
 x86-64. **Complexity: medium to high**, depending on native CI availability.
 
@@ -313,7 +373,7 @@ executable acceptance checks; verification-only work must not fabricate RED.
 
 **Verification:** use V and the optimized suite on native macOS ARM64 and Linux
 x86-64, then rerun archive smoke checks on those actual artifacts. Build with
-`roc build --opt=speed --target=arm64mac --output=dist/jlog main.roc` on macOS and
+`roc build --opt=speed --target=arm64mac --output=dist/jlog src/main.roc` on macOS and
 `--target=x64musl` on Linux. Do not execute these two output commands concurrently
 in a shared directory. Cross-build success alone never satisfies native tests.
 Record resource measurements with host tools such as macOS `/usr/bin/time -l`
@@ -322,25 +382,25 @@ Set no invented throughput promise or absolute RSS threshold after seeing result
 
 **Definition of Done / final release checklist:**
 
-- [ ] Mandatory coverage in every v0.1 traceability row executes and passes on
+- [x] Mandatory coverage in every v0.1 traceability row executes and passes on
   both native targets, including normal file/permission errors, output failures,
   and pure read-error transitions; no silent skips or probe-only success claims.
-- [ ] Advanced mid-stream read-failure injection is attempted best effort;
+- [x] Advanced mid-stream read-failure injection is attempted best effort;
   unverified scenarios are documented and are not unconditional release blockers.
   Known production error-handling defects remain blockers.
-- [ ] Every production task has RED, GREEN, regression, refactor, and verification
+- [x] Every production task has RED, GREEN, regression, refactor, and verification
   evidence; preexisting failures and actual blockers are accounted for.
-- [ ] `roc check`, `roc test`, optimized tests, formatting, and executable suites
+- [x] `roc check`, `roc test`, optimized tests, formatting, and executable suites
   pass with the pinned compiler/platform; help/version and scope are consistent.
-- [ ] Incremental operation, bounded diagnostics/tail, record order, numeric byte
+- [x] Incremental operation, bounded diagnostics/tail, record order, numeric byte
   fidelity, and measured memory/stack/scaling behavior satisfy the specification.
-- [ ] Native architecture and supported OS versions are recorded; no unsupported
+- [x] Native architecture and supported OS versions are recorded; no unsupported
   platform, generic speed claim, or unverified dependency is advertised.
-- [ ] README, source-build/install/contribution guidance, license/notices,
+- [x] README, source-build/install/contribution guidance, license/notices,
   checksums, and CI describe the tested artifacts and reduced scope accurately.
-- [ ] Clean offline archive smoke tests pass without Roc; source inputs are
+- [x] Clean offline archive smoke tests pass without Roc; source inputs are
   unchanged; no compiler caches, huge fixtures, or unintended build artifacts ship.
-- [ ] All deferred field-extraction requirements remain in v0.2, outside v0.1
+- [x] All deferred field-extraction requirements remain in v0.2, outside v0.1
   implementation and release tests. Publishing is a separate authorized action.
 
 ## Requirement and acceptance traceability

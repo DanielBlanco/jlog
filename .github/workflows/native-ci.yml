@@ -1,0 +1,120 @@
+name: Native verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x86-64
+            runner: ubuntu-24.04
+            os: Linux
+            arch: x86_64
+            target: x64musl
+            rust-target: x86_64-unknown-linux-musl
+            artifact: linux-x86_64
+          - name: macOS ARM64
+            runner: macos-15
+            os: Darwin
+            arch: arm64
+            target: arm64mac
+            rust-target: aarch64-apple-darwin
+            artifact: macos-arm64
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      LC_ALL: C
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the exact native compiler
+        shell: bash
+        run: |
+          bash tests/ci/install-roc.sh '${{ matrix.os }}' '${{ matrix.arch }}' "$RUNNER_TEMP/roc"
+          echo "$RUNNER_TEMP/roc" >> "$GITHUB_PATH"
+          echo "ROC_CACHE_DIR=$RUNNER_TEMP/roc-cache" >> "$GITHUB_ENV"
+
+      - name: Prepare the pinned patched platform
+        shell: bash
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          if [ "$(uname -s)" = Linux ]; then
+            sudo apt-get update
+            sudo apt-get install --yes musl-tools zstd
+            rustup target add --toolchain 1.99.0 '${{ matrix.rust-target }}'
+          fi
+          python3 scripts/build_platform.py --work-dir "$RUNNER_TEMP/platform-build" \
+            2>&1 | tee "$RUNNER_TEMP/platform-build.log"
+          cp platform/basic-cli/jlog-platform.json "$RUNNER_TEMP/platform.json"
+
+      - name: Check and test both builds, including strict I/O conformance
+        id: verify
+        shell: bash
+        run: |
+          python3 tests/ci/verify.py --target '${{ matrix.target }}' --output "$RUNNER_TEMP/evidence"
+
+      - name: Verify README examples and user installation
+        id: readme
+        if: ${{ !cancelled() && steps.verify.outputs.measure-ready == 'true' }}
+        shell: bash
+        run: |
+          python3 tests/verify_readme.py \
+            --source-checks \
+            --binary "$RUNNER_TEMP/evidence/jlog-speed" \
+            --report "$RUNNER_TEMP/evidence/readme.json"
+
+      # A real conformance failure must fail the job, but need not discard
+      # independent measurements of a successfully tested optimized build.
+      - name: Measure the optimized executable
+        id: measurements
+        if: ${{ !cancelled() && steps.verify.outputs.measure-ready == 'true' }}
+        shell: bash
+        run: |
+          python3 tests/measure_resources.py \
+            --binary "$RUNNER_TEMP/evidence/jlog-speed" \
+            --work-dir "$RUNNER_TEMP/measurements" \
+            --environment "$RUNNER_TEMP/evidence/environment.json" \
+            2>&1 | tee "$RUNNER_TEMP/evidence/measurements.log"
+
+      - name: Package and test the native release archive offline
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' && steps.readme.outcome == 'success' && steps.measurements.outcome == 'success' }}
+        shell: bash
+        run: |
+          python3 scripts/package_release.py \
+            --evidence "$RUNNER_TEMP/evidence" --output "$RUNNER_TEMP/release"
+          python3 tests/verify_release.py \
+            --archive "$RUNNER_TEMP/release/jlog-0.1.0-${{ matrix.artifact }}.tar.gz" \
+            --report "$RUNNER_TEMP/evidence/release.json"
+
+      - name: Preserve verification and measurement evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-${{ matrix.artifact }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/evidence/
+            ${{ runner.temp }}/measurements/results.json
+            ${{ runner.temp }}/measurements/*.time
+            ${{ runner.temp }}/measurements/*.stderr
+            ${{ runner.temp }}/platform-build.log
+            ${{ runner.temp }}/platform.json
+            ${{ runner.temp }}/release/

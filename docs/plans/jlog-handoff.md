@@ -1,13 +1,129 @@
 # jlog development handoff
 
-Snapshot: 2026-10-18, native macOS ARM64. Development is paused.
+Historical snapshot: 2026-10-18, native macOS ARM64. Later updates below record
+the user-authorized development through M4-06 closeout on 2026-10-27.
+
+Latest verified checkpoint: **M1 through M4 implementation and release
+preparation are complete.** Code commit `7f92f8c` passes native Linux x86-64 and
+macOS ARM64 [CI run 40608149721](https://github.com/DanielBlanco/jlog/actions/runs/40608149721),
+using merge checkout `26081f3`. Both builds pass 486 inline checks, 64 ordinary
+methods and all 15 strict descriptor subcases; all 13 tooling methods pass.
+README checks execute all five source blocks, 16 Linux/19 macOS usage cases and
+full discovery (80 Python methods). Each target passes 70 resource cases and
+eight offline archive cases. See the [archive report](m4-05-archive-verification.md)
+and [final audit](m4-06-release-audit.md).
+
+MIT is approved and applied. The final release set is in ignored
+`dist/jlog-0.1.0-release/`, with exact native-tested archives, checksum sidecars,
+`SHA256SUMS` and `manifest.json`. Its durable manifest, checksums and evidence
+are under `docs/verification/`. The finalizer validates real artifacts and
+rejects failed/mixed/missing evidence without rebuilding. Native artifact ZIP
+digests match GitHub metadata; all input/source/platform/binary hashes pass.
+
+There is no remaining v0.1 implementation task. Merging the existing PR, tagging
+and publication remain separate actions. `--field` stays in v0.2. Source clone
+instructions select `ci/native-m4` until this work reaches `master`. Historical
+failures and scoped resume prompts below remain snapshots, not current blockers
+or instructions to restart completed tasks.
+
+Layout update (2026-10-26): application modules and their inline checks now live
+in `src/`; the entry point is `src/main.roc`. Plans and the specification live
+in `docs/plans/` and `docs/specs/`. Historical verification commands below retain
+the paths used when executed. For current build/test commands, see the
+[README](../../README.md#for-developers). This move adds no milestone behavior.
+
+Feature update (2026-10-26): the user separately authorized `--progress` for
+inspection. It emits plain stderr snapshots at most about once per second as
+input advances and a final snapshot at EOF. See the
+[progress specification](../specs/inspection-progress.md) and the latest progress
+record for implementation/verification. Historical totals and commands below
+remain snapshot evidence; count, tail, and filtering were still unimplemented
+when that extension was added. The later M2 update follows.
 
 ## Current project status
+
+Current implementation update (2026-10-26): the user authorized M2. Count and
+bounded tail, capped data diagnostics, checked counters, EOF/read-failure
+transitions, and actual closed-pipe error paths are implemented. See the latest
+progress record for task-by-task RED/GREEN evidence and current test totals.
+Write-only stdin and suppressed EBADF output errors remain unresolved platform
+compatibility gaps; do not claim strict full-descriptor conformance on the
+strength of ordinary I/O tests.
+
+Later M3 update (2026-10-26): the user requested committing the existing work and
+starting M3. M2/progress/fixture work was committed as `f174c25`. That explicit
+authorization supersedes the earlier milestone checkpoint while leaving the M2
+descriptor gate open. String-only `--where` filtering is now implemented with
+original-byte streaming, capped diagnostics, and filter-to-count pipeline tests.
+The latest progress record contains current verification totals and the new
+[compiler declaration-order reproducer](../repros/m3-dict-parser-order.md).
+The snapshot and M1-only prompt below are historical; M4 has not been started.
+
+M4-01 update (2026-10-27): after M3 commit `d1a0d20`, the user authorized starting
+the contract/coverage audit. See the [audit](m4-01-audit.md) and latest progress
+record for actual test totals. The native macOS audit adds exact cross-mode
+fixtures, transport/redirect checks, and explicit strict descriptor tests. The
+latter still fail the specified exit-3 contract; native Linux remains pending.
+A prefilled nonblocking pipe now establishes a real mid-stream read failure
+after a consumed prefix: deferred modes emit no result and filtering keeps only
+its complete valid prefix, with status 3. Earlier pseudo-terminal observations
+remain historical evidence and are not mistaken for injected read failures.
+Do not mark M4-01 or release readiness complete from the ordinary passing suite.
+No platform/pin/FFI/dependency change or release publication was made.
+
+M4-02 update (2026-10-27): after audit commit `816f65c`, the user requested the
+next task. Optimized native macOS resource measurements now cover 100,000 and
+1,000,000 roughly-1-KiB records, all-invalid equivalents, 1 MiB/8 MiB lines,
+varying tail N, and a 4,000,000-record fixed-N follow-up. All 74 measured cases
+have exact output/status/hash verification. See the
+[report and JSON artifact](../measurements/m4-02-macos-arm64.md). No measured
+scaling/retention/stack failure required an application change. The strict
+descriptor and native Linux gates remain open; these observations do not
+establish full release readiness. The initial driver supported native macOS.
+
+Linux Docker update (2026-10-27): the user requested Linux resources using Docker.
+The local engine is ARM64, so the explicitly stated default collects native
+ARM64 guest execution while preserving the required x86-64 gate. A SHA-pinned
+Debian/compiler image runs as UID 1000 with read-only sources and Linux-local
+temporary data. Both dev and speed pass 273 pure checks and 63 ordinary CLI
+methods; the strict descriptor gate still fails 15 subcases per build. All 70
+Linux resource cases pass, with identical fixture hashes to macOS and unchanged
+input/binary hashes. See the
+[Linux ARM64 report](../measurements/m4-02-linux-arm64-docker.md) and
+[Docker workflow](../../tests/docker/README.md). The driver now supports GNU time
+and records container provenance; no application or pin change was made.
+
+Native CI update (2026-10-27): the user authorized M4-03 alongside the required
+Linux x86-64 measurements. The [workflow](../../.github/workflows/native-ci.yml)
+and [CI drivers](../../tests/ci/README.md) assert native architecture and exact
+compiler checksums, run both optimization suites and the strict descriptor gate,
+and retain measurement evidence even when that gate fails. Preparation alone
+does not establish remote execution or complete either native release gate.
+
+Execution follow-up: [run 40549245469](m4-03-native-ci.md) now executes on both
+required native architectures at `48c9aa9` on `ci/native-m4`. Each build passes
+273 pure checks and 63 ordinary CLI methods, and each architecture passes all 70
+resource cases. The strict suite still fails 15 subcases per build, leaving both
+CI jobs correctly red. The [native x86-64 report](../measurements/m4-02-linux-x86_64-ci.md)
+closes the missing M4-02 architecture evidence; full descriptor/M4-03 conformance
+and M4-04/05/06 remain open. Tested artifacts/provenance are downloaded; source,
+input and binary hashes are verified. Local/remote `master` were not changed;
+the prior pending measurement/docs work remains present on the CI branch.
+
+Descriptor correction update: after receiving the failing CI output and reviewing
+an isolated fix, the user approved integrating the basic-cli 0.25.0 host patch
+and native verification. The original Roc pin remains mandatory. Prepare the
+corrected platform with `python3 scripts/build_platform.py` before Roc commands;
+see [platform prerequisites/provenance](../../platform/README.md). This approval
+supersedes earlier prohibitions on a platform change for this specific patch.
+Local dev/speed now pass 486 inline checks, 64 ordinary methods and all 15 strict
+subcases. Native CI results are recorded in the latest progress entries; do not
+infer native Linux success from the local candidate alone.
 
 **M1-A and M1-B are already implemented and verified.** The handoff request's
 expected next checkpoint, M1-B, is stale for this checkout. Preserve the existing
 implementation; do not restart those tasks or manufacture failing tests. The
-first unimplemented task is **M2-01**, which needs separate authorization. The
+first unimplemented task at that snapshot was **M2-01**. The
 resume prompt below deliberately stays within M1-B verification and genuine gaps.
 
 `jlog` is a small Unix JSONL explorer for inspection/validation, count, tail, and
@@ -27,7 +143,7 @@ learning project, not a jq replacement. `--field` is deferred to v0.2.
   `https://github.com/roc-lang/basic-cli/releases/download/0.25.0/CZsY7tYZwR3rj9kYbpaCfxki2yVAaRL8bBwMLvB2xkbA.tar.zst`.
 
 Read the [specification](../specs/jlog-v0.1.md), [implementation plan](jlog-v0.1-plan.md),
-[progress record](jlog-v0.1-progress.md), and [feasibility report](../docs/roc-feasibility.md).
+[progress record](jlog-v0.1-progress.md), and [feasibility report](../roc-feasibility.md).
 Their initial-checkout statements are historical: application sources/tests and
 Git now exist, the compiler is outside the checkout, and `main.roc` is no longer
 the file-size example. `.tool-versions` pins Node, not Roc; Node is not needed.
@@ -60,9 +176,9 @@ These capabilities are implemented, not placeholders:
 | M1-16/17 | Buffered file and raw incremental stdin reads through the same framer/consumer; EOF-only report; propagated read errors yield exit 3 without a completed report. Empty/malformed/CRLF/final/long lines and file/stdin parity tested. |
 | M1-18 | Executable preflight with stdin held open and inaccessible paths. Already satisfied by M1-A; recorded as inherited coverage, not invented RED. |
 
-`Cli.roc` owns pure arguments/help; `Jsonl.roc` owns pure framing/classification/
-depth/JSON validation; `Operations.roc` owns pure bounded summaries/rendering.
-`main.roc` owns effects, native paths, shared reader loop, EOF/error normalization,
+`src/Cli.roc` owns pure arguments/help; `src/Jsonl.roc` owns pure framing/classification/
+depth/JSON validation; `src/Operations.roc` owns pure bounded summaries/rendering.
+`src/main.roc` owns effects, native paths, shared reader loop, EOF/error normalization,
 stdout/stderr, and exits. It uses `File.open_reader!`, `Reader.read_line!`, and
 `Stdin.bytes!`. The Python stdlib harness executes the supplied binary and asserts
 bytes/statuses; it never builds implicitly or reproduces application logic.
@@ -91,7 +207,7 @@ tests and had zero failures, errors, or skips.
 
 There are 67 CLI, 97 framing/classification/JSON, and 18 inspection/rendering
 `expect`s. The original 85 M1-A checks and seven executable tests remain included.
-Module-focused checks can use `roc test --main=main.roc Jsonl.roc` (or the owning
+Module-focused checks can use `roc test --main=src/main.roc src/Jsonl.roc` (or the owning
 module); this toolchain may include all modules reached through the main context.
 Do not add repeated run counts as distinct tests.
 
@@ -104,7 +220,7 @@ cache write failure and original formatting failure are historical; neither was
 reintroduced here. `roc fmt --help` freshly confirms `--check` and path arguments;
 continue using explicit existing project paths rather than recursive `.`.
 
-## Remaining work
+## Historical remaining work (2026-10-18)
 
 No M1-B feature is awaiting its initial implementation on this HEAD. Resume its
 verification/reconciliation only if instructed; preserve the coverage above.
@@ -123,10 +239,12 @@ requires a separate instruction; this handoff does not authorize it.
 
 ## Known limitations and risks
 
-- Fresh smoke checks confirm `--count`, `--tail 1`, and `--where status=failed`
+- At the 2026-10-18 snapshot, smoke checks confirmed `--count`, `--tail 1`, and `--where status=failed`
   remain parsing-only: empty stdout, `jlog: data operations are not implemented
   yet` on stderr, exit 1. Help describes the intended release, not full completion.
-  `--field skill` freshly returns usage exit 2; extraction remains v0.2.
+  `--field skill` returned usage exit 2; extraction remains v0.2. Later M2 work
+implemented count/tail and M3 implemented filtering. See the latest progress
+  record for current validation and descriptor-edge conformance gaps.
 - **Known stdin gap, freshly reproduced:** passing a write-only pipe descriptor
   as stdin yields an empty inspection report/status 0. Historical independent Roc
   probes showed the pinned platform exposes this as EOF, unlike Python's EBADF.
@@ -141,15 +259,18 @@ requires a separate instruction; this handoff does not authorize it.
   of such a filename on Linux remains unverified.
 - No current check fails. Native Linux application execution, large-file resource
   behavior, tail allocation, full output-fault coverage and packaging are not
-  established by these macOS tests. U64 counter/resource exhaustion handling is
-  still an M2 task. Mid-stream read-fault injection is best effort; production
+  established by these macOS tests. Later M2 work added checked U64 line/summary
+  exhaustion and pure production read-error transitions. Advanced executable
+  mid-stream read-fault injection remains unverified; production
   error handling and ordinary file/output failure tests remain mandatory.
 - Feasibility reports record an earlier compiler crash with a different JSON
   union adapter. Preserve the successful skip adapter; M3 should use the verified
-  record-based string classification approach. Retain reproducers and investigate
-  compiler crashes/unsupported APIs instead of bypassing tests.
+  record-based string classification approach. M3 exposed a separate declaration-
+  order crash; keep the custom `StringField` decoder above its dictionary consumer
+  and preserve its reproducer. Investigate compiler crashes/unsupported APIs
+  instead of bypassing tests.
 
-## Exact resume instructions
+## Historical M1-only resume instructions
 
 This prompt preserves the requested M1-B-only boundary while accounting for its
 existing implementation. It does not instruct a fresh session to redo completed
@@ -158,9 +279,9 @@ work or start the next milestone:
 ```text
 Resume jlog within M1-B (M1-09 through M1-18) ONLY.
 
-Read AGENTS.md, specs/jlog-v0.1.md, plans/jlog-v0.1-plan.md,
-plans/jlog-v0.1-progress.md, plans/jlog-handoff.md, docs/roc-feasibility.md,
-the Roc sources, and tests/test_cli.py. Inspect branch, HEAD and working tree.
+Read AGENTS.md, docs/specs/jlog-v0.1.md, docs/plans/jlog-v0.1-plan.md,
+docs/plans/jlog-v0.1-progress.md, docs/plans/jlog-handoff.md,
+docs/roc-feasibility.md, src/*.roc, and tests/test_cli.py. Inspect branch, HEAD and working tree.
 Preserve unrelated changes and every completed M1-A/M1-B behavior and test.
 
 The handoff HEAD already implements M1-B. First rerun and reconcile its acceptance
@@ -171,7 +292,7 @@ limits explicitly. Do not silently alter the specification or plan.
 Only if a genuine in-scope M1-B gap is demonstrated, work on ONE TDD task at a
 time: RED (execute a meaningful failing assertion; test syntax/compiler errors
 are not RED) -> minimum GREEN -> REFACTOR -> VERIFY. Keep evidence concise in
-plans/jlog-v0.1-progress.md: task ID, failing assertion/command, passing focused
+docs/plans/jlog-v0.1-progress.md: task ID, failing assertion/command, passing focused
 and regression tests, compiler/format status and outstanding limitations.
 Already-passing tests are inherited coverage; commits per cycle are not required.
 
@@ -183,8 +304,8 @@ Investigate and report genuine blockers rather than inventing success.
 Run focused tests and regressions after every GREEN and REFACTOR. Before stopping,
 run roc check; development and optimized Roc tests/builds; the existing Python
 executable suite against EACH binary; and roc fmt --check with explicit project
-source paths. Use the handoff's exact commands/cache guidance. Never claim an
-unexecuted check passed. Preserve malformed-line recovery, physical numbering,
+source paths. Use the README's current src/ paths with the handoff's cache
+guidance. Never claim an unexecuted check passed. Preserve malformed-line recovery, physical numbering,
 original bytes, first-100 diagnostics, EOF-only reporting and pipeline safety.
 
 Do not implement --count, --tail or --where beyond existing parsing, or --field

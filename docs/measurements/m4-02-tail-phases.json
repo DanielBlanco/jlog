@@ -1,0 +1,98 @@
+{
+  "purpose": "Separate pre-EOF processing from post-EOF tail reordering/output on the unchanged optimized executable.",
+  "binary_sha256": "0bf01d6835fa99f8dec215c922be8bd8f68601653dae1a0a326a01cb24c6ed77",
+  "fixture_sha256": "a37e77a6851dbc2aa2d95c428ffe6319a7a4f26e7aabfb2c3803e48887b267c6",
+  "fixture_max_body_bytes": 1023,
+  "probe_sha256": "54ae688a1c2d3c9ae2c8342cb22718cffe1032946d937fd5f485fb6d64b63986",
+  "probe_path": "/private/tmp/jlog-tail-phases-6w1akmup/probe.py",
+  "raw_results_path": "/private/tmp/jlog-tail-phases-6w1akmup/results.json",
+  "method": "Mach MACH_TASK_BASIC_INFO current RSS and resident_size_max, followed by per-child wait4 ru_maxrss. Gate EOF with an open input pipe, verify the input byte queue is empty and no stdout exists, then close the writer and block stdout before draining/verifying it. FIFO uses the File.Reader path; it is not a regular-file benchmark.",
+  "sampling": "During input roughly every 10 ms; during drain roughly every 2 ms; 0.5-second dwell before EOF and while stdout blocked. Kernel lifetime high-water fields retain intervening peaks.",
+  "limitations": "Follow-up trials use stdin pipes and a named-pipe file-reader path. They do not timestamp the earlier regular-file measurements or determine the allocator cause of resident memory overhead.",
+  "trials": [
+    {
+      "records": 100000,
+      "transport": "stdin",
+      "tail_n": 16384,
+      "before_eof": {
+        "current_rss_bytes": 65617920,
+        "lifetime_max_rss_bytes": 65617920
+      },
+      "output_blocked": {
+        "current_rss_bytes": 66125824,
+        "lifetime_max_rss_bytes": 66125824
+      },
+      "final_wait4_max_rss_bytes": 66142208,
+      "observed_lifetime_max_rss_bytes": 66125824,
+      "sampled_processing_max_rss_bytes": 65437696,
+      "sampled_output_max_rss_bytes": 66125824,
+      "stdout_bytes": 16777216,
+      "stdout_sha256": "e65458a3113e57c0bfd925eab7098123febdb400c4836cd3604460095d75c720",
+      "verified": true,
+      "sample_count": 73
+    },
+    {
+      "records": 100000,
+      "transport": "fifo",
+      "tail_n": 16384,
+      "before_eof": {
+        "current_rss_bytes": 54755328,
+        "lifetime_max_rss_bytes": 59260928
+      },
+      "output_blocked": {
+        "current_rss_bytes": 55279616,
+        "lifetime_max_rss_bytes": 59260928
+      },
+      "final_wait4_max_rss_bytes": 59260928,
+      "observed_lifetime_max_rss_bytes": 59260928,
+      "sampled_processing_max_rss_bytes": 59260928,
+      "sampled_output_max_rss_bytes": 55279616,
+      "stdout_bytes": 16777216,
+      "stdout_sha256": "e65458a3113e57c0bfd925eab7098123febdb400c4836cd3604460095d75c720",
+      "verified": true,
+      "sample_count": 73
+    },
+    {
+      "records": 1000000,
+      "transport": "stdin",
+      "tail_n": 16384,
+      "before_eof": {
+        "current_rss_bytes": 92962816,
+        "lifetime_max_rss_bytes": 92962816
+      },
+      "output_blocked": {
+        "current_rss_bytes": 93470720,
+        "lifetime_max_rss_bytes": 93470720
+      },
+      "final_wait4_max_rss_bytes": 93470720,
+      "observed_lifetime_max_rss_bytes": 93470720,
+      "sampled_processing_max_rss_bytes": 92962816,
+      "sampled_output_max_rss_bytes": 93470720,
+      "stdout_bytes": 16777216,
+      "stdout_sha256": "d42433679ab2bba5fd7176f579ad97b81c935b9fc828b74854db353779fa38e7",
+      "verified": true,
+      "sample_count": 582
+    },
+    {
+      "records": 1000000,
+      "transport": "fifo",
+      "tail_n": 16384,
+      "before_eof": {
+        "current_rss_bytes": 78790656,
+        "lifetime_max_rss_bytes": 80330752
+      },
+      "output_blocked": {
+        "current_rss_bytes": 79265792,
+        "lifetime_max_rss_bytes": 80330752
+      },
+      "final_wait4_max_rss_bytes": 80330752,
+      "observed_lifetime_max_rss_bytes": 80330752,
+      "sampled_processing_max_rss_bytes": 80330752,
+      "sampled_output_max_rss_bytes": 79265792,
+      "stdout_bytes": 16777216,
+      "stdout_sha256": "d42433679ab2bba5fd7176f579ad97b81c935b9fc828b74854db353779fa38e7",
+      "verified": true,
+      "sample_count": 633
+    }
+  ]
+}

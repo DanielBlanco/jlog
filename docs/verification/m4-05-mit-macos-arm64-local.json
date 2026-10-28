@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "host": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "execution": "native",
+  "archive": "jlog-0.1.0-macos-arm64.tar.gz",
+  "archive_sha256": "ddc8a23babfb21832b372641d69bca31515c504cfa516f91dc5e0c9cd8014214",
+  "binary_sha256": "c43bbc634256da04ef0123a1f1defd5df6580c54f72299760a5a7a51dfe240c1",
+  "install_script": "if command -v sha256sum >/dev/null; then\n  sha256sum -c \"$JLOG_ARCHIVE.sha256\"\nelse\n  shasum -a 256 -c \"$JLOG_ARCHIVE.sha256\"\nfi\ntar -xzf \"$JLOG_ARCHIVE\"\nJLOG_DIRECTORY=\"${JLOG_ARCHIVE%.tar.gz}\"\nJLOG_INSTALL_PREFIX=\"${JLOG_INSTALL_PREFIX:-$HOME/.local}\"\nmkdir -p \"$JLOG_INSTALL_PREFIX/bin\"\ninstall -m 755 \"$JLOG_DIRECTORY/bin/jlog\" \"$JLOG_INSTALL_PREFIX/bin/jlog\"\nexport PATH=\"$JLOG_INSTALL_PREFIX/bin:$PATH\"\njlog --version\n",
+  "install_exit_status": 0,
+  "install_stdout": "jlog-0.1.0-macos-arm64.tar.gz: OK\njlog 0.1.0\n",
+  "work_dir": "/var/folders/7p/xl3qxqnx4kbgq0drnk2ymz9c0000gp/T/jlog-release-bnhj6dw_",
+  "cases": [
+    {
+      "name": "version",
+      "args": [
+        "--version"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "8ba490307028098f0eae719a6e2b2f9da6037c7176d77ef3105a1dc4e02784bb",
+      "stderr": "",
+      "verified": true
+    },
+    {
+      "name": "help",
+      "args": [
+        "--help"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "0c9db1e30fa590dba6c1372c92496d8ac55539726d7576f2806b489d877a4ce8",
+      "stderr": "",
+      "verified": true
+    },
+    {
+      "name": "inspect-read-only-file",
+      "args": [
+        "/var/folders/7p/xl3qxqnx4kbgq0drnk2ymz9c0000gp/T/jlog-release-bnhj6dw_/events.jsonl"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "01d22b4dc57babc3ed1d116315ccc0cc1f80328fb66f127e2e4afa3c208e1fb6",
+      "stderr": "",
+      "verified": true
+    },
+    {
+      "name": "count",
+      "args": [
+        "--count",
+        "/var/folders/7p/xl3qxqnx4kbgq0drnk2ymz9c0000gp/T/jlog-release-bnhj6dw_/events.jsonl"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
+      "stderr": "",
+      "verified": true
+    },
+    {
+      "name": "tail-original-bytes",
+      "args": [
+        "--tail",
+        "1",
+        "/var/folders/7p/xl3qxqnx4kbgq0drnk2ymz9c0000gp/T/jlog-release-bnhj6dw_/events.jsonl"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "5a05350ec82b4df1b8680b0c62da9abdcca1aac76150aaeb6df69e52300c2af0",
+      "stderr": "",
+      "verified": true
+    },
+    {
+      "name": "filter-original-bytes",
+      "args": [
+        "--where",
+        "status=failed",
+        "/var/folders/7p/xl3qxqnx4kbgq0drnk2ymz9c0000gp/T/jlog-release-bnhj6dw_/events.jsonl"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "7ce8eff12277310f98d059937246673a31a8763107cebe668c8a6526bbcfc7cb",
+      "stderr": "",
+      "verified": true
+    },
+    {
+      "name": "filter-to-count-pipeline",
+      "producer_exit_status": 0,
+      "consumer_exit_status": 0,
+      "verified": true
+    },
+    {
+      "name": "empty-stdin",
+      "args": [
+        "--count"
+      ],
+      "exit_status": 0,
+      "stdout_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "stderr": "",
+      "verified": true
+    }
+  ],
+  "isolation": {
+    "method": "macOS sandbox-exec",
+    "network": "deny network*",
+    "toolchains": "absent from PATH; executable names denied, including absolute paths",
+    "profile": "(version 1)(allow default)(deny network*)(deny process-exec (regex #\"/(roc|rustc|cargo)$\"))(deny file-read* (subpath \"/Users/dblanco/Code/jlog\"))(deny file-read* (subpath \"/Users/runner/.rustup\") (subpath \"/Users/runner/.cargo\"))"
+  },
+  "network_denial_probe_verified": true,
+  "input_binary_archive_hashes_unchanged": true,
+  "verified": true,
+  "status": "approved MIT candidate; local macOS smoke passed; native archive CI remains pending",
+  "native_build_run": "https://github.com/DanielBlanco/jlog/actions/runs/40571638408",
+  "native_build_commit": "cb0e0f304e441a2b5e9f015ade095be4d915980c",
+  "project_license_sha256": "70d60baa983130995b8187c18255841ce4435ea0fb9f119cf4765834cd121779",
+  "candidate_archives": {
+    "jlog-0.1.0-linux-x86_64.tar.gz": "d77962cbf420811056b449204d1913d6260c271bae829e6aa9d37ccd95c2ca4d",
+    "jlog-0.1.0-macos-arm64.tar.gz": "ddc8a23babfb21832b372641d69bca31515c504cfa516f91dc5e0c9cd8014214"
+  }
+}

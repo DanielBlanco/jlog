@@ -336,6 +336,11 @@ now passes on a clean local source checkout and both native CI targets. README
 usage/install cases and five actual source-command blocks are automated, and
 contribution guidance is added. The remaining implementation tasks are M4-05/06.
 
+M4-05 preparation is now authorized and implemented; see the
+[archive report](m4-05-archive-verification.md). Tooling and private macOS fixture
+smokes pass. The user subsequently approved MIT; actual native release-candidate
+CI archive runs remain pending. M4-05 is not complete.
+
 **Objective:** evidence-backed public release on native macOS ARM64 and Linux
 x86-64. **Complexity: medium to high**, depending on native CI availability.
 

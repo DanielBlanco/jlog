@@ -71,6 +71,7 @@ jobs:
           python3 tests/ci/verify.py --target '${{ matrix.target }}' --output "$RUNNER_TEMP/evidence"
 
       - name: Verify README examples and user installation
+        id: readme
         if: ${{ !cancelled() && steps.verify.outputs.measure-ready == 'true' }}
         shell: bash
         run: |
@@ -82,6 +83,7 @@ jobs:
       # A real conformance failure must fail the job, but need not discard
       # independent measurements of a successfully tested optimized build.
       - name: Measure the optimized executable
+        id: measurements
         if: ${{ !cancelled() && steps.verify.outputs.measure-ready == 'true' }}
         shell: bash
         run: |
@@ -90,6 +92,16 @@ jobs:
             --work-dir "$RUNNER_TEMP/measurements" \
             --environment "$RUNNER_TEMP/evidence/environment.json" \
             2>&1 | tee "$RUNNER_TEMP/evidence/measurements.log"
+
+      - name: Package and test the native release archive offline
+        if: ${{ !cancelled() && steps.verify.outcome == 'success' && steps.readme.outcome == 'success' && steps.measurements.outcome == 'success' }}
+        shell: bash
+        run: |
+          python3 scripts/package_release.py \
+            --evidence "$RUNNER_TEMP/evidence" --output "$RUNNER_TEMP/release"
+          python3 tests/verify_release.py \
+            --archive "$RUNNER_TEMP/release/jlog-0.1.0-${{ matrix.artifact }}.tar.gz" \
+            --report "$RUNNER_TEMP/evidence/release.json"
 
       - name: Preserve verification and measurement evidence
         if: ${{ always() }}
@@ -105,3 +117,4 @@ jobs:
             ${{ runner.temp }}/measurements/*.stderr
             ${{ runner.temp }}/platform-build.log
             ${{ runner.temp }}/platform.json
+            ${{ runner.temp }}/release/

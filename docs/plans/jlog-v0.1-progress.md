@@ -932,3 +932,65 @@ the earlier corrected-host binaries. Raw CI downloads are under
 M4-04 is complete. M4-05 release archives/checksums/offline smoke tests and M4-06
 license/notices/OS support/final manifest remain. No application/platform/compiler
 change, release archive, upstream publication or PR merge is part of this task.
+
+## M4-05 archive preparation — authorized 2026-10-27, in progress
+
+The user requested starting the next task after M4-04. Packaging now reuses the
+tested optimized native executable, requires passing verification (including
+both strict descriptor suites), verifies source/compiler/platform/binary hashes
+and writes deterministic archives with executable permissions, notices, install
+instructions, build provenance and checksum sidecars. Five tooling regression
+methods reject failed/absent strict evidence, altered identities, corrupted
+archives, lost executable permissions and missing licenses.
+
+Notice collection preserves basic-cli/Roc/Rust upstream documents and the
+conservative union of 87 native host dependency crates. Every downloaded crate
+checksum matches the pinned Cargo.lock before its full notice files are copied.
+The official Roc archive checksum and copied legal documents are independently
+verified. `release/notices.json` records original paths/hashes and identities;
+the final M4-06 audit remains separate from mechanical notice collection.
+
+Private fixture archives outside the checkout use an explicit test-only license
+marker while the project's license remains unchosen. They reuse the unchanged
+M4-04 CI binaries and reproduce byte-for-byte in a second packaging directory.
+Native macOS passes bundled installation and all eight runtime cases with
+network access denied and no toolchains available to the process. The original
+fixture/input/binary hashes remain unchanged. The initial shell probe assumed a
+particular `command -v` failure status; an explicit conditional fixes that
+harness issue. This is not application RED or a distributable release candidate.
+
+Full Python discovery passes **77 methods** against the corrected local binary.
+Roc check/format, both sets of 486 inline checks, Python 3.9 syntax/docstrings,
+notice integrity and workflow actionlint pass. The workflow is prepared to
+package only after native regressions, README checks and resource measurements
+succeed, then execute the native offline smoke: a compiler-free `FROM scratch`
+image with no network on Linux, and a network/toolchain-denying sandbox on macOS.
+
+The [preparation report](m4-05-archive-verification.md) and
+[private-fixture summary](../verification/m4-05-preparation-macos-arm64.json)
+record exact scope and evidence. License selection/ownership confirmation is
+pending via the proposed MIT / `Copyright (c) 2026 Daniel Blanco` question.
+The production packager correctly stops at the missing root LICENSE. No actual
+release-candidate/native Linux archive verification is claimed, and the pending
+workflow has not been pushed while that gate cannot pass. M4-05 remains open;
+M4-06 audit and public release remain later tasks.
+
+### MIT approval and clean commit checkpoint
+
+The user requested committing everything and leaving a clean state, then
+approved MIT. The proposed license is now root `LICENSE`, with
+`Copyright (c) 2026 Daniel Blanco`; the redundant proposal file is removed.
+Both actual archive candidates package successfully from the tested M4-04
+optimized artifacts. The MIT macOS archive passes installation and all eight
+local offline runtime cases, with unchanged input/binary/archive hashes.
+The [candidate JSON](../verification/m4-05-mit-macos-arm64-local.json) retains
+the approved license hash, both candidate checksums and local smoke evidence.
+
+Generated archives/checksum sidecars remain ignored under `dist/release/`.
+Upstream notice documents retain their original bytes and whitespace; staged
+source/documentation whitespace checks exclude those verbatim documents, whose
+recorded hashes still match. Source, notice inventory, documentation, workflow
+and verification records are included in the requested commit. No push is part
+of this local checkpoint. M4-05's actual native archive CI results and M4-06 final
+audit/publication work remain pending; the license-selection prerequisite is
+resolved.

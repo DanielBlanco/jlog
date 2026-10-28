@@ -5,7 +5,8 @@
 M1 through M3 behavior is implemented. The approved basic-cli host correction
 closes the known M2 descriptor gap; M4-01/02/03 now have passing native evidence.
 M4-04 documentation/source-build/install verification also passes on both native
-targets. M4-05/06 release preparation remains. Read the latest
+targets. M4-05 archive preparation is in progress; native release-candidate smoke
+execution remains. The user approved MIT, now applied in `LICENSE`. M4-06 final audit follows. Read the latest
 [progress record](docs/plans/jlog-v0.1-progress.md) and the
 [development handoff](docs/plans/jlog-handoff.md) before resuming for current state,
 verification, and checkpoint limits.
@@ -13,7 +14,13 @@ verification, and checkpoint limits.
 The user authorized M4-04, which is now complete: documented source build,
 installation and usage in clean temporary locations, README updates and
 contribution guidance. See the [verification report](docs/plans/m4-04-docs-verification.md).
-Packaging, license decisions and release publication remain later tasks.
+The user subsequently authorized starting M4-05. Packaging, checksums, notices
+and native offline checks are prepared; see the
+[archive preparation report](docs/plans/m4-05-archive-verification.md). Private
+fixture smoke checks pass on macOS. MIT is now approved, both native archive
+candidates are packaged from tested artifacts, and the MIT macOS archive passes
+local offline verification. Native archive CI remains pending. Release
+publication remains separate.
 
 The separately authorized `--progress` extension adds opt-in, rate-limited stderr
 counts to inspection. See its [specification](docs/specs/inspection-progress.md).
@@ -42,6 +49,9 @@ constraint; it does not authorize a Roc compiler upgrade. See
 - `tests/verify_readme.py` executes documented usage/install blocks against a
   supplied binary in a temporary workspace. `--source-checks` explicitly adds
   documented build/check/test commands and writes ignored `dist/` outputs.
+- `scripts/package_release.py`, `tests/verify_release.py` and `release/` prepare
+  tested-binary archives, notice inventories/checksums and native offline smoke
+  checks. Packaging requires passing strict I/O evidence and a project license.
 - `tests/test_io_contract.py` is the strict standard-descriptor regression gate.
   Preserve its exit-3 expectations; the approved platform patch addresses the
   published platform's known failures.

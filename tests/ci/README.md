@@ -24,7 +24,7 @@ green on both targets, including all strict descriptor assertions and resource c
 
 `verify.py` runs as an ordinary user and records each command and status:
 
-1. Platform integrity, compiler check, explicit-source formatting and driver/platform unit checks.
+1. Platform integrity, compiler check, explicit-source formatting and driver/platform/release unit checks.
 2. Dev pure checks, native build, executable acceptance and strict descriptor suite.
 3. The same pure/build/executable/descriptor sequence with speed optimization.
 4. Source/platform integrity and binary hashes, runner/image identity and source commit.
@@ -48,10 +48,20 @@ Measurements use the full 70-case M4-02 matrix sequentially on each native runne
 Fixtures and temporary stdout live under `RUNNER_TEMP`, outside the checkout.
 Each measurement checks exact output/status/diagnostics and final input/binary
 hashes. The workflow uploads logs, provenance, both tested executables, the JSON
-matrix, platform build log/manifest and raw timing/stderr files for 14 days. It excludes generated JSONL files,
-large stdout, compiler/cache data and release archives. These are verification
+matrix, platform build log/manifest and raw timing/stderr files for 14 days.
+It excludes generated JSONL files, large stdout and compiler/cache data. These are verification
 artifacts, not a published release. Single shared-runner timings do not promise
 throughput or establish a minimum supported OS version.
+
+After successful native verification, README checks and measurements, CI packages
+the tested optimized executable and runs the [archive smoke test](../../release/README.md).
+It checks installation, help/version, raw records, read-only inputs and a real
+filter→count pipeline. Linux uses a network-disabled `FROM scratch` Docker image
+with no compiler or runtime; macOS uses a network-denying sandbox and a PATH
+containing only the installed binary. Archives, per-archive checksums and
+`evidence/release.json` accompany the existing artifacts. Packaging is gated by
+the full verification result, including both strict descriptor suites; successful
+independent measurements cannot authorize packaging after a conformance failure.
 
 To run the verification driver locally with the existing pinned compiler:
 

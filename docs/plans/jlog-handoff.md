@@ -8,8 +8,19 @@ macOS ARM64 and Linux x86-64 CI, including all 15 descriptor subcases per build
 and all 70 resource cases per target. See the
 [correction report](m4-03-stdio-correction.md). M4-01/02/03 are verified;
 M4-04 documentation/source-build/install verification is now complete; next is
-M4-05 packaging and offline archive verification. Historical failures and scoped resume prompts below
+M4-05 packaging and offline archive verification (now started). Historical failures and scoped resume prompts below
 remain snapshots, not current instructions to preserve the unpatched defect.
+
+M4-05 preparation: tested-binary packaging, checksum/inventory gates, collected
+notices and native offline smoke tooling are implemented. Private fixture
+archives package deterministically, and all eight macOS runtime cases pass with
+network/toolchain access denied. All 77 Python methods pass. The user subsequently
+approved MIT, now applied in root `LICENSE`. Both native candidates are packaged;
+the MIT macOS archive passes all eight local offline cases. Actual native CI
+release-candidate archive evidence remains pending.
+The user requested committing everything and leaving a clean working tree. See the
+[preparation report](m4-05-archive-verification.md); do not mark M4-05 complete
+from the fixture smoke check or publish its private test-only archives.
 
 M4-04 preparation: documented clone instructions must select `ci/native-m4`
 until the current work reaches `master`. The original default-branch clone

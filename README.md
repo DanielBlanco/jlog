@@ -295,8 +295,9 @@ Use the exact compiler pin: Roc syntax and APIs are evolving.
 
 The verified native environments are macOS **15.7.9 and 27.0.1 ARM64**, and
 Ubuntu **24.04.5 x86-64** with a statically linked musl executable. Debian 12
-ARM64 Docker results are supplemental. These are tested environments; minimum
-supported OS versions remain part of the final release audit.
+ARM64 Docker results are supplemental. v0.1 support is limited to these tested
+configurations; earlier OS versions and other distributions are unverified.
+See the [support policy](release/SUPPORT.md) for the release baselines and limits.
 
 On macOS, the native C compiler comes from Xcode or its Command Line Tools;
 `xcode-select -p` checks that a developer directory is selected. Install the

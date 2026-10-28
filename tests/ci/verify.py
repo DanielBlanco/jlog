@@ -80,6 +80,8 @@ def main():
                                              "-p", "test_build_platform.py", "-v"], output, results)
     run("release-units", ["python3", "-m", "unittest", "discover", "-s", "tests",
                           "-p", "test_package_release.py", "-v"], output, results)
+    run("release-set-units", ["python3", "-m", "unittest", "discover", "-s", "tests",
+                              "-p", "test_finalize_release.py", "-v"], output, results)
     measure_ready = False
     for optimization in ("dev", "speed"):
         binary = output / f"jlog-{optimization}"

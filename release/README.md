@@ -3,8 +3,8 @@
 M4-05 prepares macOS ARM64 and Linux x86-64 archives from the **already tested**
 optimized executable. It does not rebuild the application or publish a release.
 The project uses the approved root [MIT license](../LICENSE).
-M4-06 audits ownership,
-notices, minimum OS support and the final release manifest before publication.
+The [support policy](SUPPORT.md) records the verified native baselines and limits.
+The final release-set tool checks both native artifacts before creating a manifest.
 
 Use a native verification output directory containing `jlog-speed`,
 `environment.json` and `verification.json` (see [native CI](../tests/ci/README.md)).
@@ -26,7 +26,7 @@ fixed gzip header make repeated packaging of identical inputs deterministic on
 the same packaging toolchain. This is not a claim about reproducible compilation.
 
 Each archive contains only `bin/jlog`, the project license, bundled installation
-instructions, third-party notices, complete upstream license documents and
+instructions, support policy, third-party notices, complete upstream license documents and
 `BUILD.json`. That per-archive manifest preserves the tested source/CI/platform
 identity, binary hash and bundled file inventory. Compiler/cache/large fixture
 data and development executables are excluded. SHA-256 detects corruption;
@@ -81,4 +81,24 @@ inventory. No runtime license retrieval or packaging dependency is introduced.
 When a compiler/platform/dependency pin changes, recollect notices from those
 verified sources and review the inventory before replacing its hashes. The
 packager refuses a mismatched Cargo.lock or changed notice file. The final
-M4-06 legal/notices review remains separate from this mechanical collection.
+M4-06 records the final audit separately from this mechanical collection.
+
+## Finalize both verified native archives
+
+Download and extract the two artifacts from the same passing native CI run.
+Pass their roots, each containing `evidence/`, `measurements/` and `release/`,
+to the finalizer:
+
+```sh
+python3 scripts/finalize_release.py \
+  --artifacts /tmp/native-macos-arm64 /tmp/native-linux-x86_64 \
+  --output dist/jlog-0.1.0-release
+```
+
+The output directory must be new. The finalizer rechecks full native test,
+README, resource and offline archive results; hashes; current source/platform
+pins; and the bundled license, notices, support and installation documents.
+It rejects missing/duplicate targets, failed smoke checks and differing shared
+release inputs. It copies the exact tested archives/checksum sidecars and writes
+`manifest.json` plus `SHA256SUMS` (archives and manifest). No rebuild occurs.
+Publication, tagging and merging remain separate actions.

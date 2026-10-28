@@ -34,7 +34,7 @@ def unpack_checked(archive, work):
         expected_names = {f"{prefix}/{name}" for name in manifest["files_sha256"]} | {f"{prefix}/BUILD.json"}
         if {member.name for member in members} != expected_names:
             raise ValueError("Archive differs from its file inventory")
-        required = {"bin/jlog", "LICENSE", "INSTALL.md", "THIRD_PARTY_NOTICES.md"}
+        required = {"bin/jlog", "LICENSE", "INSTALL.md", "SUPPORT.md", "THIRD_PARTY_NOTICES.md"}
         if not required.issubset(manifest["files_sha256"]) or not any(n.startswith("licenses/") for n in manifest["files_sha256"]):
             raise ValueError("Missing executable, license, notices or instructions")
         for member in members:

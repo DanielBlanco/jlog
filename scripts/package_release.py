@@ -77,6 +77,7 @@ def package(evidence, output):
     # Reading LICENSE is intentional: an unchosen project license blocks packaging.
     files = {"bin/jlog": binary.read_bytes(), "LICENSE": (ROOT / "LICENSE").read_bytes(),
              "INSTALL.md": (ROOT / "release/INSTALL.md").read_bytes(),
+             "SUPPORT.md": (ROOT / "release/SUPPORT.md").read_bytes(),
              "THIRD_PARTY_NOTICES.md": (ROOT / "release/THIRD_PARTY_NOTICES.md").read_bytes()}
     files.update({str(Path(name).relative_to("release")): (ROOT / name).read_bytes()
                   for name in notices["files_sha256"]})

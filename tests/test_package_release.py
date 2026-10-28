@@ -81,7 +81,7 @@ class ArchiveContractTests(unittest.TestCase):
         data = bytearray(64)
         data[:6] = b"\x7fELF\x02\x01"
         struct.pack_into("<H", data, 18, 62)
-        self.files = {"bin/jlog": bytes(data), "LICENSE": b"test fixture", "INSTALL.md": b"instructions",
+        self.files = {"bin/jlog": bytes(data), "LICENSE": b"test fixture", "INSTALL.md": b"instructions", "SUPPORT.md": b"support policy",
                       "THIRD_PARTY_NOTICES.md": b"notices", "licenses/example.txt": b"upstream notice"}
 
     def write_archive(self, executable_mode=0o755):

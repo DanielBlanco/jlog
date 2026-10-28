@@ -42,5 +42,7 @@ records. Filtering can emit valid matches before later malformed records or I/O
 errors; check the pipeline status. A failed write can leave truncated output.
 Normal OS signal termination follows the shell's signal conventions.
 
-The native verification reports record tested OS versions. Minimum supported OS
-versions and release publication remain subject to the final release audit.
+The native verification reports record tested OS versions. Support is limited
+to the tested configurations in `SUPPORT.md`: macOS
+15.7.9 ARM64 (also tested on 27.0.1) and Ubuntu 24.04.5 x86-64. Other OS
+versions/distributions are unverified. Release publication is a separate step.

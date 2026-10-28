@@ -266,15 +266,16 @@ status outside the application's 0–4 exit-code table.
 
 ## Build and install
 
-Verified release candidates are prepared for macOS ARM64 and Linux x86-64.
-Native CI artifacts contain the tested archives and checksums. See the
-[archive preparation and offline checks](release/README.md) and bundled
-[installation instructions](release/INSTALL.md). No public binary release is
-available yet; the source build below remains the current installation path.
+Download [jlog v0.1.0](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0)
+for macOS ARM64 or Linux x86-64. The release includes verified archives,
+checksum sidecars and a manifest. Follow the bundled
+[installation instructions](release/INSTALL.md); running the binary requires
+neither Roc nor Rust. Source builds and the
+[archive verification workflow](release/README.md) are documented below.
 Project code uses the [MIT license](LICENSE); dependencies retain the terms in
 the [third-party notices](release/THIRD_PARTY_NOTICES.md).
 
-### Prerequisites
+### Prerequisites for source builds
 
 - **Roc `nightly-2026-10-09-258ab27`** from the
   [pinned nightly release](https://github.com/roc-lang/nightlies/releases/tag/nightly-2026-10-09-258ab27).
@@ -318,10 +319,10 @@ rustup target add --toolchain 1.99.0 x86_64-unknown-linux-musl
 
 ### Get the sources
 
-Until the current work is merged into `master`, use the development branch:
+Clone the `master` branch:
 
 ```sh
-git clone --branch ci/native-m4 https://github.com/DanielBlanco/jlog.git
+git clone --branch master https://github.com/DanielBlanco/jlog.git
 cd jlog
 ```
 
@@ -479,7 +480,9 @@ The [final native run](https://github.com/DanielBlanco/jlog/actions/runs/4060814
 also passes all offline archive checks on both targets. The
 [release audit](docs/plans/m4-06-release-audit.md) records final completion;
 the [durable manifest](docs/verification/jlog-0.1.0-release-manifest.json)
-identifies the exact tested artifacts. Publication remains a separate action.
+identifies the pre-publication candidate artifacts. The
+[v0.1.0 release](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0)
+contains the published archives, manifest and checksums.
 
 ### Measure resources
 
@@ -533,7 +536,7 @@ in the [progress log](docs/plans/jlog-v0.1-progress.md).
 | M1: CLI, framing, file/stdin inspection and validation | ✅ Implemented. |
 | M2: `--count`, `--tail N`, and expanded error handling | Implemented; the approved host patch closes the known descriptor gap on both native targets. |
 | M3: `--where KEY=TEXT`, string-only top-level equality | Implemented and tested on both native targets, including streaming and pipelines. |
-| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Complete through M4-06: native regressions, offline archives and [final release audit](docs/plans/m4-06-release-audit.md) pass. MIT is applied; publication remains separate. |
+| M4: resource measurements, native targets, CI, docs, licensing, and release packaging | Complete through M4-06: native regressions, offline archives and [final release audit](docs/plans/m4-06-release-audit.md) pass. MIT is applied; see [v0.1.0](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0). |
 | v0.2: `--field KEY` | Deferred; currently rejected with exit 2. |
 
 The [implementation plan](docs/plans/jlog-v0.1-plan.md) contains the ordered tasks.

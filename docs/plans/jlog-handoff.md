@@ -20,9 +20,10 @@ are under `docs/verification/`. The finalizer validates real artifacts and
 rejects failed/mixed/missing evidence without rebuilding. Native artifact ZIP
 digests match GitHub metadata; all input/source/platform/binary hashes pass.
 
-There is no remaining v0.1 implementation task. Merging the existing PR, tagging
-and publication remain separate actions. `--field` stays in v0.2. Source clone
-instructions select `ci/native-m4` until this work reaches `master`. Historical
+There is no remaining v0.1 implementation task. PR #1 is merged into `master`
+at `f387bff`; its native CI run `40615855991` passes. The user now authorizes
+correcting source checkout instructions, committing, pushing and publishing
+`v0.1.0`. Source clone instructions select `master`. `--field` stays in v0.2. Historical
 failures and scoped resume prompts below remain snapshots, not current blockers
 or instructions to restart completed tasks.
 

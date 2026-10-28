@@ -1051,3 +1051,18 @@ complete. The plan checklist, README, contribution guide, repository instruction
 and handoff now record the finished v0.1 state. No implementation or verification
 task remains. The verified release candidate is unpublished; new features,
 merging, tagging and publication require their own subsequent request.
+
+## Publish v0.1.0 — authorized 2026-10-27
+
+The user confirmed PR #1 merged, then explicitly requested the README fix,
+commit, push and publication of 0.1.0. Merge commit `f387bff` passes native
+master CI [40615855991](https://github.com/DanielBlanco/jlog/actions/runs/40615855991).
+The local master is fast-forwarded without replacing local history.
+
+Source instructions now clone `master`; README release links, bundled install
+wording and the handoff are updated for publication. Versioned release notes
+describe the implemented scope, installation, platforms, error codes and license.
+The bundled wording change requires fresh native archive verification before
+publishing; application/platform/compiler inputs remain unchanged. The user has
+authorized tagging, uploading the exact verified assets and publishing the release.
+The final publication result is recorded after those actions succeed.

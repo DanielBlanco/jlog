@@ -18,7 +18,9 @@ the exact tested archives, checksums and manifest under ignored
 [final audit](docs/plans/m4-06-release-audit.md). Native verification uses code
 commit `7f92f8c`, PR run `40608149721`. No implementation task remains for v0.1.
 New features require a new request; `--field` remains deferred to v0.2.
-Merging, tagging and release publication remain separate actions.
+PR #1 is merged into `master`. The user explicitly authorized fixing checkout
+documentation, committing, pushing and publishing `v0.1.0`. See the latest
+progress entry for the publication result; future releases need their own request.
 
 The separately authorized `--progress` extension adds opt-in, rate-limited stderr
 counts to inspection. See its [specification](docs/specs/inspection-progress.md).

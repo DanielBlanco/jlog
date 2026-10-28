@@ -3,7 +3,7 @@
 Use `jlog-0.1.0-macos-arm64.tar.gz` on macOS ARM64 or
 `jlog-0.1.0-linux-x86_64.tar.gz` on Linux x86-64. Download the matching `.sha256`
 file alongside it. The checksum detects damaged downloads; obtain both files
-from the same trusted release. No public release is available yet.
+from the same trusted [v0.1.0 release](https://github.com/DanielBlanco/jlog/releases/tag/v0.1.0).
 
 In Bash or zsh, set `JLOG_ARCHIVE` to the archive filename in the current
 directory, then run:
@@ -45,4 +45,4 @@ Normal OS signal termination follows the shell's signal conventions.
 The native verification reports record tested OS versions. Support is limited
 to the tested configurations in `SUPPORT.md`: macOS
 15.7.9 ARM64 (also tested on 27.0.1) and Ubuntu 24.04.5 x86-64. Other OS
-versions/distributions are unverified. Release publication is a separate step.
+versions/distributions are unverified.
